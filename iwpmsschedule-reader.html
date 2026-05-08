@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schedule PrimeReader — PMsentric</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f1c;--surface:#111827;--surface2:#162032;
+  --border:#1e2d45;--border2:#243550;
+  --accent:#00d4ff;--wbs-color:#60a5fa;
+  --ns:#94a3b8;--ip:#34d399;--done:#64748b;
+  --text:#e2eaf4;--tm:#5a7a96;--td:#3d5a75;
+  --rh:30px;
+  --th:56px;
+  --divider:5px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+.app{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+
+header{display:flex;align-items:center;gap:14px;padding:13px 24px;border-bottom:1px solid var(--border);background:rgba(11,15,28,.97);backdrop-filter:blur(8px);flex-shrink:0;}
+.logo{width:36px;height:36px;background:linear-gradient(135deg,#c8922a,#a8721a);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.ht{font-size:15px;font-weight:700;letter-spacing:-.3px;}
+.hs{font-size:11px;color:var(--tm);margin-top:1px;}
+.ha{font-size:11px;font-weight:600;background:linear-gradient(90deg,#00d4ff,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.3px;margin-top:2px;}
+.hact{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:7px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .18s;white-space:nowrap;}
+.bp{background:linear-gradient(135deg,var(--accent),#0099cc);color:#000;}
+.bp:hover{box-shadow:0 0 18px rgba(0,212,255,.35);transform:translateY(-1px);}
+.bg{background:transparent;border:1px solid var(--border2);color:var(--tm);}
+.bg:hover{border-color:var(--accent);color:var(--accent);}
+.bg:disabled{opacity:.35;cursor:not-allowed;}
+.toolbar{display:flex;align-items:center;gap:12px;padding:10px 24px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap;}
+.tl{font-size:11px;color:var(--tm);font-weight:600;text-transform:uppercase;letter-spacing:.8px;}
+select{background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 12px;border-radius:7px;font-family:'Sora',sans-serif;font-size:12px;cursor:pointer;outline:none;min-width:260px;transition:border-color .18s;}
+select:focus{border-color:var(--accent);}select:disabled{opacity:.4;cursor:not-allowed;}
+.sw{position:relative;margin-left:auto;}
+.sw input{background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 12px 6px 32px;border-radius:7px;font-family:'Sora',sans-serif;font-size:12px;outline:none;width:200px;transition:border-color .18s,width .3s;}
+.sw input:focus{border-color:var(--accent);width:260px;}
+.sw input::placeholder{color:var(--td);}
+.si{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--td);pointer-events:none;}
+.stats-bar{display:flex;align-items:center;padding:0 24px;border-bottom:1px solid var(--border);background:rgba(17,24,39,.6);flex-shrink:0;height:32px;overflow:hidden;}
+.si2{display:flex;align-items:center;gap:6px;padding:0 16px;border-right:1px solid var(--border);height:100%;font-size:11px;color:var(--tm);}
+.si2:first-child{padding-left:0;}
+.sv{font-weight:700;color:var(--text);font-family:'Space Mono',monospace;}
+.legend-bar{display:flex;align-items:center;gap:18px;padding:5px 24px;border-bottom:1px solid var(--border);background:rgba(11,15,28,.75);flex-shrink:0;}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tm);}
+.ld{width:8px;height:8px;border-radius:50%;}
+.lw{background:var(--wbs-color);}.ln{background:var(--ns);}.lip{background:var(--ip);}.ldo{background:var(--done);}
+
+#dropZone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border:2px dashed var(--border2);border-radius:16px;margin:24px;cursor:pointer;transition:all .25s;background:var(--surface);position:relative;overflow:hidden;}
+#dropZone::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,212,255,.05),transparent 65%);pointer-events:none;}
+#dropZone:hover,#dropZone.dov{border-color:var(--accent);background:var(--surface2);}
+.di{font-size:52px;filter:drop-shadow(0 0 16px rgba(0,212,255,.3));}
+.dt{font-size:18px;font-weight:700;}
+.ds{color:var(--tm);font-size:13px;}
+#fileInput{display:none;}
+
+/* ═══════════════════════════════════════════════════════════
+   SPLIT PANE LAYOUT
+   #mainContent = flex row: [tablePart] [divider] [ganttPart]
+   Each pane is fully self-contained with its own scroll box.
+   Vertical scroll is synced via a single JS listener.
+   ═══════════════════════════════════════════════════════════ */
+#mainContent{
+  flex:1;display:none;overflow:hidden;
+  flex-direction:row;min-height:0;
+}
+
+/* ── TABLE PANE ── */
+#tablePart{
+  display:flex;flex-direction:column;
+  overflow:hidden;min-width:200px;
+  /* width set by JS splitter, default 60% */
+}
+/* Sticky thead wrapper — fixed height, never scrolls */
+#tableHeadWrap{
+  flex-shrink:0;
+  background:var(--surface);
+  border-bottom:2px solid var(--border2);
+  overflow:hidden; /* clip any horizontal overflow */
+}
+#tableHeadWrap table{width:max-content;border-collapse:collapse;table-layout:fixed;}
+#tableHeadWrap thead th{
+  padding:0 12px;height:var(--th);text-align:left;
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--tm);
+  white-space:nowrap;user-select:none;position:relative;overflow:hidden;
+}
+#tableHeadWrap thead th.sortable{cursor:pointer;}
+#tableHeadWrap thead th.sortable:hover{color:var(--accent);}
+#tableHeadWrap thead th.sa .si3::after{content:'▲';color:var(--accent);margin-left:3px;font-size:8px;}
+#tableHeadWrap thead th.sd .si3::after{content:'▼';color:var(--accent);margin-left:3px;font-size:8px;}
+#tableHeadWrap thead th .si3{font-size:8px;opacity:.4;margin-left:3px;}
+#tableHeadWrap thead th.sortable:not(.sa):not(.sd) .si3::after{content:'⇅';}
+#tableHeadWrap thead th.center{text-align:center;}
+#tableHeadWrap thead th .rh{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:col-resize;}
+#tableHeadWrap thead th .rh:hover{background:var(--accent);}
+#tableHeadWrap thead th.dragging{opacity:.35;}
+#tableHeadWrap thead th.dov2{border-left:2px solid var(--accent);}
+
+/* Body scroll box */
+#tableBodyWrap{
+  flex:1;overflow:auto;
+}
+#tableBodyWrap table{width:max-content;border-collapse:collapse;table-layout:fixed;}
+tbody tr{border-bottom:1px solid rgba(30,45,69,.5);transition:background .1s;}
+tbody tr:hover{background:var(--surface2);}
+td{padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:var(--rh);vertical-align:middle;}
+td.center{text-align:center;}
+tr.wr td{color:var(--wbs-color);font-weight:600;}
+tr.shrow td{background:rgba(255,215,0,.12) !important;}
+tr.shrow:hover td{background:rgba(255,215,0,.18) !important;}
+.shmk{background:rgba(255,215,0,.35);color:#fff59d;border-radius:2px;padding:0 2px;font-weight:700;}
+tr.nr td{color:var(--ns);}
+tr.ir td{color:var(--ip);font-weight:500;}
+tr.dr td{color:var(--done);}
+.tbtn{background:none;border:none;cursor:pointer;color:var(--tm);font-size:10px;padding:0 4px;transition:color .15s,transform .2s;display:inline-block;line-height:1;}
+.tbtn:hover{color:var(--accent);}
+.tbtn.col{transform:rotate(-90deg);}
+.nc{display:flex;align-items:center;overflow:hidden;}
+.nt{overflow:hidden;text-overflow:ellipsis;}
+.pbw{display:flex;align-items:center;gap:6px;justify-content:center;}
+.pb{width:44px;height:5px;background:var(--border2);border-radius:3px;overflow:hidden;flex-shrink:0;}
+.pf{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),#7c3aed);}
+tr.ir .pf{background:var(--ip);}tr.dr .pf{background:var(--done);}
+tr.crit td:first-child{box-shadow:inset 3px 0 0 #f87171;}
+
+/* ── DIVIDER ── */
+#divider{
+  width:var(--divider);flex-shrink:0;
+  background:var(--border);
+  cursor:col-resize;
+  position:relative;
+  transition:background .15s;
+  display:none; /* shown when gantt open */
+}
+#divider:hover,#divider.dragging{background:var(--accent);}
+#divider::after{
+  content:'⋮';position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  color:var(--tm);font-size:14px;letter-spacing:-2px;
+  pointer-events:none;
+}
+
+/* ── GANTT PANE ── */
+#ganttPart{
+  display:none;flex-direction:column;
+  overflow:hidden;min-width:150px;
+  border-left:2px solid var(--border2);
+}
+#ganttPart.open{display:flex;}
+
+/* Gantt header: controls row + time axis row — fixed, never scrolls */
+#ganttHeadWrap{
+  flex-shrink:0;
+  background:var(--surface);
+  border-bottom:2px solid var(--border2);
+  height:var(--th);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+/* Controls row — top half of gantt header */
+#ganttControls{
+  height:19px;flex-shrink:0;display:flex;align-items:center;gap:6px;padding:0 10px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+}
+.glabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--tm);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.zbtn{background:var(--surface2);border:1px solid var(--border2);color:var(--text);width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;line-height:1;}
+.zbtn:hover{border-color:var(--accent);color:var(--accent);}
+.zval{font-family:'Space Mono',monospace;font-size:10px;color:var(--tm);min-width:28px;text-align:center;}
+.cgbtn{background:none;border:none;cursor:pointer;color:var(--tm);font-size:15px;padding:0 3px;transition:color .15s;flex-shrink:0;}
+.cgbtn:hover{color:#f87171;}
+
+/* Time axis row — bottom half of gantt header */
+#ganttAxisWrap{
+  flex:1;
+  overflow:hidden;
+  position:relative;
+  background:var(--surface2);
+}
+#ganttAxisInner{position:absolute;top:0;left:0;height:100%;}
+.tyr{position:absolute;top:0;height:50%;display:flex;align-items:center;padding:0 5px;font-size:10px;font-weight:700;color:var(--accent);font-family:'Space Mono',monospace;border-right:1px solid var(--border2);border-bottom:1px solid var(--border2);overflow:hidden;white-space:nowrap;}
+.tmo{position:absolute;bottom:0;height:50%;display:flex;align-items:center;padding:0 3px;font-size:9px;color:var(--tm);border-right:1px solid rgba(30,45,69,.4);overflow:hidden;white-space:nowrap;}
+
+/* Gantt body scroll — horizontal only; vertical synced from tableBodyWrap */
+#ganttBodyWrap{
+  flex:1;
+  overflow-x:auto;
+  overflow-y:hidden;
+}
+/* Hide vertical scrollbar on ganttBodyWrap — we'll set scrollTop directly */
+#ganttBodyWrap::-webkit-scrollbar{height:8px;}
+#ganttBodyWrap::-webkit-scrollbar-track{background:var(--bg);}
+#ganttBodyWrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+
+#ganttInner{position:relative;display:inline-block;}
+.gvl{position:absolute;width:1px;background:rgba(30,45,69,.55);pointer-events:none;}
+.gvl.yr{background:rgba(0,212,255,.18);}
+.gtd{position:absolute;width:2px;background:rgba(255,190,0,.7);pointer-events:none;z-index:4;}
+/* Gantt rows — height MUST equal --rh, border matches tbody tr */
+.grow{height:var(--rh);position:relative;border-bottom:1px solid rgba(30,45,69,.5);}
+.gbar{position:absolute;border-radius:3px;min-width:3px;overflow:hidden;}
+.gbar.ns{height:14px;top:8px;background:linear-gradient(90deg,#94a3b8,#64748b);}
+.gbar.ip{height:14px;top:8px;background:linear-gradient(90deg,#34d399,#059669);}
+.gbar.done{height:14px;top:8px;background:linear-gradient(90deg,#64748b,#475569);}
+.gbar.wbs{height:8px;top:11px;border-radius:2px;background:linear-gradient(90deg,#60a5fa,#3b82f6);opacity:.9;}
+.gbar.bl{height:6px;top:21px;border-radius:2px;background:linear-gradient(90deg,#D4A017,#A37A00);opacity:.85;}
+.gbar.bl-wbs{height:4px;top:22px;border-radius:2px;background:linear-gradient(90deg,#D4A017,#A37A00);opacity:.85;}
+.gbar.crit-bar{background:linear-gradient(90deg,#ef4444,#b91c1c) !important;}
+.gpct{position:absolute;top:0;left:0;bottom:0;background:rgba(255,255,255,.25);border-radius:3px 0 0 3px;}
+
+.status-bar{display:flex;align-items:center;gap:10px;padding:6px 24px;border-top:1px solid var(--border);background:var(--surface);font-size:11px;color:var(--tm);flex-shrink:0;font-family:'Space Mono',monospace;}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--td);}
+.sdot.ok{background:var(--ip);}.sdot.err{background:#f87171;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:var(--td);}
+
+/* AUTH OVERLAY CSS REMOVED */
+.auth-box-unused{
+  width:100%;max-width:440px;
+  background:#111827;
+}
+/* ── User pill in app header (shared PMsentric auth) ── */
+.nav-user-pill{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 12px;border-radius:7px;
+  border:1.5px solid var(--border2);background:transparent;
+  cursor:pointer;transition:border-color .2s;
+  font-family:inherit;
+}
+.nav-user-pill:hover{border-color:#c8922a;}
+.nav-user-avatar{
+  width:22px;height:22px;border-radius:50%;object-fit:cover;
+  background:linear-gradient(135deg,#c8922a,#a8721a);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Mono',monospace;font-size:10px;font-weight:700;
+  flex-shrink:0;
+}
+.nav-user-name{
+  font-size:12px;color:var(--text);font-family:'Space Mono',monospace;
+  max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.nav-user-hint{font-size:10px;color:var(--td);}
+.badge-pro{
+  display:inline-block;margin-left:4px;
+  font-family:'Space Mono',monospace;font-size:8px;
+  padding:1px 5px;border-radius:3px;
+  background:rgba(200,146,42,.15);color:#c8922a;
+  border:1px solid rgba(200,146,42,.35);
+  letter-spacing:.08em;text-transform:uppercase;vertical-align:middle;
+}
+/* ── Exit confirmation modal ── */
+#exitModal{position:fixed;inset:0;background:rgba(7,9,14,.85);backdrop-filter:blur(6px);z-index:9999;display:none;align-items:center;justify-content:center;}
+#exitModal.open{display:flex;}
+.exit-box{background:#111827;border:1px solid #1e2d45;border-radius:12px;padding:28px 32px;max-width:380px;width:90%;text-align:center;}
+.exit-box h3{font-size:16px;font-weight:700;margin-bottom:8px;color:#e2eaf4;}
+.exit-box p{font-size:13px;color:#5a7a96;line-height:1.6;margin-bottom:20px;}
+.exit-btns{display:flex;gap:10px;justify-content:center;}
+.btn-tool-switch{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:7px;font-family:'Sora',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(200,146,42,.35);background:rgba(200,146,42,.08);color:#c8922a;transition:all .18s;white-space:nowrap;text-decoration:none;}
+.btn-tool-switch:hover{border-color:#c8922a;background:rgba(200,146,42,.18);}
+</style>
+</head>
+<body>
+<script>try{if(sessionStorage.getItem('pms_xer_current')){document.write('<style>#dropZone{display:none!important}</style>');}}catch(e){}</script>
+
+<div class="app">
+
+<header>
+  <div class="logo">PM</div>
+  <div>
+    <div class="ht">Schedule PrimeReader</div>
+    <div class="hs">Project Schedule Viewer — Web Edition</div>
+    <div class="ha"><a href="https://pmsentric.com/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">✦ PMSentric</a></div>
+  </div>
+  <div class="hact">
+    <a href="#" class="btn bg" onclick="askExit('/');return false;">← Home</a>
+    <a href="/iwpmsresource-analyzer" class="btn-tool-switch" onclick="switchTool('/iwpmsresource-analyzer');return false;">⚙️ Resource Analyzer</a>
+    <a href="/iwpmscriticalpath" class="btn-tool-switch" onclick="switchTool('/iwpmscriticalpath');return false;">🔗 Critical Path</a>
+    <div id="appUserPill" style="display:none;"></div>
+    <button class="btn bg" id="signinBtn" onclick="goSignIn()" style="display:none;">Log In</button>
+    <button class="btn bg" id="closeBtn" onclick="closeFile()" style="display:none;border-color:#f87171;color:#f87171;">✕ Close File</button>
+    <button class="btn bg" id="loadBaselineBtn" onclick="document.getElementById('baselineInput').click()" style="display:none;">📎 Load Baseline XER</button>
+    <button class="btn bg" id="clearBaselineBtn" onclick="clearBaseline()" style="display:none;border-color:#f87171;color:#f87171;">✕ Clear Baseline</button>
+    <button class="btn bp" onclick="document.getElementById('fileInput').click()">📂 Load XER File</button>
+    <input type="file" id="fileInput" accept=".xer">
+    <input type="file" id="baselineInput" accept=".xer" style="display:none;">
+  </div>
+</header>
+
+<!-- Free-tier upgrade banner: always shown for non-Pro users -->
+<div id="freeBanner" style="display:flex;background:linear-gradient(90deg,rgba(200,146,42,.12),rgba(200,146,42,.04));border-bottom:1px solid rgba(200,146,42,.25);padding:8px 24px;font-size:12px;color:#e6d8b0;align-items:center;gap:12px;flex-wrap:wrap;">
+  <span style="font-family:'Space Mono',monospace;font-size:10px;padding:2px 6px;border-radius:3px;background:rgba(200,146,42,.2);color:#c8922a;border:1px solid rgba(200,146,42,.4);letter-spacing:.06em;text-transform:uppercase;">Free</span>
+  <span id="freeBannerMsg">Free plan: limited to 100 activities per project. Subscribe to Pro to view unlimited activities.</span>
+  <a href="/?page=pricing" style="margin-left:auto;color:#c8922a;font-weight:600;text-decoration:underline;">Upgrade to Pro →</a>
+</div>
+
+<div class="toolbar">
+  <span class="tl">Project</span>
+  <select id="projectSelect" disabled onchange="onProjSel()"><option>— load a file first —</option></select>
+  <button class="btn bg" id="collapseBtn" disabled onclick="collapseAll()">➖ Collapse All</button>
+  <button class="btn bg" id="expandBtn"   disabled onclick="expandAll()">➕ Expand All</button>
+  <select id="wbsLevelSel" disabled onchange="onWbsLevel()" title="Show WBS up to selected level" style="min-width:130px;"><option value="all">WBS Level: All</option></select>
+  <button class="btn bg" id="ganttBtn"    disabled onclick="toggleGantt()">📊 Gantt</button>
+  <label id="critLabel" style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid var(--border2);border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tm);opacity:.5;pointer-events:none;transition:all .18s;" title="Show only critical activities (driving_path_flag = Y)">
+    <input type="checkbox" id="criticalChk" onchange="onCriticalToggle()" style="accent-color:#f87171;cursor:pointer;margin:0;">
+    <span style="color:#f87171;">🔺</span>Critical Only
+  </label>
+  <label id="remainLabel" style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid var(--border2);border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tm);opacity:.5;pointer-events:none;transition:all .18s;" title="Show only remaining activities (Not Started or In Progress)">
+    <input type="checkbox" id="remainingChk" onchange="onRemainingToggle()" style="accent-color:#00d4ff;cursor:pointer;margin:0;">
+    <span style="color:#00d4ff;">◷</span>Remaining Only
+  </label>
+  <div class="sw">
+    <span class="si">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search all WBS levels &amp; activities…" oninput="onSearch()" disabled>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="si2">Projects <span class="sv" id="sp">—</span></div>
+  <div class="si2">WBS Nodes <span class="sv" id="sw2">—</span></div>
+  <div class="si2">Activities <span class="sv" id="sa">—</span></div>
+  <div class="si2">In Progress <span class="sv" id="sip">—</span></div>
+  <div class="si2">Completed <span class="sv" id="sd">—</span></div>
+  <div class="si2" style="border-right:none;margin-left:auto;gap:14px;">
+    <div class="li"><div class="ld lw"></div>WBS Node</div>
+    <div class="li"><div class="ld ln"></div>Not Started</div>
+    <div class="li"><div class="ld lip"></div>In Progress</div>
+    <div class="li"><div class="ld ldo"></div>Completed</div>
+    <div class="li"><div class="ld" style="background:#dc2626"></div>Baseline</div>
+  </div>
+</div>
+
+<div id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="onDO(event)" ondragleave="onDL(event)" ondrop="onDD(event)">
+  <div class="di">📋</div>
+  <div class="dt">Drop your XER file here</div>
+  <div class="ds">or click to browse — all processing happens in your browser</div>
+  <button class="btn bp" style="margin-top:8px" onclick="event.stopPropagation();document.getElementById('fileInput').click()">Choose File</button>
+</div>
+
+<div id="mainContent">
+
+  <!-- TABLE PANE -->
+  <div id="tablePart">
+    <div id="tableHeadWrap">
+      <table><thead><tr id="headerRow"></tr></thead></table>
+    </div>
+    <div id="tableBodyWrap">
+      <table><tbody id="tableBody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- DRAGGABLE DIVIDER -->
+  <div id="divider"></div>
+
+  <!-- GANTT PANE -->
+  <div id="ganttPart">
+    <div id="ganttHeadWrap">
+      <div id="ganttControls">
+        <span class="glabel" id="ganttLabel">Gantt Chart</span>
+        <button class="zbtn" onclick="zoomOut()">−</button>
+        <span class="zval" id="zoomVal">1×</span>
+        <button class="zbtn" onclick="zoomIn()">+</button>
+        <button class="cgbtn" onclick="closeGantt()">✕</button>
+      </div>
+      <div id="ganttAxisWrap"><div id="ganttAxisInner"></div></div>
+    </div>
+    <div id="ganttBodyWrap">
+      <div id="ganttInner"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="status-bar">
+  <div class="sdot" id="statusDot"></div>
+  <span id="statusText">Ready — load an XER file to begin</span>
+</div>
+
+</div><!-- .app -->
+<script>
+// ═══ STATE ════════════════════════════════════════════════════════════════
+const S={
+  projects:{},wbsNodes:{},taskData:{},taskBudget:{},
+  currentProjId:null,treeHierarchy:{},rootNodes:[],
+  expandedSet:new Set(),searchQuery:'',criticalOnly:false,remainingOnly:false,
+  wbsLevelCap:null,
+  sortCol:null,sortDir:1,
+  columns:[],colWidths:{},dragSrcIdx:null,
+  ganttOpen:false,ganttZoomIdx:2,
+  renderedRows:[],
+  wbsActsIndex:{},
+  rlpCache:{},
+  wbsHasChildren:{},
+  baselineLoaded:false,
+  baselineByCode:{},
+  baselineWbsByCode:{},
+};
+const ZOOM=[.4,.6,1,1.5,2,3,4.5];
+const MONS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const ROW_H=30;
+let tableColsWidth=0; // track total table width for head/body sync
+
+// ═══ COLUMNS ══════════════════════════════════════════════════════════════
+function defCols(){return[
+  {key:'name',       label:'WBS / Activity', sortable:false,width:300,align:'left'},
+  {key:'code',       label:'Activity ID',    sortable:true, width:120,align:'center'},
+  {key:'blStart',    label:'BL Start',       sortable:true, width:110,align:'center',baseline:true},
+  {key:'blFinish',   label:'BL Finish',      sortable:true, width:110,align:'center',baseline:true},
+  {key:'start',      label:'Start',          sortable:true, width:110,align:'center'},
+  {key:'finish',     label:'Finish',         sortable:true, width:110,align:'center'},
+  {key:'variance',   label:'Var (days)',     sortable:true, width:100,align:'center',baseline:true},
+  {key:'remainDrtn', label:'Rem. Dur. (CD)',  sortable:true, width:110,align:'center'},
+  {key:'schedPct',   label:'Sched % Compl.', sortable:true, width:130,align:'center',baseline:true},
+  {key:'pct',        label:'% Complete',     sortable:true, width:120,align:'center'},
+  {key:'count',      label:'Activities',     sortable:true, width:85, align:'center'},
+];}
+
+// ═══ PARSING ══════════════════════════════════════════════════════════════
+function parseDt(s){
+  if(!s||!s.trim())return'N/A';s=s.trim();
+  let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m)return fmtD(new Date(+m[1],+m[2]-1,+m[3]));
+  m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if(m)return fmtD(new Date(+m[3],+m[1]-1,+m[2]));
+  return s;
+}
+function fmtD(d){if(!d||isNaN(d))return'N/A';return`${d.getDate()}-${MONS[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`;}
+function toD(s){
+  if(!s||s==='N/A')return null;
+  const mn={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  const m=s.match(/^(\d+)-([A-Za-z]+)-(\d+)$/);
+  return m?new Date(2000+(+m[3]),mn[m[2]],+m[1]):null;
+}
+function minDS(a){const v=a.map(toD).filter(Boolean);return v.length?fmtD(new Date(Math.min(...v))):'N/A';}
+function maxDS(a){const v=a.map(toD).filter(Boolean);return v.length?fmtD(new Date(Math.max(...v))):'N/A';}
+
+function procR(sec,r){
+  if(sec==='PROJECT'){const id=r.proj_id||'';S.projects[id]={id,name:r.proj_short_name||id,dataDate:r.last_recalc_date||''};}
+  else if(sec==='PROJWBS'){const id=r.wbs_id||'';S.wbsNodes[id]={id,name:r.wbs_name||'',shortName:r.wbs_short_name||'',parentId:r.parent_wbs_id||'',projId:r.proj_id||''};}
+  else if(sec==='TASKRSRC'||sec==='PROJCOST'){const tid=r.task_id||'',c=parseFloat(r.target_cost)||0;if(tid)S.taskBudget[tid]=(S.taskBudget[tid]||0)+c;}
+  else if(sec==='TASK'){
+    const id=r.task_id||'';
+    const aS=parseDt(r.act_start_date||''),aE=parseDt(r.act_end_date||'');
+    const eS=parseDt(r.early_start_date||r.target_start_date||'');
+    const eF=parseDt(r.early_end_date||r.target_end_date||'');
+    const rF=parseDt(r.reend_date||r.remain_early_end_date||'');
+    let dS,dF,st;
+    if(aS==='N/A'){dS=eS;dF=eF;st='ns';}
+    else if(aE==='N/A'){dS=aS;dF=rF!=='N/A'?rF:eF;st='ip';}
+    else{dS=aS;dF=aE;st='done';}
+    let pct;
+    if(r.complete_pct_type==='CP_Drtn'){const t=parseFloat(r.target_drtn_hr_cnt)||0,rm=parseFloat(r.remain_drtn_hr_cnt)||0;pct=t>0?Math.round((t-rm)/t*1000)/10:0;}
+    else pct=Math.round((parseFloat(r.phys_complete_pct||r.perf_complete_pct||r.complete_pct||'0')||0)*10)/10;
+    // Remaining duration: calendar days from data date to forecast finish
+    let rmDays=0;
+    if(st!=='done'){
+      const proj=S.projects[r.proj_id||''];
+      const dataDateRaw=proj?proj.dataDate:'';
+      const dataD=dataDateRaw?new Date(dataDateRaw.trim().slice(0,10)):null;
+      const finD=toD(dF);
+      if(dataD&&finD){rmDays=Math.max(0,Math.round((finD-dataD)/86400000));}
+    }
+    const critical=(r.driving_path_flag||'').trim().toUpperCase()==='Y';
+    S.taskData[id]={id,code:r.task_code||'',name:r.task_name||'',wbsId:r.wbs_id||'',projId:r.proj_id||'',
+      displayStart:dS,displayFinish:dF,actualStart:aS,actualEnd:aE,completePct:pct,status:st,remainDrtn:rmDays,critical};
+  }
+}
+function parseXER(content){
+  S.projects={};S.wbsNodes={};S.taskData={};S.taskBudget={};S.wbsActsIndex={};S.rlpCache={};S.wbsHasChildren={};
+  let tbl=null,flds=[];
+  for(const raw of content.split('\n')){
+    const l=raw.replace(/\r$/,'');
+    if(l.startsWith('%T\t')){tbl=l.slice(3).trim();flds=[];}
+    else if(l.startsWith('%F\t'))flds=l.slice(3).split('\t');
+    else if(l.startsWith('%R\t')){const v=l.slice(3).split('\t'),r={};flds.forEach((f,i)=>{r[f]=i<v.length?v[i]:'';});procR(tbl,r);}
+  }
+  for(const[tid,b]of Object.entries(S.taskBudget))if(S.taskData[tid])S.taskData[tid].budgetCost=b;
+  for(const t of Object.values(S.taskData))if(t.budgetCost===undefined)t.budgetCost=0;
+  buildWbsIndex();
+}
+
+// ═══ BASELINE ═════════════════════════════════════════════════════════════
+function parseBaselineXER(content){
+  const bl={},blWbs={};
+  const projs={},wbs={};
+  let tbl=null,flds=[];
+  for(const raw of content.split('\n')){
+    const l=raw.replace(/\r$/,'');
+    if(l.startsWith('%T\t')){tbl=l.slice(3).trim();flds=[];}
+    else if(l.startsWith('%F\t'))flds=l.slice(3).split('\t');
+    else if(l.startsWith('%R\t')){
+      const v=l.slice(3).split('\t'),r={};
+      flds.forEach((f,i)=>{r[f]=i<v.length?v[i]:'';});
+      if(tbl==='PROJECT'){projs[r.proj_id||'']={dataDate:r.last_recalc_date||''};}
+      else if(tbl==='PROJWBS'){wbs[r.wbs_id||'']={name:r.wbs_name||'',shortName:r.wbs_short_name||'',parentId:r.parent_wbs_id||'',projId:r.proj_id||''};}
+      else if(tbl==='TASK'){
+        const code=r.task_code||'';if(!code)continue;
+        const aS=parseDt(r.act_start_date||''),aE=parseDt(r.act_end_date||'');
+        const eS=parseDt(r.early_start_date||r.target_start_date||'');
+        const eF=parseDt(r.early_end_date||r.target_end_date||'');
+        const rF=parseDt(r.reend_date||r.remain_early_end_date||'');
+        let dS,dF;
+        if(aS==='N/A'){dS=eS;dF=eF;}
+        else if(aE==='N/A'){dS=aS;dF=rF!=='N/A'?rF:eF;}
+        else{dS=aS;dF=aE;}
+        bl[code]={start:dS,finish:dF,wbsId:r.wbs_id||''};
+      }
+    }
+  }
+  // Build WBS path key (concatenated short names) for each baseline WBS, map by path to finish/start
+  // We'll aggregate WBS baseline dates from tasks under them
+  return {bl,wbs};
+}
+
+function loadBaselineText(text,name){
+  try{
+    const {bl,wbs}=parseBaselineXER(text);
+    if(!Object.keys(bl).length){setSt('Baseline: no activities found.','err');return;}
+    S.baselineByCode=bl;
+    S.baselineLoaded=true;
+    // WBS rollup is now computed against the CURRENT project's WBS tree,
+    // aggregating baseline dates from activities matched by task_code.
+    // This removes any dependence on WBS name/path matching between files.
+    rebuildBaselineWbsRollup();
+    document.getElementById('clearBaselineBtn').style.display='inline-flex';
+    document.getElementById('loadBaselineBtn').textContent='📎 Replace Baseline';
+    // Re-render if a project is selected
+    if(S.currentProjId){renderHead();renderTable();}
+    setSt(`Baseline loaded: ${name}  ·  ${Object.keys(bl).length} activities matched by code`,'ok');
+    if(!__xerSyncInbound)__xerBroadcast({type:'xer:baseline:load',text:text,name:name});
+  }catch(err){setSt('Baseline error: '+err.message,'err');}
+}
+
+function loadBaseline(file){
+  if(!file)return;
+  setSt('Parsing baseline '+file.name+'…','');
+  const r=new FileReader();
+  r.onload=e=>loadBaselineText(e.target.result,file.name);
+  r.onerror=()=>setSt('Failed to read baseline file.','err');
+  r.readAsText(file,'latin-1');
+}
+
+// Rolls up baseline start/finish per WBS id of the CURRENT project, by
+// pulling baseline dates from S.baselineByCode for every activity under that WBS.
+// Matches by task_code (already how activity-level BL works), so WBS renames
+// between current and baseline files don't break the rollup.
+function rebuildBaselineWbsRollup(){
+  S.baselineWbsByCode={};
+  if(!S.baselineLoaded||!S.currentProjId)return;
+  // Build tree for current project if not already in S.treeHierarchy
+  const tr=S.treeHierarchy&&Object.keys(S.treeHierarchy).length?S.treeHierarchy:getTree(S.currentProjId).tr;
+  for(const[wid,w]of Object.entries(S.wbsNodes)){
+    if(w.projId!==S.currentProjId)continue;
+    const descendants=allActsFor(wid,tr);
+    const starts=[],finishes=[];
+    for(const a of descendants){
+      const bl=S.baselineByCode[a.code];
+      if(!bl)continue;
+      if(bl.start&&bl.start!=='N/A')starts.push(bl.start);
+      if(bl.finish&&bl.finish!=='N/A')finishes.push(bl.finish);
+    }
+    if(starts.length||finishes.length){
+      S.baselineWbsByCode[wid]={
+        start:starts.length?minDS(starts):'N/A',
+        finish:finishes.length?maxDS(finishes):'N/A'
+      };
+    }
+  }
+}
+
+function clearBaseline(){
+  S.baselineLoaded=false;
+  S.baselineByCode={};
+  S.baselineWbsByCode={};
+  document.getElementById('clearBaselineBtn').style.display='none';
+  document.getElementById('loadBaselineBtn').textContent='📎 Load Baseline XER';
+  if(S.currentProjId){renderHead();renderTable();}
+  setSt('Baseline cleared.','ok');
+  if(!__xerSyncInbound)__xerBroadcast({type:'xer:baseline:clear'});
+}
+
+function wbsPathKey(wid){
+  const parts=[];let cur=wid;
+  while(cur&&S.wbsNodes[cur]){parts.unshift(S.wbsNodes[cur].name||S.wbsNodes[cur].shortName);cur=S.wbsNodes[cur].parentId;}
+  return parts.join('\u0001');
+}
+
+function varianceDays(finishStr,blFinishStr){
+  // Variance = Baseline Finish − Current Finish (positive = ahead, negative = behind)
+  const cur=toD(finishStr),bl=toD(blFinishStr);
+  if(!cur||!bl)return null;
+  return Math.round((bl-cur)/86400000);
+}
+
+// Returns the current schedule's data date as a Date, or null.
+function currentDataDate(){
+  const proj=S.projects[S.currentProjId];
+  const raw=proj?proj.dataDate:'';
+  if(!raw)return null;
+  const d=new Date(raw.trim().slice(0,10));
+  return isNaN(d)?null:d;
+}
+
+// Planned elapsed fraction (0..1) of the BASELINE window at DD.
+// 0 if DD <= BL start, 1 if DD >= BL finish, linear in between.
+// Returns null if baseline window invalid / missing.
+function plannedFrac(blStartStr,blFinishStr,dataDate){
+  if(!dataDate)return null;
+  const bs=toD(blStartStr),bf=toD(blFinishStr);
+  if(!bs||!bf)return null;
+  const span=bf-bs;
+  if(span<=0)return dataDate>=bf?1:0;
+  if(dataDate<=bs)return 0;
+  if(dataDate>=bf)return 1;
+  return (dataDate-bs)/span;
+}
+
+// Activity-level Schedule % Complete = Planned Value to DD / Budget at Completion
+//   PV(DD) = BAC * plannedFrac(BL start, BL finish, DD)
+//   SchedPct = PV(DD) / BAC * 100  =  plannedFrac * 100
+// Returns null if baseline window invalid or BAC <= 0.
+function schedPctAt(blStartStr,blFinishStr,dataDate,bac){
+  if(!(bac>0))return null;
+  const f=plannedFrac(blStartStr,blFinishStr,dataDate);
+  if(f===null)return null;
+  return Math.round(f*1000)/10;
+}
+
+// WBS-level Schedule % Complete = Sum(PV to DD) / Sum(BAC) across descendant
+// activities. Activities without a baseline match or zero BAC are skipped.
+function schedPctWbs(wid,dataDate){
+  if(!dataDate||!S.baselineLoaded)return null;
+  const acts=allActsFor(wid,S.treeHierarchy);
+  let pvSum=0,bacSum=0;
+  for(const a of acts){
+    const bac=a.budgetCost||0;
+    if(bac<=0)continue;
+    const bl=S.baselineByCode[a.code];
+    if(!bl)continue;
+    const f=plannedFrac(bl.start,bl.finish,dataDate);
+    if(f===null)continue;
+    pvSum+=bac*f;
+    bacSum+=bac;
+  }
+  return bacSum>0?Math.round(pvSum/bacSum*1000)/10:null;
+}
+
+function visibleCols(){
+  return S.baselineLoaded?S.columns:S.columns.filter(c=>!c.baseline);
+}
+
+// ═══ TREE / ROLLUP ════════════════════════════════════════════════════════
+function getTree(projId){
+  const tr={},roots=[];
+  for(const[id,w]of Object.entries(S.wbsNodes)){
+    if(w.projId!==projId)continue;
+    if(!w.parentId||!S.wbsNodes[w.parentId])roots.push(id);
+    else{if(!tr[w.parentId])tr[w.parentId]=[];tr[w.parentId].push(id);}
+  }
+  return{tr,roots};
+}
+function buildWbsIndex(){
+  // Build wbsId -> [tasks] index once after parsing
+  S.wbsActsIndex={};
+  for(const t of Object.values(S.taskData)){
+    if(!S.wbsActsIndex[t.wbsId])S.wbsActsIndex[t.wbsId]=[];
+    S.wbsActsIndex[t.wbsId].push(t);
+  }
+}
+function actsFor(wid){return S.wbsActsIndex[wid]||[];}
+function allActsFor(wid,tr){
+  // Iterative DFS using index — no repeated Object.values scans
+  const result=[];
+  const stack=[wid];
+  while(stack.length){
+    const id=stack.pop();
+    const acts=S.wbsActsIndex[id];
+    if(acts)for(const a of acts)result.push(a);
+    const children=tr[id];
+    if(children)for(const c of children)stack.push(c);
+  }
+  return result;
+}
+function rlpCompute(wid,tr){
+  const a=allActsFor(wid,tr);
+  if(!a.length)return{start:'N/A',finish:'N/A',actStart:'N/A',actFinish:'N/A',actStartFlag:false,actFinishFlag:false,pct:0,count:0};
+  const tb=a.reduce((s,x)=>s+x.budgetCost,0);
+  const pct=tb>0?Math.round(a.reduce((s,x)=>s+x.completePct*x.budgetCost,0)/tb*10)/10:0;
+  // Actual start rollup: earliest actual start among any child that has one
+  const hasActStart=a.some(x=>x.actualStart!=='N/A');
+  const rolledActStart=hasActStart?minDS(a.filter(x=>x.actualStart!=='N/A').map(x=>x.actualStart)):'N/A';
+  // Actual finish rollup: only if ALL children have an actual finish
+  const allDone=a.every(x=>x.actualEnd!=='N/A');
+  const rolledActFinish=allDone?maxDS(a.map(x=>x.actualEnd)):'N/A';
+  // Displayed start = earliest displayStart; flag A if it matches the rolled actual start
+  const dispStart=minDS(a.map(x=>x.displayStart));
+  const dispFinish=maxDS(a.map(x=>x.displayFinish));
+  const actStartFlag=hasActStart&&rolledActStart===dispStart;
+  const actFinishFlag=allDone&&rolledActFinish===dispFinish;
+  return{start:dispStart,finish:dispFinish,
+    actStart:rolledActStart,actFinish:rolledActFinish,
+    actStartFlag,actFinishFlag,
+    pct,count:a.length};
+}
+function buildRlpCache(tr){
+  // Compute all rollups once in bottom-up order (leaves first)
+  S.rlpCache={};
+  S.wbsHasChildren={};
+  // Post-order traversal using all wbs nodes for current project
+  const visited=new Set();
+  function visit(wid){
+    if(visited.has(wid))return;visited.add(wid);
+    const children=tr[wid]||[];
+    for(const c of children)visit(c);
+    S.rlpCache[wid]=rlpCompute(wid,tr);
+    S.wbsHasChildren[wid]=children.length>0||actsFor(wid).length>0;
+  }
+  for(const id of S.rootNodes)visit(id);
+}
+function rlp(wid){return S.rlpCache[wid]||{start:'N/A',finish:'N/A',actStart:'N/A',actFinish:'N/A',actStartFlag:false,actFinishFlag:false,pct:0,count:0};}
+
+function minRemainDrtn(wid){
+  const a=allActsFor(wid,S.treeHierarchy);
+  if(!a.length)return'—';
+  const max=Math.max(...a.map(x=>x.remainDrtn||0));
+  return max;
+}
+
+// ═══ SORT ═════════════════════════════════════════════════════════════════
+function srtV(act,col){
+  switch(col){
+    case'code':return act.code||'';
+    case'start':return toD(act.displayStart)||new Date(0);
+    case'finish':return toD(act.displayFinish)||new Date(0);
+    case'actStart':return toD(act.actualStart)||new Date(0);
+    case'actEnd':return toD(act.actualEnd)||new Date(0);
+    case'pct':return act.completePct||0;
+    case'remainDrtn':return act.remainDrtn||0;
+    case'blStart':{const b=S.baselineByCode[act.code];return b?(toD(b.start)||new Date(0)):new Date(0);}
+    case'blFinish':{const b=S.baselineByCode[act.code];return b?(toD(b.finish)||new Date(0)):new Date(0);}
+    case'variance':{const b=S.baselineByCode[act.code];if(!b)return -99999;const v=varianceDays(act.displayFinish,b.finish);return v===null?-99999:v;}
+    case'schedPct':{const b=S.baselineByCode[act.code];if(!b)return -1;const p=schedPctAt(b.start,b.finish,currentDataDate(),act.budgetCost);return p===null?-1:p;}
+    default:return'';
+  }
+}
+function sortActs(a){
+  if(!S.sortCol)return a;
+  return[...a].sort((a,b)=>{const va=srtV(a,S.sortCol),vb=srtV(b,S.sortCol);if(va instanceof Date)return(va-vb)*S.sortDir;if(typeof va==='number')return(va-vb)*S.sortDir;return String(va).localeCompare(String(vb))*S.sortDir;});
+}
+function onSortCol(k){S.sortCol===k?S.sortDir*=-1:(S.sortCol=k,S.sortDir=1);renderHead();renderTable();}
+
+// ═══ HEADER ═══════════════════════════════════════════════════════════════
+function getTotalColWidth(){return visibleCols().reduce((s,c)=>s+(S.colWidths[c.key]||c.width),0);}
+
+function renderHead(){
+  const cols=visibleCols();
+  const w=getTotalColWidth();
+  // Apply same width to both head and body tables so columns align
+  document.querySelector('#tableHeadWrap table').style.width=w+'px';
+  document.querySelector('#tableBodyWrap table').style.width=w+'px';
+
+  document.getElementById('headerRow').innerHTML=cols.map((c,i)=>{
+    const cw=S.colWidths[c.key]||c.width;
+    const sc=c.sortable?' sortable'+(S.sortCol===c.key?(S.sortDir===1?' sa':' sd'):''):'';
+    const cc=c.align==='center'?' center':'';
+    return`<th class="${cc}${sc}" style="width:${cw}px;min-width:40px" data-col="${c.key}" data-idx="${i}"
+      draggable="true" ondragstart="cdS(event,${i})" ondragover="cdO(event,${i})"
+      ondrop="cdD(event,${i})" ondragleave="cdL(event)"
+      ${c.sortable?`onclick="onSortCol('${c.key}')"`:''}
+    >${c.label}<span class="si3"></span><div class="rh" onmousedown="rhD(event,'${c.key}')" onclick="event.stopPropagation()"></div></th>`;
+  }).join('');
+}
+function cdS(e,i){S.dragSrcIdx=i;e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
+function cdO(e,i){e.preventDefault();if(i===S.dragSrcIdx)return;document.querySelectorAll('#headerRow th').forEach(t=>t.classList.remove('dov2'));e.currentTarget.classList.add('dov2');}
+function cdL(e){e.currentTarget.classList.remove('dov2');}
+function cdD(e,i){
+  e.preventDefault();document.querySelectorAll('#headerRow th').forEach(t=>{t.classList.remove('dov2');t.classList.remove('dragging');});
+  if(i===S.dragSrcIdx||S.dragSrcIdx===null)return;
+  // Reorder within visible cols, then project back to S.columns
+  const vis=visibleCols();
+  const[mv]=vis.splice(S.dragSrcIdx,1);vis.splice(i,0,mv);
+  // Rebuild S.columns: visible in new order + hidden baseline cols appended in original order
+  const hidden=S.columns.filter(c=>c.baseline&&!S.baselineLoaded);
+  S.columns=[...vis,...hidden];
+  S.dragSrcIdx=null;renderHead();renderTable();
+}
+function rhD(e,key){
+  e.preventDefault();e.stopPropagation();
+  const sx=e.clientX;
+  const colDef=S.columns.find(c=>c.key===key);
+  const sw=S.colWidths[key]||colDef.width;
+  const vis=visibleCols();
+  const colIdx=vis.findIndex(c=>c.key===key);
+  const th=document.querySelectorAll('#headerRow th')[colIdx];
+  const mm=ev=>{
+    const newW=Math.max(50,sw+(ev.clientX-sx));
+    S.colWidths[key]=newW;
+    if(th){th.style.width=newW+'px';}
+    document.querySelectorAll('#tableBodyWrap tbody tr').forEach(tr=>{
+      const td=tr.children[colIdx];
+      if(td){td.style.width=newW+'px';td.style.maxWidth=newW+'px';}
+    });
+    const totalW=getTotalColWidth();
+    document.querySelector('#tableHeadWrap table').style.width=totalW+'px';
+    document.querySelector('#tableBodyWrap table').style.width=totalW+'px';
+  };
+  const mu=()=>{
+    document.removeEventListener('mousemove',mm);
+    document.removeEventListener('mouseup',mu);
+    document.body.style.cursor='';
+    document.body.style.userSelect='';
+  };
+  document.body.style.cursor='col-resize';
+  document.body.style.userSelect='none';
+  document.addEventListener('mousemove',mm);
+  document.addEventListener('mouseup',mu);
+}
+
+// ═══ TABLE BODY ═══════════════════════════════════════════════════════════
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function hl(s,q){
+  const str=String(s??'');
+  if(!q)return esc(str);
+  const lo=str.toLowerCase(),ql=q.toLowerCase();
+  let out='',i=0;
+  while(i<str.length){
+    const k=lo.indexOf(ql,i);
+    if(k===-1){out+=esc(str.slice(i));break;}
+    out+=esc(str.slice(i,k))+'<span class="shmk">'+esc(str.slice(k,k+ql.length))+'</span>';
+    i=k+ql.length;
+  }
+  return out;
+}
+
+function allWbsDescendants(wid,tr){
+  const result=[];
+  const stack=[...(tr[wid]||[])];
+  while(stack.length){
+    const id=stack.pop();
+    const n=S.wbsNodes[id];
+    if(n)result.push(n);
+    const children=tr[id];
+    if(children)for(const c of children)stack.push(c);
+  }
+  return result;
+}
+
+function buildRows(wid,depth,tr,flt){
+  const rows=[],w=S.wbsNodes[wid];if(!w)return rows;
+  if(S.wbsLevelCap!==null&&depth>S.wbsLevelCap)return rows;
+  const r=rlp(wid);
+  const co=S.criticalOnly;
+  const ro=S.remainingOnly;
+  let selfWbsMatch=false;
+  let ancestorWbsMatch=arguments.length>4?arguments[4]:false;
+  if(flt){
+    selfWbsMatch=w.name.toLowerCase().includes(flt)||w.shortName.toLowerCase().includes(flt);
+    const descWbsMatch=allWbsDescendants(wid,tr).some(n=>n.name.toLowerCase().includes(flt)||n.shortName.toLowerCase().includes(flt));
+    const cm=allActsFor(wid,tr).some(a=>a.name.toLowerCase().includes(flt)||a.code.toLowerCase().includes(flt));
+    if(!selfWbsMatch&&!descWbsMatch&&!cm&&!ancestorWbsMatch)return rows;
+  }
+  if(co){
+    // Hide WBS branches with no critical descendants
+    const anyCrit=allActsFor(wid,tr).some(a=>a.critical);
+    if(!anyCrit)return rows;
+  }
+  if(ro){
+    // Hide WBS branches with no remaining (non-completed) descendants
+    const anyRem=allActsFor(wid,tr).some(a=>a.status!=='done');
+    if(!anyRem)return rows;
+  }
+  rows.push({type:'wbs',wid,depth,r,w,hit:selfWbsMatch});
+  const inheritedMatch=ancestorWbsMatch||selfWbsMatch;
+  if(S.expandedSet.has(wid)){
+    let acts=actsFor(wid);if(S.sortCol)acts=sortActs(acts);
+    for(const a of acts){
+      if(co&&!a.critical)continue;
+      if(ro&&a.status==='done')continue;
+      let actHit=false;
+      if(flt){
+        actHit=a.name.toLowerCase().includes(flt)||a.code.toLowerCase().includes(flt);
+        // If no WBS ancestor or self matched by name, only show activities that themselves match
+        if(!actHit&&!inheritedMatch)continue;
+      }
+      rows.push({type:'act',act:a,depth:depth+1,hit:actHit});
+    }
+    for(const cid of(tr[wid]||[]))rows.push(...buildRows(cid,depth+1,tr,flt,inheritedMatch));
+  }
+  return rows;
+}
+
+function cellH(col,row){
+  const{type,act,r,w,depth,wid}=row;const ind=depth*18;
+  if(col.key==='name'){
+    if(type==='wbs'){
+      const hk=S.wbsHasChildren[w.id]||false;
+      const op=S.expandedSet.has(w.id);
+      return`<div class="nc" style="padding-left:${ind}px">${hk?`<button class="tbtn ${op?'':'col'}" onclick="togW('${esc(w.id)}')">▼</button>`:'<span style="width:18px;display:inline-block"></span>'}<span style="margin:0 5px">📁</span><span class="nt" title="${esc(w.name)}">${hl(w.name,S.searchQuery)}</span></div>`;
+    }
+    const ic=act.status==='ip'?'▶':act.status==='done'?'✔':'◷';
+    return`<div class="nc" style="padding-left:${ind+18}px;gap:5px"><span style="font-size:10px">${ic}</span><span class="nt" title="${esc(act.name)}">${hl(act.name,S.searchQuery)}</span></div>`;
+  }
+  if(type==='wbs'){
+    const blW=S.baselineLoaded?S.baselineWbsByCode[wid]:null;
+    switch(col.key){
+      case'code':return'<span style="color:var(--td)">—</span>';
+      case'start':{const aFlag=r.actStartFlag?'<span style="color:var(--accent);font-weight:700;margin-left:3px">A</span>':'';return r.start+aFlag;}
+      case'finish':{const aFlag=r.actFinishFlag?'<span style="color:var(--accent);font-weight:700;margin-left:3px">A</span>':'';return r.finish+aFlag;}
+      case'blStart':return blW?blW.start:'<span style="color:var(--td)">—</span>';
+      case'blFinish':return blW?blW.finish:'<span style="color:var(--td)">—</span>';
+      case'variance':{
+        if(!blW)return'<span style="color:var(--td)">—</span>';
+        const v=varianceDays(r.finish,blW.finish);
+        if(v===null)return'<span style="color:var(--td)">—</span>';
+        const color=v<0?'#f87171':v>0?'#34d399':'var(--tm)';
+        const sign=v>0?'+':'';
+        return`<span style="color:${color};font-family:'Space Mono',monospace;font-size:11px;font-weight:600">${sign}${v}d</span>`;
+      }
+      case'remainDrtn':return r.count>0?`<span style="font-family:'Space Mono',monospace;font-size:11px">${minRemainDrtn(wid)}d</span>`:'—';
+      case'schedPct':{
+        const p=schedPctWbs(wid,currentDataDate());
+        if(p===null)return'<span style="color:var(--td)">—</span>';
+        return`<div class="pbw"><div class="pb"><div class="pf" style="width:${p}%;background:linear-gradient(90deg,#c8922a,#a8721a)"></div></div><span>${p}%</span></div>`;
+      }
+      case'pct':return`<div class="pbw"><div class="pb"><div class="pf" style="width:${r.count>0?r.pct:0}%"></div></div><span>${r.count>0?r.pct+'%':'—'}</span></div>`;
+      case'count':return r.count>0?r.count:'—';
+    }
+  }else{
+    const bl=S.baselineLoaded?S.baselineByCode[act.code]:null;
+    switch(col.key){
+      case'code':return`<span style="font-family:'Space Mono',monospace;font-size:11px">${hl(act.code,S.searchQuery)}</span>`;
+      case'start':{const aFlag=act.actualStart!=='N/A'&&act.actualStart===act.displayStart?'<span style="color:var(--accent);font-weight:700;margin-left:3px">A</span>':'';return act.displayStart+aFlag;}
+      case'finish':{const aFlag=act.actualEnd!=='N/A'&&act.actualEnd===act.displayFinish?'<span style="color:var(--accent);font-weight:700;margin-left:3px">A</span>':'';return act.displayFinish+aFlag;}
+      case'blStart':return bl?bl.start:'<span style="color:var(--td)">—</span>';
+      case'blFinish':return bl?bl.finish:'<span style="color:var(--td)">—</span>';
+      case'variance':{
+        if(!bl)return'<span style="color:var(--td)">—</span>';
+        const v=varianceDays(act.displayFinish,bl.finish);
+        if(v===null)return'<span style="color:var(--td)">—</span>';
+        const color=v<0?'#f87171':v>0?'#34d399':'var(--tm)';
+        const sign=v>0?'+':'';
+        return`<span style="color:${color};font-family:'Space Mono',monospace;font-size:11px;font-weight:600">${sign}${v}d</span>`;
+      }
+      case'remainDrtn':return act.status==='done'?'<span style="color:var(--done)">0d</span>':`<span style="font-family:'Space Mono',monospace;font-size:11px">${act.remainDrtn}d</span>`;
+      case'schedPct':{
+        if(!bl)return'<span style="color:var(--td)">—</span>';
+        const p=schedPctAt(bl.start,bl.finish,currentDataDate(),act.budgetCost);
+        if(p===null)return'<span style="color:var(--td)">—</span>';
+        return`<div class="pbw"><div class="pb"><div class="pf" style="width:${p}%;background:linear-gradient(90deg,#c8922a,#a8721a)"></div></div><span>${p}%</span></div>`;
+      }
+      case'pct':return`<div class="pbw"><div class="pb"><div class="pf" style="width:${act.completePct}%"></div></div><span>${act.completePct}%</span></div>`;
+      case'count':return'';
+    }
+  }
+  return'';
+}
+
+function renderTable(){
+  const flt=S.searchQuery.toLowerCase();
+  const rows=[];
+  for(const r of S.rootNodes)rows.push(...buildRows(r,0,S.treeHierarchy,flt));
+  S.renderedRows=rows;
+
+  const cols=visibleCols();
+  const w=getTotalColWidth();
+  document.querySelector('#tableBodyWrap table').style.width=w+'px';
+
+  const html=rows.map(row=>{
+    const isW=row.type==='wbs';
+    const cls=(isW?'wr':row.act.status==='ip'?'ir':row.act.status==='done'?'dr':'nr')+(!isW&&row.act.critical?' crit':'')+(row.hit?' shrow':'');
+    const cells=cols.map(c=>{const cc=c.align==='center'?' class="center"':'';const cw=S.colWidths[c.key]||c.width;return`<td${cc} data-col="${c.key}" style="width:${cw}px;max-width:${cw}px">${cellH(c,row)}</td>`;}).join('');
+    return`<tr class="${cls}">${cells}</tr>`;
+  }).join('');
+  document.getElementById('tableBody').innerHTML=html||`<tr><td colspan="${cols.length}" style="padding:40px;text-align:center;color:var(--tm)">No results found.</td></tr>`;
+
+  // Sync horizontal scroll: head mirrors body
+  const tbw=document.getElementById('tableBodyWrap');
+  const thw=document.getElementById('tableHeadWrap');
+  // reattach scroll listener
+  tbw.onscroll=()=>{
+    thw.scrollLeft=tbw.scrollLeft;
+    if(S.ganttOpen) document.getElementById('ganttBodyWrap').scrollTop=tbw.scrollTop;
+  };
+
+  if(S.ganttOpen)renderGantt();
+}
+
+function togW(id){S.expandedSet.has(id)?S.expandedSet.delete(id):S.expandedSet.add(id);renderTable();}
+function collapseAll(){S.expandedSet.clear();S.wbsLevelCap=null;const w=document.getElementById('wbsLevelSel');if(w)w.value='all';renderTable();}
+function expandAll(){S.wbsLevelCap=null;const w=document.getElementById('wbsLevelSel');if(w)w.value='all';for(const[id,wn]of Object.entries(S.wbsNodes))if(wn.projId===S.currentProjId)S.expandedSet.add(id);renderTable();}
+function computeMaxWbsDepth(){
+  let maxD=0;
+  function walk(wid,d){
+    if(d>maxD)maxD=d;
+    const kids=S.treeHierarchy[wid]||[];
+    for(const k of kids)walk(k,d+1);
+  }
+  for(const r of S.rootNodes)walk(r,0);
+  return maxD;
+}
+function populateWbsLevelSel(){
+  const sel=document.getElementById('wbsLevelSel');if(!sel)return;
+  const maxD=computeMaxWbsDepth();
+  let opts='<option value="all">WBS Level: All</option>';
+  for(let i=0;i<=maxD;i++)opts+=`<option value="${i}">WBS Level ${i+1}</option>`;
+  sel.innerHTML=opts;sel.value='all';sel.disabled=false;
+}
+function onWbsLevel(){
+  const v=document.getElementById('wbsLevelSel').value;
+  if(v==='all'){
+    S.wbsLevelCap=null;
+    for(const[id,w]of Object.entries(S.wbsNodes))if(w.projId===S.currentProjId)S.expandedSet.add(id);
+  }else{
+    const cap=parseInt(v,10);
+    S.wbsLevelCap=cap;
+    // Expand every WBS node at depth < cap so children up to `cap` are visible.
+    // WBS nodes at exactly `cap` remain visible (rendered) but their activities/children stay hidden.
+    S.expandedSet=new Set();
+    function walk(wid,d){
+      if(d<cap)S.expandedSet.add(wid);
+      const kids=S.treeHierarchy[wid]||[];
+      for(const k of kids)walk(k,d+1);
+    }
+    for(const r of S.rootNodes)walk(r,0);
+  }
+  renderTable();
+}
+function onSearch(){S.searchQuery=document.getElementById('searchInput').value;if(S.searchQuery)expandAll();renderTable();}
+function onCriticalToggle(){
+  S.criticalOnly=document.getElementById('criticalChk').checked;
+  if(S.criticalOnly)expandAll();
+  renderTable();
+}
+function onRemainingToggle(){
+  S.remainingOnly=document.getElementById('remainingChk').checked;
+  if(S.remainingOnly)expandAll();
+  renderTable();
+}
+function onProjSel(){
+  const sel=document.getElementById('projectSelect');S.currentProjId=sel.value;
+  const{tr,roots}=getTree(S.currentProjId);S.treeHierarchy=tr;S.rootNodes=roots;
+  S.expandedSet=new Set(roots);S.sortCol=null;S.sortDir=1;
+  S.wbsLevelCap=null;
+  buildRlpCache(tr);
+  rebuildBaselineWbsRollup();
+  populateWbsLevelSel();
+  renderHead();renderTable();updateStats();
+}
+function updateStats(){
+  const a=Object.values(S.taskData).filter(t=>t.projId===S.currentProjId);
+  document.getElementById('sp').textContent=Object.keys(S.projects).length;
+  document.getElementById('sw2').textContent=Object.values(S.wbsNodes).filter(w=>w.projId===S.currentProjId).length;
+  document.getElementById('sa').textContent=a.length;
+  document.getElementById('sip').textContent=a.filter(x=>x.status==='ip').length;
+  document.getElementById('sd').textContent=a.filter(x=>x.status==='done').length;
+}
+function setSt(msg,t){document.getElementById('statusText').textContent=msg;document.getElementById('statusDot').className='sdot'+(t==='ok'?' ok':t==='err'?' err':'');}
+
+// ═══ SPLITTER ═════════════════════════════════════════════════════════════
+function initSplitter(){
+  const div=document.getElementById('divider');
+  const mc=document.getElementById('mainContent');
+  let dragging=false,startX=0,startLeft=0;
+
+  div.addEventListener('mousedown',e=>{
+    dragging=true;startX=e.clientX;
+    startLeft=document.getElementById('tablePart').offsetWidth;
+    div.classList.add('dragging');
+    document.body.style.cursor='col-resize';
+    document.body.style.userSelect='none';
+  });
+  document.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    const total=mc.offsetWidth;
+    const divW=5;
+    const newLeft=Math.max(200,Math.min(total-200-divW,startLeft+(e.clientX-startX)));
+    document.getElementById('tablePart').style.width=newLeft+'px';
+    document.getElementById('tablePart').style.flex='none';
+    document.getElementById('ganttPart').style.width=(total-newLeft-divW)+'px';
+    document.getElementById('ganttPart').style.flex='none';
+  });
+  document.addEventListener('mouseup',()=>{
+    if(dragging){dragging=false;div.classList.remove('dragging');document.body.style.cursor='';document.body.style.userSelect='';}
+  });
+}
+
+// ═══ GANTT ════════════════════════════════════════════════════════════════
+function zoomIn(){S.ganttZoomIdx=Math.min(ZOOM.length-1,S.ganttZoomIdx+1);document.getElementById('zoomVal').textContent=ZOOM[S.ganttZoomIdx]+'×';if(S.ganttOpen)renderGantt();}
+function zoomOut(){S.ganttZoomIdx=Math.max(0,S.ganttZoomIdx-1);document.getElementById('zoomVal').textContent=ZOOM[S.ganttZoomIdx]+'×';if(S.ganttOpen)renderGantt();}
+
+function toggleGantt(){S.ganttOpen?closeGantt():openGantt();}
+function openGantt(){
+  S.ganttOpen=true;
+  const mc=document.getElementById('mainContent');
+  const gp=document.getElementById('ganttPart');
+  const dv=document.getElementById('divider');
+  gp.classList.add('open');
+  dv.style.display='block';
+  // Set default split: table 55%, gantt 45% minus divider
+  const total=mc.offsetWidth;
+  const tp=document.getElementById('tablePart');
+  if(!tp.style.width){
+    tp.style.width=Math.round(total*0.55)+'px';
+    tp.style.flex='none';
+    gp.style.width=Math.round(total*0.45-5)+'px';
+    gp.style.flex='none';
+  }
+  renderGantt();
+  // Sync vertical: tableBodyWrap scroll → ganttBodyWrap scrollTop
+  const tbw=document.getElementById('tableBodyWrap');
+  const gbw=document.getElementById('ganttBodyWrap');
+  tbw.onscroll=()=>{
+    document.getElementById('tableHeadWrap').scrollLeft=tbw.scrollLeft;
+    gbw.scrollTop=tbw.scrollTop;
+  };
+  // Sync ganttBodyWrap horizontal → axis
+  gbw.addEventListener('scroll',()=>{
+    document.getElementById('ganttAxisWrap').scrollLeft=gbw.scrollLeft;
+  });
+}
+function closeGantt(){
+  S.ganttOpen=false;
+  document.getElementById('ganttPart').classList.remove('open');
+  document.getElementById('divider').style.display='none';
+  // restore tablePart to full width
+  const tp=document.getElementById('tablePart');
+  tp.style.width='';tp.style.flex='1';
+}
+
+function gRange(rows){
+  const ds=[];
+  for(const row of rows){
+    const s=row.type==='wbs'?toD(row.r.start):toD(row.act.displayStart);
+    const f=row.type==='wbs'?toD(row.r.finish):toD(row.act.displayFinish);
+    if(s)ds.push(s);if(f)ds.push(f);
+    if(S.baselineLoaded){
+      let blS=null,blF=null;
+      if(row.type==='wbs'){const blW=S.baselineWbsByCode[row.wid];if(blW){blS=toD(blW.start);blF=toD(blW.finish);}}
+      else{const bl=S.baselineByCode[row.act.code];if(bl){blS=toD(bl.start);blF=toD(bl.finish);}}
+      if(blS)ds.push(blS);if(blF)ds.push(blF);
+    }
+  }
+  if(!ds.length)return null;
+  let mn=new Date(Math.min(...ds)),mx=new Date(Math.max(...ds));
+  mn=new Date(mn.getFullYear(),mn.getMonth()-1,1);
+  mx=new Date(mx.getFullYear(),mx.getMonth()+2,0);
+  return{mn,mx};
+}
+function buildMonths(mn,mx){const m=[];let c=new Date(mn.getFullYear(),mn.getMonth(),1);while(c<=mx){m.push(new Date(c));c=new Date(c.getFullYear(),c.getMonth()+1,1);}return m;}
+
+function renderGantt(){
+  const rows=S.renderedRows;
+  const range=gRange(rows);
+  const gi=document.getElementById('ganttInner');
+  const ai=document.getElementById('ganttAxisInner');
+  if(!range){gi.innerHTML='';ai.innerHTML='';return;}
+
+  const MW=55*ZOOM[S.ganttZoomIdx];
+  const months=buildMonths(range.mn,range.mx);
+  const TW=months.length*MW;
+  const totalH=rows.length*ROW_H;
+  const spanMs=range.mx-range.mn;
+  function xOf(d){return d?Math.max(0,Math.min(TW,((d-range.mn)/spanMs)*TW)):null;}
+
+  // Time axis
+  let axH='';
+  let grps=[],cy=null,cs=0,cc=0;
+  months.forEach((m,i)=>{const y=m.getFullYear();if(y!==cy){if(cy!==null)grps.push({y:cy,s:cs,c:cc});cy=y;cs=i;cc=1;}else cc++;});
+  if(cy!==null)grps.push({y:cy,s:cs,c:cc});
+  grps.forEach(g=>{const txt=g.c*MW>=30?g.y:'';axH+=`<div class="tyr" style="left:${g.s*MW}px;width:${g.c*MW}px">${txt}</div>`;});
+  months.forEach((m,i)=>{axH+=`<div class="tmo" style="left:${i*MW}px;width:${MW}px">${MONS[m.getMonth()]}</div>`;});
+  ai.style.width=TW+'px';ai.innerHTML=axH;
+  document.getElementById('ganttLabel').textContent=`Gantt · ${months.length} mo`;
+
+  // Body: wrapper with relative for grid lines + stacked .grow rows
+  let html=`<div style="position:relative;width:${TW}px;height:${totalH}px">`;
+  months.forEach((m,i)=>{
+    const x=i*MW,yr=m.getMonth()===0;
+    html+=`<div class="gvl ${yr?'yr':''}" style="left:${x}px;height:${totalH}px"></div>`;
+  });
+  const proj=S.projects[S.currentProjId];
+  const ddRaw=proj?proj.dataDate:'';
+  const dataDateD=ddRaw?new Date(ddRaw.trim().slice(0,10)):new Date();
+  if(dataDateD>=range.mn&&dataDateD<=range.mx)
+    html+=`<div class="gtd" style="left:${xOf(dataDateD)}px;height:${totalH}px" title="Data Date: ${fmtD(dataDateD)}"></div>`;
+
+  // Stacked rows (no absolute top — just flow)
+  rows.forEach(row=>{
+    let sD,fD,pct=0,bc='ns';
+    let blSD=null,blFD=null;
+    if(row.type==='wbs'){
+      sD=toD(row.r.start);fD=toD(row.r.finish);pct=row.r.pct;bc='wbs';
+      if(S.baselineLoaded){
+        const blW=S.baselineWbsByCode[row.wid];
+        if(blW){blSD=toD(blW.start);blFD=toD(blW.finish);}
+      }
+    }
+    else{
+      sD=toD(row.act.displayStart);fD=toD(row.act.displayFinish);pct=row.act.completePct;bc=(row.act.status==='ip'?'ip':row.act.status==='done'?'done':'ns')+(row.act.critical?' crit-bar':'');
+      if(S.baselineLoaded){
+        const bl=S.baselineByCode[row.act.code];
+        if(bl){blSD=toD(bl.start);blFD=toD(bl.finish);}
+      }
+    }
+    html+=`<div class="grow">`;
+    if(sD&&fD){
+      const x1=xOf(sD),x2=xOf(fD),bw=Math.max(3,x2-x1),pw=(pct/100)*bw;
+      html+=`<div class="gbar ${bc}" style="left:${x1}px;width:${bw}px" title="${esc(row.type==='wbs'?row.w.name:row.act.name)}"><div class="gpct" style="width:${pw}px"></div></div>`;
+    }
+    if(blSD&&blFD){
+      const bx1=xOf(blSD),bx2=xOf(blFD),bbw=Math.max(3,bx2-bx1);
+      const blCls=row.type==='wbs'?'bl-wbs':'bl';
+      const blLabel=row.type==='wbs'?row.w.name:row.act.name;
+      html+=`<div class="gbar ${blCls}" style="left:${bx1}px;width:${bbw}px" title="Baseline: ${esc(blLabel)}"></div>`;
+    }
+    html+=`</div>`;
+  });
+  html+=`</div>`;
+  gi.innerHTML=html;
+  document.getElementById('ganttAxisWrap').scrollLeft=document.getElementById('ganttBodyWrap').scrollLeft;
+  // Restore scrollTop from table
+  document.getElementById('ganttBodyWrap').scrollTop=document.getElementById('tableBodyWrap').scrollTop;
+}
+
+// ═══ FILE ═════════════════════════════════════════════════════════════════
+// Internal flag — when true, loadFileText / loadBaselineText were called
+// from an inbound parent message and must NOT re-broadcast.
+let __xerSyncInbound=false;
+function __xerBroadcast(msg){try{parent.postMessage(msg,'*');}catch(e){}}
+
+function loadFileText(text,name){
+  try{
+    parseXER(text);
+    const projs=Object.values(S.projects);
+    if(!projs.length){setSt('No projects found.','err');return;}
+    const sel=document.getElementById('projectSelect');
+    sel.innerHTML=projs.map(p=>`<option value="${esc(p.id)}">${esc(p.name)} (${esc(p.id)})</option>`).join('');
+    sel.disabled=false;
+    ['collapseBtn','expandBtn','ganttBtn'].forEach(id=>document.getElementById(id).disabled=false);
+    document.getElementById('searchInput').disabled=false;
+    const cl=document.getElementById('critLabel');cl.style.opacity='1';cl.style.pointerEvents='auto';
+    const rl=document.getElementById('remainLabel');if(rl){rl.style.opacity='1';rl.style.pointerEvents='auto';}
+    document.getElementById('dropZone').style.display='none';
+    document.getElementById('closeBtn').style.display='inline-flex';
+    document.getElementById('loadBaselineBtn').style.display='inline-flex';
+    document.getElementById('mainContent').style.display='flex';
+    S.columns=defCols();S.colWidths={};
+    S.currentProjId=projs[0].id;sel.value=S.currentProjId;
+    onProjSel();openGantt();
+    setSt(`Loaded: ${name}  ·  ${projs.length} proj  ·  ${Object.keys(S.wbsNodes).length} WBS  ·  ${Object.keys(S.taskData).length} activities`,'ok');
+    if(!__xerSyncInbound)__xerBroadcast({type:'xer:current:load',text:text,name:name});
+  }catch(err){setSt('Error: '+err.message,'err');}
+}
+
+function loadFile(file){
+  if(!file)return;setSt('Parsing '+file.name+'…','');
+  const r=new FileReader();
+  r.onload=e=>loadFileText(e.target.result,file.name);
+  r.onerror=()=>setSt('Failed to read file.','err');
+  r.readAsText(file,'latin-1');
+}
+function closeFile(){
+  S.projects={};S.wbsNodes={};S.taskData={};S.taskBudget={};
+  S.currentProjId=null;S.treeHierarchy={};S.rootNodes=[];
+  S.expandedSet=new Set();S.searchQuery='';S.sortCol=null;S.sortDir=1;
+  S.criticalOnly=false;S.remainingOnly=false;S.wbsLevelCap=null;
+  const ccb=document.getElementById('criticalChk');if(ccb)ccb.checked=false;
+  const ccl=document.getElementById('critLabel');if(ccl){ccl.style.opacity='.5';ccl.style.pointerEvents='none';}
+  const rcb=document.getElementById('remainingChk');if(rcb)rcb.checked=false;
+  const rcl=document.getElementById('remainLabel');if(rcl){rcl.style.opacity='.5';rcl.style.pointerEvents='none';}
+  S.ganttOpen=false;S.renderedRows=[];
+  const sel=document.getElementById('projectSelect');
+  sel.innerHTML='<option>— load a file first —</option>';sel.disabled=true;
+  const wls=document.getElementById('wbsLevelSel');if(wls){wls.innerHTML='<option value="all">WBS Level: All</option>';wls.value='all';wls.disabled=true;}
+  ['collapseBtn','expandBtn','ganttBtn'].forEach(id=>document.getElementById(id).disabled=true);
+  const si=document.getElementById('searchInput');si.disabled=true;si.value='';
+  ['sp','sw2','sa','sip','sd'].forEach(id=>document.getElementById(id).textContent='—');
+  document.getElementById('tableBody').innerHTML='';
+  document.getElementById('dropZone').style.display='';
+  document.getElementById('mainContent').style.display='none';
+  document.getElementById('closeBtn').style.display='none';
+  document.getElementById('loadBaselineBtn').style.display='none';
+  document.getElementById('clearBaselineBtn').style.display='none';
+  document.getElementById('loadBaselineBtn').textContent='📎 Load Baseline XER';
+  S.baselineLoaded=false;S.baselineByCode={};S.baselineWbsByCode={};
+  document.getElementById('ganttPart').classList.remove('open');
+  document.getElementById('divider').style.display='none';
+  const tp=document.getElementById('tablePart');tp.style.width='';tp.style.flex='1';
+  setSt('Ready — load an XER file to begin','');
+  if(!__xerSyncInbound)__xerBroadcast({type:'xer:current:close'});
+}
+
+document.getElementById('fileInput').addEventListener('change',e=>{loadFile(e.target.files[0]);e.target.value='';});
+document.getElementById('baselineInput').addEventListener('change',e=>{loadBaseline(e.target.files[0]);e.target.value='';});
+function onDO(e){e.preventDefault();document.getElementById('dropZone').classList.add('dov');}
+function onDL(){document.getElementById('dropZone').classList.remove('dov');}
+function onDD(e){e.preventDefault();onDL();loadFile(e.dataTransfer.files[0]);}
+window.addEventListener('DOMContentLoaded',initSplitter);
+
+/* ── Cross-tab XER sync bridge ─────────────────────────────────── */
+window.addEventListener('message',ev=>{
+  const m=ev.data||{};
+  if(!m||typeof m.type!=='string')return;
+  __xerSyncInbound=true;
+  try{
+    if(m.type==='xer:current:load'){loadFileText(m.text,m.name||'file.xer');}
+    else if(m.type==='xer:baseline:load'){loadBaselineText(m.text,m.name||'baseline.xer');}
+    else if(m.type==='xer:current:close'){if(document.getElementById('mainContent').style.display==='flex')closeFile();}
+    else if(m.type==='xer:baseline:clear'){if(S.baselineLoaded)clearBaseline();}
+  }finally{__xerSyncInbound=false;}
+});
+window.addEventListener('load',()=>{try{parent.postMessage({type:'xer:ready'},'*');}catch(e){}});
+</script>
+
+<!-- QR Code: qrcode.js via CDN (battle-tested, guaranteed valid output) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+window.drawQRCode = function(canvasId, text) {
+  var container = document.getElementById(canvasId).parentNode;
+  var existing = container.querySelector('[id^="qr-div"]');
+  if (existing) existing.remove();
+  var div = document.createElement('div');
+  div.id = 'qr-div-' + canvasId;
+  div.style.display = 'inline-block';
+  div.style.background = '#ffffff';
+  div.style.padding = '16px';
+  container.insertBefore(div, document.getElementById(canvasId));
+  document.getElementById(canvasId).style.display = 'none';
+  new QRCode(div, {
+    text: text,
+    width: 220,
+    height: 220,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+  console.log('QR drawn OK via qrcode.js:', text);
+};
+// ---- OLD CUSTOM QR LIBRARY (reference implementation) ----
+window.drawQRCode_OLD = function(canvasId, text) {
+  // --- RS/GF math ---
+  var EXP = [], LOG = new Array(256);
+  for (var i = 0; i < 8; i++) EXP[i] = 1 << i;
+  for (var i = 8; i < 512; i++) EXP[i] = EXP[i-4]^EXP[i-5]^EXP[i-6]^EXP[i-8];
+  for (var i = 0; i < 255; i++) LOG[EXP[i]] = i;
+  function gexp(n){ while(n<0)n+=255; while(n>=256)n-=255; return EXP[n]; }
+  function glog(n){ if(n<1)throw 'glog('+n+')'; return LOG[n]; }
+
+  // --- Polynomial ---
+  function Poly(num, shift) {
+    var s=0; while(s<num.length&&num[s]==0)s++;
+    this.n = new Array(num.length-s+shift);
+    for(var i=0;i<num.length-s;i++) this.n[i]=num[i+s];
+  }
+  Poly.prototype.get=function(i){return this.n[i]||0;};
+  Poly.prototype.len=function(){return this.n.length;};
+  Poly.prototype.mul=function(e){
+    var r=new Array(this.len()+e.len()-1);
+    for(var i=0;i<this.len();i++) for(var j=0;j<e.len();j++) r[i+j]^=gexp(glog(this.get(i))+glog(e.get(j)));
+    return new Poly(r,0);
+  };
+  Poly.prototype.mod=function(e){
+    if(this.len()-e.len()<0) return this;
+    var ratio=glog(this.get(0))-glog(e.get(0));
+    var r=this.n.slice();
+    for(var i=0;i<e.len();i++) r[i]^=gexp(glog(e.get(i))+ratio);
+    return new Poly(r,0).mod(e);
+  };
+
+  // --- RS blocks table (type 1-9, levels L/M/Q/H) ---
+  var RST=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15]];
+  function getRSBlocks(tn,ecl){var t=RST[(tn-1)*4+ecl],l=t.length/3,a=[];for(var i=0;i<l;i++)for(var j=0;j<t[i*3];j++)a.push({tc:t[i*3+1],dc:t[i*3+2]});return a;}
+
+  // --- BitBuffer ---
+  function BitBuf(){this.buf=[];this.len=0;}
+  BitBuf.prototype.put=function(n,l){for(var i=0;i<l;i++)this.putBit(((n>>>(l-i-1))&1)==1);};
+  BitBuf.prototype.putBit=function(b){var i=Math.floor(this.len/8);if(this.buf.length<=i)this.buf.push(0);if(b)this.buf[i]|=(0x80>>>(this.len%8));this.len++;};
+
+  // --- Pattern positions ---
+  var PP=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66]];
+
+  // --- BCH ---
+  function bchDig(d){var n=0;while(d){n++;d>>>=1;}return n;}
+  function bchInfo(d){var v=d<<10;while(bchDig(v)-bchDig(1335)>=0)v^=(1335<<(bchDig(v)-bchDig(1335)));return(d<<10|v)^21522;}
+  function bchNum(d){var v=d<<12;while(bchDig(v)-bchDig(7973)>=0)v^=(7973<<(bchDig(v)-bchDig(7973)));return d<<12|v;}
+
+  // --- Mask ---
+  function applyMask(p,r,c){switch(p){case 0:return(r+c)%2==0;case 1:return r%2==0;case 2:return c%3==0;case 3:return(r+c)%3==0;case 4:return(Math.floor(r/2)+Math.floor(c/3))%2==0;case 5:return(r*c)%2+(r*c)%3==0;case 6:return((r*c)%2+(r*c)%3)%2==0;case 7:return((r+c)%2+(r*c)%3)%2==0;}return false;}
+
+  // --- Make QR ---
+  function makeMatrix(tn, ecl, data) {
+    var mc = tn*4+17;
+    var m = [];
+    for(var i=0;i<mc;i++){m.push([]);for(var j=0;j<mc;j++)m[i].push(null);}
+
+    function probe(r,c){
+      for(var dr=-1;dr<=7;dr++){if(r+dr<0||r+dr>=mc)continue;for(var dc=-1;dc<=7;dc++){if(c+dc<0||c+dc>=mc)continue;m[r+dr][c+dc]=(dr>=0&&dr<=6&&(dc==0||dc==6))||(dc>=0&&dc<=6&&(dr==0||dr==6))||(dr>=2&&dr<=4&&dc>=2&&dc<=4);}}
+    }
+    probe(0,0);probe(mc-7,0);probe(0,mc-7);
+
+    // timing
+    for(var i=8;i<mc-8;i++){if(m[i][6]==null)m[i][6]=i%2==0;if(m[6][i]==null)m[6][i]=i%2==0;}
+
+    // alignment
+    var pos=PP[tn-1]||[];
+    for(var pi=0;pi<pos.length;pi++)for(var pj=0;pj<pos.length;pj++){
+      var pr=pos[pi],pc=pos[pj];if(m[pr][pc]!=null)continue;
+      for(var dr=-2;dr<=2;dr++)for(var dc=-2;dc<=2;dc++)m[pr+dr][pc+dc]=(dr==-2||dr==2||dc==-2||dc==2||(dr==0&&dc==0));
+    }
+
+    function setFormat(test, mp) {
+      var d=(ecl<<3)|mp, bits=bchInfo(d);
+      for(var i=0;i<15;i++){var v=(!test&&((bits>>i)&1)==1);if(i<6)m[i][8]=v;else if(i<8)m[i+1][8]=v;else m[mc-15+i][8]=v;}
+      for(var i=0;i<15;i++){var v=(!test&&((bits>>i)&1)==1);if(i<8)m[8][mc-i-1]=v;else if(i<9)m[8][15-i]=v;else m[8][15-i-1]=v;}
+      m[mc-8][8]=!test;
+    }
+
+    function mapData(dc, mp) {
+      var inc=-1,row=mc-1,bit=7,byte_=0;
+      for(var col=mc-1;col>0;col-=2){
+        if(col==6)col--;
+        while(true){
+          for(var c=0;c<2;c++){
+            if(m[row][col-c]==null){
+              var dark=false;
+              if(byte_<dc.length)dark=((dc[byte_]>>>bit)&1)==1;
+              if(applyMask(mp,row,col-c))dark=!dark;
+              m[row][col-c]=dark;
+              bit--;if(bit==-1){byte_++;bit=7;}
+            }
+          }
+          row+=inc;
+          if(row<0||row>=mc){row-=inc;inc=-inc;break;}
+        }
+      }
+    }
+
+    function lostPoint(){
+      var lp=0;
+      for(var r=0;r<mc;r++)for(var c=0;c<mc;c++){
+        var sc=0,dk=m[r][c];
+        for(var dr=-1;dr<=1;dr++)for(var dc=-1;dc<=1;dc++){if(r+dr<0||r+dr>=mc||c+dc<0||c+dc>=mc||(!dr&&!dc))continue;if(dk==m[r+dr][c+dc])sc++;}
+        if(sc>5)lp+=sc-2;
+      }
+      return lp;
+    }
+
+    // find best mask
+    var bestLost=0,bestMask=0;
+    for(var mp=0;mp<8;mp++){
+      // reset
+      for(var i=0;i<mc;i++)for(var j=0;j<mc;j++)m[i][j]=null;
+      probe(0,0);probe(mc-7,0);probe(0,mc-7);
+      for(var i=8;i<mc-8;i++){if(m[i][6]==null)m[i][6]=i%2==0;if(m[6][i]==null)m[6][i]=i%2==0;}
+      for(var pi=0;pi<pos.length;pi++)for(var pj=0;pj<pos.length;pj++){var pr=pos[pi],pc=pos[pj];if(m[pr][pc]!=null)continue;for(var dr=-2;dr<=2;dr++)for(var dc=-2;dc<=2;dc++)m[pr+dr][pc+dc]=(dr==-2||dr==2||dc==-2||dc==2||(dr==0&&dc==0));}
+      setFormat(true,mp);
+      mapData(data,mp);
+      var lp=lostPoint();
+      if(mp==0||lp<bestLost){bestLost=lp;bestMask=mp;}
+    }
+
+    // final render with best mask
+    for(var i=0;i<mc;i++)for(var j=0;j<mc;j++)m[i][j]=null;
+    probe(0,0);probe(mc-7,0);probe(0,mc-7);
+    for(var i=8;i<mc-8;i++){if(m[i][6]==null)m[i][6]=i%2==0;if(m[6][i]==null)m[6][i]=i%2==0;}
+    for(var pi=0;pi<pos.length;pi++)for(var pj=0;pj<pos.length;pj++){var pr=pos[pi],pc=pos[pj];if(m[pr][pc]!=null)continue;for(var dr=-2;dr<=2;dr++)for(var dc=-2;dc<=2;dc++)m[pr+dr][pc+dc]=(dr==-2||dr==2||dc==-2||dc==2||(dr==0&&dc==0));}
+    setFormat(false,bestMask);
+    mapData(data,bestMask);
+    return m;
+  }
+
+  function createData(tn, ecl, text) {
+    var rsBlocks = getRSBlocks(tn, ecl);
+    var buf = new BitBuf();
+    buf.put(4, 4); // byte mode
+    buf.put(text.length, (8 <= 9 ? 8 : 16)); // length bits - type 8 still uses 8 bits (type<10)
+    for(var i=0;i<text.length;i++) buf.put(text.charCodeAt(i),8);
+    var totalDC=0; for(var i=0;i<rsBlocks.length;i++) totalDC+=rsBlocks[i].dc;
+    if(buf.len>totalDC*8) throw 'Data overflow';
+    if(buf.len+4<=totalDC*8) buf.put(0,4);
+    while(buf.len%8) buf.putBit(false);
+    while(buf.len<totalDC*8){buf.put(0xEC,8);if(buf.len<totalDC*8)buf.put(0x11,8);}
+
+    // RS encode
+    var dcData=[], ecData=[];
+    var offset=0, maxDC=0, maxEC=0;
+    for(var i=0;i<rsBlocks.length;i++){
+      var dc=rsBlocks[i].dc, ec=rsBlocks[i].tc-dc;
+      maxDC=Math.max(maxDC,dc); maxEC=Math.max(maxEC,ec);
+      dcData.push(buf.buf.slice(offset,offset+dc)); offset+=dc;
+      var rsPoly=new Poly([1],0);
+      for(var j=0;j<ec;j++) rsPoly=rsPoly.mul(new Poly([1,gexp(j)],0));
+      var rawPoly=new Poly(dcData[i],rsPoly.len()-1);
+      var mod=rawPoly.mod(rsPoly);
+      var ecd=new Array(rsPoly.len()-1);
+      for(var j=0;j<ecd.length;j++){var mi=j+mod.len()-ecd.length;ecd[j]=mi>=0?mod.get(mi):0;}
+      ecData.push(ecd);
+    }
+    var result=[];
+    for(var i=0;i<maxDC;i++) for(var r=0;r<rsBlocks.length;r++) if(i<dcData[r].length) result.push(dcData[r][i]);
+    for(var i=0;i<maxEC;i++) for(var r=0;r<rsBlocks.length;r++) if(i<ecData[r].length) result.push(ecData[r][i]);
+    return result;
+  }
+
+  // --- Draw ---
+  var canvas = document.getElementById(canvasId);
+  if (!canvas) { console.error('Canvas not found:', canvasId); return; }
+  try {
+    var data = createData(3, 0, text); // type 3, L error correction — 55-byte capacity, fits 40-char URL
+    var matrix = makeMatrix(3, 0, data);
+    var mc = matrix.length;
+    var QUIET = 4; // QR spec minimum quiet zone in modules — phones cannot scan without this
+    var cell = 7; // fixed cell size for crisp rendering
+    var size = cell * (mc + QUIET * 2); // canvas sized to guarantee full quiet zone
+    var off = cell * QUIET; // offset = exactly 4 modules of white border
+    canvas.width = size; canvas.height = size;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#000000';
+    for(var r=0;r<mc;r++) for(var c=0;c<mc;c++) if(matrix[r][c]) ctx.fillRect(off+c*cell, off+r*cell, cell, cell);
+    console.log('QR drawn OK, size:', mc);
+  } catch(e) {
+    console.error('QR failed:', e);
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,220,220);
+    ctx.fillStyle='#f87171'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('QR Error', 110, 110);
+  }
+}; // end drawQRCode_OLD
+</script>
+
+<!-- Auth bypassed — open/unlocked version -->
+<script>
+// launchApp is a no-op in this unlocked build — app loads directly
+function launchApp(){ /* unlocked */ }
+</script>
+
+<!-- ══ PMAUTH OFFLINE STUB (local testing only) ══ -->
+<script>
+window.PMAuth = {
+  onAuthChange: function(cb) { cb(null, true); },
+  signOut: async function() {},
+  getUser: function() { return null; }
+};
+</script>
+
+<script>
+// ══════════ Free-tier cap + login status (website edition) ══════════
+const FREE_ACTIVITY_CAP = 100;
+let _isPro = true; // OFFLINE STUB
+let _currentUser = null;
+
+function goSignIn(){ window.location.href = '/?signin=1'; }
+
+async function appSignOut(){
+  if(window.PMAuth){ try { await PMAuth.signOut(); } catch(e){} }
+  window.location.href = '/';
+}
+
+// ── Exit confirmation ──────────────────────────────────────────────────
+let _exitTarget = '/';
+function askExit(url){ _exitTarget = url||'/'; document.getElementById('exitModal').classList.add('open'); }
+function closeExitModal(){ document.getElementById('exitModal').classList.remove('open'); }
+function confirmExit(){ try{sessionStorage.removeItem('pms_xer_current');sessionStorage.removeItem('pms_xer_current_name');}catch(e){} window.location.href = _exitTarget; }
+function switchTool(url){ window.location.href = url; }
+
+// ── SessionStorage XER bridge ──────────────────────────────────────────
+const _sr_origLoadFileText = window.loadFileText;
+window.loadFileText = function(text, name){
+  try{ sessionStorage.setItem('pms_xer_current', text); sessionStorage.setItem('pms_xer_current_name', name||'file.xer'); }catch(e){}
+  _sr_origLoadFileText(text, name);
+};
+const _sr_origCloseFile2 = window.closeFile;
+window.closeFile = function(){
+  _sr_origCloseFile2 && _sr_origCloseFile2();
+  try{ sessionStorage.removeItem('pms_xer_current'); sessionStorage.removeItem('pms_xer_current_name'); }catch(e){}
+};
+// Auto-load from session if available
+(function(){
+  try{
+    const stored = sessionStorage.getItem('pms_xer_current');
+    const name   = sessionStorage.getItem('pms_xer_current_name') || 'file.xer';
+    if(stored){ setTimeout(()=>{ if(window.loadFileText) window.loadFileText(stored, name); }, 300); }
+  }catch(e){}
+})();
+
+function renderAppUserPill(user, licenseActive){
+  const slot = document.getElementById('appUserPill');
+  const btn  = document.getElementById('signinBtn');
+  if(!slot || !btn) return;
+  if(user){
+    btn.style.display = 'none';
+    const displayName = (user.user_metadata && user.user_metadata.full_name)
+      ? user.user_metadata.full_name.split(' ')[0]
+      : (user.email ? user.email.split('@')[0] : 'Account');
+    const avatarUrl = user.user_metadata && user.user_metadata.avatar_url;
+    const avatarHtml = avatarUrl
+      ? `<img class="nav-user-avatar" src="${avatarUrl}" alt="">`
+      : `<div class="nav-user-avatar">${(displayName[0]||'U').toUpperCase()}</div>`;
+    const proBadge = licenseActive ? '<span class="badge-pro">Pro</span>' : '';
+    slot.style.display = '';
+    slot.innerHTML =
+      `<button class="nav-user-pill" onclick="appSignOut()" title="Click to sign out">` +
+        avatarHtml +
+        `<span class="nav-user-name">${displayName}${proBadge}</span>` +
+        `<span class="nav-user-hint">↩</span>` +
+      `</button>`;
+  } else {
+    slot.style.display = 'none';
+    slot.innerHTML = '';
+    btn.style.display = '';
+  }
+}
+
+// Apply the free-tier cap to S.taskData for the current project.
+let _removedByProj = {};
+let _projCounts    = {};
+
+function _snapshotProjCounts(){
+  _projCounts = {};
+  for(const t of Object.values(S.taskData)){
+    _projCounts[t.projId] = (_projCounts[t.projId] || 0) + 1;
+  }
+}
+
+function enforceFreeCap(){
+  if(_isPro) return;
+  const seenPerProj = {};
+  const toRemove = [];
+  for(const [tid, t] of Object.entries(S.taskData)){
+    const pid = t.projId;
+    seenPerProj[pid] = (seenPerProj[pid] || 0) + 1;
+    if(seenPerProj[pid] > FREE_ACTIVITY_CAP){
+      toRemove.push(tid);
+    }
+  }
+  for(const tid of toRemove){
+    const t = S.taskData[tid];
+    if(!t) continue;
+    (_removedByProj[t.projId] = _removedByProj[t.projId] || []).push(t);
+    delete S.taskData[tid];
+  }
+}
+
+function restoreAllActivities(){
+  for(const pid of Object.keys(_removedByProj)){
+    for(const t of _removedByProj[pid]){
+      S.taskData[t.id] = t;
+    }
+  }
+  _removedByProj = {};
+}
+
+function updateFreeBanner(){
+  const banner = document.getElementById('freeBanner');
+  const msg    = document.getElementById('freeBannerMsg');
+  if(!banner || !msg) return;
+  if(_isPro){ banner.style.display = 'none'; return; }
+  const pid = S.currentProjId;
+  const total = pid ? (_projCounts[pid] || 0) : 0;
+  if(total > FREE_ACTIVITY_CAP){
+    msg.textContent = `Showing the first ${FREE_ACTIVITY_CAP} of ${total} activities in this project. Subscribe to Pro to view all.`;
+  } else {
+    msg.textContent = 'Free plan: limited to 100 activities per project. Subscribe to Pro to view unlimited activities.';
+  }
+  banner.style.display = 'flex';
+}
+
+// ── Hook into parseXER and onProjSel without editing them directly ─────
+const _origParseXER = window.parseXER;
+window.parseXER = function(content){
+  _origParseXER(content);
+  _snapshotProjCounts();
+  enforceFreeCap();
+  buildWbsIndex();
+};
+
+const _origOnProjSel = window.onProjSel;
+window.onProjSel = function(){
+  _origOnProjSel();
+  updateFreeBanner();
+};
+
+const _origCloseFile = window.closeFile;
+window.closeFile = function(){
+  _origCloseFile();
+  _projCounts = {};
+  _removedByProj = {};
+  updateFreeBanner();
+};
+
+
+// ── Boot: subscribe to PMAuth ──────────────────────────────────────────
+(function initWebsiteAuth(){
+  function start(){
+    PMAuth.onAuthChange(function(user, licenseActive){
+      const wasPro = _isPro;
+      _currentUser = user || null;
+      _isPro = !!(user && licenseActive);
+      renderAppUserPill(_currentUser, _isPro);
+
+      // If user just upgraded mid-session (was free, now Pro) and a file is loaded,
+      // restore hidden activities and re-render.
+      if(_isPro && !wasPro && S.currentProjId){
+        restoreAllActivities();
+        buildWbsIndex();
+        const {tr, roots} = getTree(S.currentProjId);
+        S.treeHierarchy = tr; S.rootNodes = roots;
+        S.expandedSet = new Set(roots);
+        buildRlpCache(tr);
+        renderHead(); renderTable(); updateStats();
+      }
+      updateFreeBanner();
+      // Notify parent (and frame2) of pro status change
+      try{ parent.broadcastProStatus(_isPro); }catch(e){}
+    });
+  }
+  if(window.PMAuth) start();
+  else {
+    const iv = setInterval(function(){
+      if(window.PMAuth){ clearInterval(iv); start(); }
+    }, 50);
+    // Safety: if PMAuth never loads, show Sign In button and proceed as free user
+    setTimeout(function(){
+      if(!window.PMAuth){
+        clearInterval(iv);
+        renderAppUserPill(null, false);
+      }
+    }, 4000);
+  }
+})();
+</script>
+<!-- ── Exit confirmation modal ── -->
+<div id="exitModal">
+  <div class="exit-box">
+    <h3>Leave this tool?</h3>
+    <p>Your current XER session data will be cleared and you will need to upload the file again when you return.</p>
+    <div class="exit-btns">
+      <button class="btn bg" onclick="closeExitModal()" style="min-width:90px;">Cancel</button>
+      <button class="btn bp" style="min-width:90px;" onclick="confirmExit()">Leave</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

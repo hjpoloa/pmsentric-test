@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Critical Path Analyzer — PMsentric</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f1c;--surface:#111827;--surface2:#162032;
+  --border:#1e2d45;--border2:#243550;
+  --accent:#f87171;--accent2:#fca5a5;
+  --gold:#C9A84C;
+  --ns:#94a3b8;--ip:#34d399;--done:#64748b;
+  --text:#e2eaf4;--tm:#5a7a96;--td:#3d5a75;
+  --rh:30px;--th:56px;--divider:5px;
+}
+html.light{
+  --bg:#f4f6fa;--surface:#ffffff;--surface2:#edf0f7;
+  --border:#d1d9e6;--border2:#bcc8dc;
+  --accent:#dc2626;--accent2:#ef4444;
+  --gold:#b07d20;
+  --ns:#64748b;--ip:#059669;--done:#94a3b8;
+  --text:#1a2336;--tm:#4a6080;--td:#8aa0bc;
+  --rh:30px;--th:56px;--divider:5px;
+}
+html.light body::before{background-image:linear-gradient(rgba(220,38,38,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(220,38,38,.012) 1px,transparent 1px);}
+html.light header{background:rgba(244,246,250,.97);}
+html.light .btn-tool-switch{border-color:rgba(176,125,32,.4);background:rgba(176,125,32,.08);color:#9a6c18;}
+html.light .btn-tool-switch:hover{border-color:#b07d20;background:rgba(176,125,32,.18);}
+html.light tr.crit td{background:rgba(220,38,38,.04);}
+html.light tr.crit td:first-child{border-left:2px solid #dc2626;}
+html.light tr.ir td{background:rgba(5,150,105,.05);}
+html.light tr.dr td{background:rgba(148,163,184,.06);}
+html.light tr.wbs-hdr td{background:var(--surface2);}
+html.light .stats-bar{background:rgba(237,240,247,.8);}
+html.light .gbar.crit-bar{background:rgba(220,38,38,.25);border:1px solid rgba(220,38,38,.5);}
+html.light .gvl{background:rgba(177,196,220,.6);}
+html.light .gvl.yr{background:rgba(140,165,200,.8);}
+html.light .gtd{background:rgba(220,38,38,.7);}
+html.light #ganttHeadWrap,html.light #ganttControls{background:var(--surface);}
+html.light #ganttAxisWrap{background:var(--surface2);}
+html.light .tyr{color:var(--accent);}
+html.light .tmo{color:var(--tm);}
+html.light tr.fp-banner td{background:rgba(176,125,32,.06);}
+html.light tr.fp-banner td:hover{background:rgba(176,125,32,.1)!important;}
+html.light #dropZone{background:var(--surface);}
+html.light #dropZone::before{background:radial-gradient(ellipse at 50% 0%,rgba(220,38,38,.04),transparent 65%);}
+/* theme toggle button */
+.theme-toggle{width:34px;height:34px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--tm);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .18s;flex-shrink:0;}
+.theme-toggle:hover{border-color:var(--gold);color:var(--gold);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(248,113,113,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(248,113,113,.018) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+.app{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+
+header{display:flex;align-items:center;gap:14px;padding:13px 24px;border-bottom:1px solid var(--border);background:rgba(11,15,28,.97);backdrop-filter:blur(8px);flex-shrink:0;}
+.logo{width:36px;height:36px;background:linear-gradient(135deg,#c8922a,#a8721a);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.ht{font-size:15px;font-weight:700;letter-spacing:-.3px;}
+.hs{font-size:11px;color:var(--tm);margin-top:1px;}
+.ha{font-size:11px;color:var(--tm);margin-top:1px;}
+.header-badge{font-family:'Bebas Neue',sans-serif;font-size:18px;color:#C9A84C;letter-spacing:.12em;text-decoration:none;transition:color .2s;}
+.header-badge:hover{color:#E8C87A;}
+.hact{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:7px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .18s;white-space:nowrap;}
+.bp{background:linear-gradient(135deg,var(--accent),#b91c1c);color:#fff;}
+.bp:hover{box-shadow:0 0 18px rgba(248,113,113,.35);transform:translateY(-1px);}
+.bg{background:transparent;border:1px solid var(--border2);color:var(--tm);}
+.bg:hover{border-color:var(--accent);color:var(--accent);}
+.bg:disabled{opacity:.35;cursor:not-allowed;}
+.btn-tool-switch{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:7px;font-family:'Sora',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(200,146,42,.35);background:rgba(200,146,42,.08);color:#c8922a;transition:all .18s;white-space:nowrap;text-decoration:none;}
+.btn-tool-switch:hover{border-color:#c8922a;background:rgba(200,146,42,.18);}
+.nav-user-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:7px;background:rgba(200,146,42,.08);border:1px solid rgba(200,146,42,.2);cursor:pointer;transition:border-color .2s;font-family:inherit;}
+.nav-user-pill:hover{border-color:#c8922a;}
+.nav-user-avatar{width:22px;height:22px;border-radius:50%;object-fit:cover;background:linear-gradient(135deg,#c8922a,#a8721a);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;flex-shrink:0;}
+.nav-user-name{font-size:12px;color:var(--text);font-family:'Space Mono',monospace;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.nav-user-hint{font-size:10px;color:var(--td);}
+.badge-pro{display:inline-block;margin-left:4px;font-family:'Space Mono',monospace;font-size:8px;padding:1px 5px;border-radius:3px;background:rgba(200,146,42,.15);color:#c8922a;border:1px solid rgba(200,146,42,.35);letter-spacing:.08em;text-transform:uppercase;vertical-align:middle;}
+
+.toolbar{display:flex;align-items:center;gap:12px;padding:10px 24px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap;}
+.tl{font-size:11px;color:var(--tm);font-weight:600;text-transform:uppercase;letter-spacing:.8px;}
+select{background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 12px;border-radius:7px;font-family:'Sora',sans-serif;font-size:12px;cursor:pointer;outline:none;min-width:260px;transition:border-color .18s;}
+select:focus{border-color:var(--accent);}select:disabled{opacity:.4;cursor:not-allowed;}
+.sw{position:relative;margin-left:auto;}
+.sw input{background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 12px 6px 32px;border-radius:7px;font-family:'Sora',sans-serif;font-size:12px;outline:none;width:220px;transition:border-color .18s,width .3s;}
+.sw input:focus{border-color:var(--accent);width:280px;}
+.sw input::placeholder{color:var(--td);}
+.si{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--td);pointer-events:none;}
+
+.stats-bar{display:flex;align-items:center;padding:0 24px;border-bottom:1px solid var(--border);background:rgba(17,24,39,.6);flex-shrink:0;height:32px;overflow:hidden;}
+.si2{display:flex;align-items:center;gap:6px;padding:0 16px;border-right:1px solid var(--border);height:100%;font-size:11px;color:var(--tm);}
+.si2:first-child{padding-left:0;}
+.sv{font-weight:700;color:var(--text);font-family:'Space Mono',monospace;}
+.legend-bar{display:flex;align-items:center;gap:18px;padding:5px 24px;border-bottom:1px solid var(--border);background:rgba(11,15,28,.75);flex-shrink:0;}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tm);}
+.ld{width:8px;height:8px;border-radius:50%;}
+
+#dropZone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border:2px dashed var(--border2);border-radius:16px;margin:24px;cursor:pointer;transition:all .25s;background:var(--surface);position:relative;overflow:hidden;}
+#dropZone::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(248,113,113,.05),transparent 65%);pointer-events:none;}
+#dropZone:hover,#dropZone.dov{border-color:var(--accent);background:var(--surface2);}
+.di{font-size:52px;filter:drop-shadow(0 0 16px rgba(248,113,113,.3));}
+.dt{font-size:18px;font-weight:700;}
+.ds{color:var(--tm);font-size:13px;}
+#fileInput{display:none;}
+
+/* ═══ SPLIT PANE ═══ */
+#mainContent{flex:1;display:none;overflow:hidden;flex-direction:row;min-height:0;}
+#tablePart{display:flex;flex-direction:column;overflow:hidden;min-width:200px;}
+#tableHeadWrap{overflow:hidden;flex-shrink:0;background:var(--surface);border-bottom:2px solid var(--border2);}
+#tableHeadWrap table{width:max-content;border-collapse:collapse;table-layout:fixed;}
+#tableHeadWrap thead th{
+  padding:0 12px;height:var(--th);text-align:left;
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--tm);
+  white-space:nowrap;user-select:none;position:relative;overflow:hidden;
+}
+#tableHeadWrap thead th.sortable{cursor:pointer;}
+#tableHeadWrap thead th.sortable:hover{color:var(--accent);}
+#tableHeadWrap thead th.sa .si3::after{content:'▲';color:var(--accent);margin-left:3px;font-size:8px;}
+#tableHeadWrap thead th.sd .si3::after{content:'▼';color:var(--accent);margin-left:3px;font-size:8px;}
+#tableHeadWrap thead th .si3{font-size:8px;opacity:.4;margin-left:3px;}
+#tableHeadWrap thead th.sortable:not(.sa):not(.sd) .si3::after{content:'⇅';}
+#tableHeadWrap thead th.center{text-align:center;}
+#tableHeadWrap thead th .rh{position:absolute;right:0;top:20%;bottom:20%;width:5px;cursor:col-resize;display:flex;align-items:center;justify-content:center;}
+#tableHeadWrap thead th .rh::after{content:'';position:absolute;right:2px;top:0;bottom:0;width:1px;background:var(--border2);transition:background .15s,width .15s;}
+#tableHeadWrap thead th .rh:hover::after{background:var(--accent);width:2px;}
+#tableHeadWrap thead th.dragging{opacity:.35;}
+#tableHeadWrap thead th.dov2{border-left:2px solid var(--accent);}
+
+#tableBodyWrap{overflow:auto;flex:1;}
+#tableBodyWrap table{width:max-content;border-collapse:collapse;table-layout:fixed;}
+tbody tr{border-bottom:1px solid rgba(30,45,69,.5);transition:background .1s;}
+td{padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:var(--rh);vertical-align:middle;}
+td.center{text-align:center;}
+tr.ir td{background:rgba(52,211,153,.04);}
+tr.dr td{background:rgba(100,116,139,.04);}
+tr.nr td{}
+tr.crit td{background:rgba(248,113,113,.06);}
+tr.crit td:first-child{border-left:2px solid #f87171;}
+tr:hover td{background:rgba(255,255,255,.03)!important;}
+tr.shrow td{background:rgba(248,113,113,.12)!important;}
+.shmk{background:rgba(248,113,113,.35);border-radius:2px;padding:0 1px;}
+/* WBS group header rows */
+tr.wbs-hdr td{background:var(--surface2);border-bottom:1px solid var(--border2);cursor:default;height:var(--rh);}
+tr.wbs-hdr td:hover{background:var(--surface2)!important;}
+tr.wbs-hdr .wbs-hdr-label{font-size:11px;font-weight:700;color:var(--tm);letter-spacing:.4px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;}
+tr.wbs-hdr .wbs-hdr-label .wbs-lvl-badge{font-family:'Space Mono',monospace;font-size:9px;background:rgba(42,85,130,.35);color:var(--tm);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;flex-shrink:0;}
+/* Float Path banner rows */
+tr.fp-banner td{background:rgba(201,168,76,.07);border-top:2px solid rgba(201,168,76,.4);border-bottom:1px solid rgba(201,168,76,.25);cursor:default;height:36px;}
+tr.fp-banner td:hover{background:rgba(201,168,76,.1)!important;}
+tr.fp-banner .fp-banner-label{display:flex;align-items:center;gap:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.08em;color:var(--gold);}
+tr.fp-banner .fp-banner-badge{font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;background:rgba(201,168,76,.15);color:var(--gold);border:1px solid rgba(201,168,76,.4);letter-spacing:.06em;text-transform:uppercase;font-weight:700;}
+
+/* progress bar */
+.pbw{display:flex;align-items:center;gap:6px;}.pb{width:60px;height:5px;background:var(--border2);border-radius:3px;overflow:hidden;}.pf{height:100%;background:var(--accent);border-radius:3px;}
+
+/* status bar */
+.status-bar{display:flex;align-items:center;gap:8px;padding:0 20px;height:28px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;font-size:11px;color:var(--tm);}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--td);}
+.sdot.ok{background:#34d399;}.sdot.err{background:#f87171;}
+
+/* divider */
+#divider{width:var(--divider);background:var(--border);cursor:col-resize;flex-shrink:0;display:none;transition:background .15s;}
+#divider:hover,#divider.dragging{background:var(--accent);}
+
+/* gantt */
+#ganttPart{display:none;flex-direction:column;overflow:hidden;min-width:150px;border-left:2px solid var(--border2);}
+#ganttPart.open{display:flex;}
+/* Gantt header: controls row + time axis row — fixed, never scrolls */
+#ganttHeadWrap{
+  flex-shrink:0;
+  background:var(--surface);
+  border-bottom:2px solid var(--border2);
+  height:var(--th);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+#ganttControls{
+  height:19px;flex-shrink:0;display:flex;align-items:center;gap:6px;padding:0 10px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+}
+.glabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--tm);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.zbtn{background:var(--surface2);border:1px solid var(--border2);color:var(--text);width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;line-height:1;}
+.zbtn:hover{border-color:var(--accent);color:var(--accent);}
+.zval{font-family:'Space Mono',monospace;font-size:10px;color:var(--tm);min-width:28px;text-align:center;}
+.cgbtn{background:none;border:none;cursor:pointer;color:var(--tm);font-size:15px;padding:0 3px;transition:color .15s;flex-shrink:0;}
+.cgbtn:hover{color:#f87171;}
+#ganttAxisWrap{flex:1;overflow:hidden;position:relative;background:var(--surface2);}
+#ganttAxisInner{position:absolute;top:0;left:0;height:100%;}
+.tyr{position:absolute;top:0;height:50%;display:flex;align-items:center;padding:0 5px;font-size:10px;font-weight:700;color:var(--accent);font-family:'Space Mono',monospace;border-right:1px solid var(--border2);border-bottom:1px solid var(--border2);overflow:hidden;white-space:nowrap;}
+.tmo{position:absolute;bottom:0;height:50%;display:flex;align-items:center;padding:0 3px;font-size:9px;color:var(--tm);border-right:1px solid rgba(30,45,69,.4);overflow:hidden;white-space:nowrap;}
+#ganttBodyWrap{flex:1;overflow-x:auto;overflow-y:hidden;}
+#ganttInner{position:relative;display:inline-block;}
+/* Gantt rows — height MUST equal --rh, border matches tbody tr */
+.grow{height:var(--rh);position:relative;border-bottom:1px solid rgba(30,45,69,.5);}
+.gbar{position:absolute;top:50%;transform:translateY(-50%);height:14px;border-radius:3px;overflow:hidden;}
+.gbar.ns{background:rgba(148,163,184,.25);border:1px solid rgba(148,163,184,.4);}
+.gbar.ip{background:rgba(52,211,153,.25);border:1px solid rgba(52,211,153,.4);}
+.gbar.done{background:rgba(100,116,139,.35);border:1px solid rgba(100,116,139,.5);}
+.gbar.crit-bar{background:rgba(248,113,113,.35);border:1px solid rgba(248,113,113,.6);}
+.gbar.bl{height:6px;background:rgba(220,38,38,.6);border:none;border-radius:2px;top:75%;}
+.gpct{height:100%;background:rgba(255,255,255,.25);}
+.gvl{position:absolute;top:0;width:1px;background:rgba(30,45,69,.8);}
+.gvl.yr{background:rgba(50,70,100,.9);}
+.gtd{position:absolute;top:0;width:2px;background:rgba(248,113,113,.7);z-index:2;}
+
+#exitModal{position:fixed;inset:0;background:rgba(7,9,14,.85);backdrop-filter:blur(6px);z-index:9999;display:none;align-items:center;justify-content:center;}
+#exitModal.open{display:flex;}
+.exit-box{background:#111827;border:1px solid #1e2d45;border-radius:12px;padding:28px 32px;max-width:380px;width:90%;text-align:center;}
+.exit-box h3{font-size:16px;font-weight:700;margin-bottom:8px;color:#e2eaf4;}
+.exit-box p{font-size:13px;color:#5a7a96;line-height:1.6;margin-bottom:20px;}
+.exit-btns{display:flex;gap:10px;justify-content:center;}
+
+/* Float Path Modal */
+#fpModal{position:fixed;inset:0;background:rgba(7,9,14,.85);backdrop-filter:blur(6px);z-index:9998;display:none;align-items:center;justify-content:center;}
+#fpModal.open{display:flex;}
+.fp-box{background:#111827;border:1px solid #1e2d45;border-radius:12px;padding:28px 32px;max-width:420px;width:90%;}
+.fp-box h3{font-size:15px;font-weight:700;margin-bottom:6px;color:#e2eaf4;}
+.fp-box .fp-sub{font-size:12px;color:#5a7a96;margin-bottom:20px;line-height:1.6;}
+.fp-paths-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--tm);margin-bottom:8px;}
+.fp-paths-row{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.fp-paths-row input[type=number]{background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:8px 14px;border-radius:7px;font-family:'Space Mono',monospace;font-size:14px;font-weight:700;width:80px;outline:none;text-align:center;transition:border-color .18s;}
+.fp-paths-row input[type=number]:focus{border-color:var(--gold);}
+.fp-paths-row .fp-paths-hint{font-size:11px;color:var(--td);}
+.fp-path-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;}
+.fp-path-chip{font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid var(--border2);color:var(--tm);cursor:pointer;font-family:'Space Mono',monospace;transition:all .15s;background:var(--surface);}
+.fp-path-chip.sel{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.1);}
+.fp-box-btns{display:flex;gap:10px;justify-content:flex-end;}
+.btn-gold{background:linear-gradient(135deg,#c8922a,#a8721a);color:#fff;border:none;}
+.btn-gold:hover{box-shadow:0 0 16px rgba(200,146,42,.4);}
+</style>
+</head>
+<body>
+<script>if(window.self !== window.top){ window.top.location.href = window.self.location.href; }
+// Suppress dropzone flash if XER data already in sessionStorage
+try{if(sessionStorage.getItem('pms_xer_current')){document.addEventListener('DOMContentLoaded',function(){var dz=document.getElementById('dropZone');if(dz)dz.style.display='none';});}}catch(e){}
+</script>
+<div class="app">
+
+<header>
+  <div class="logo">CP</div>
+  <div>
+    <div class="ht">Critical Path Analyzer</div>
+    <div class="hs">Primavera P6 · XER Format</div>
+  </div>
+  <a href="https://pmsentric.com/" target="_blank" rel="noopener" class="header-badge">✦ PMSentric</a>
+  <div class="hact">
+    <a href="#" class="btn bg" onclick="askExit('/');return false;">← Home</a>
+    <a href="/iwpmsschedule-reader" class="btn-tool-switch" onclick="switchTool('/iwpmsschedule-reader');return false;">📋 Schedule Reader</a>
+    <a href="/iwpmsresource-analyzer" class="btn-tool-switch" onclick="switchTool('/iwpmsresource-analyzer');return false;">⚙️ Resource Analyzer</a>
+    <div id="appUserPill" style="display:none;"></div>
+    <button class="btn bg" id="signinBtn" onclick="goSignIn()" style="display:none;">Log In</button>
+    <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
+    <button class="btn bg" id="closeBtn" onclick="closeFile()" style="display:none;border-color:#f87171;color:#f87171;">✕ Close File</button>
+    <button class="btn bp" onclick="document.getElementById('fileInput').click()">📂 Load XER File</button>
+    <input type="file" id="fileInput">
+  </div>
+</header>
+
+<div class="toolbar">
+  <span class="tl">Project</span>
+  <select id="projectSelect" disabled onchange="onProjSel()"><option>— load a file first —</option></select>
+  <span class="tl" style="margin-left:8px;">WBS Level:</span>
+  <select id="wbsLevelSelect" disabled onchange="onWbsLevelChange()" style="min-width:100px;">
+    <option value="All">All</option>
+  </select>
+  <button class="btn bg" id="ganttBtn" disabled onclick="toggleGantt()">📊 Gantt</button>
+  <span class="tl" style="margin-left:8px;">Filter:</span>
+  <select id="filterModeSelect" disabled onchange="onFilterModeChange()" style="min-width:160px;">
+    <option value="critical">Critical Path</option>
+    <option value="driving">Driving Path</option>
+    <option value="longestpath">Longest Path</option>
+    <option value="floatpath">Float Path</option>
+  </select>
+  <span id="fpActiveLabel" style="display:none;font-family:'Space Mono',monospace;font-size:11px;color:var(--gold);padding:5px 10px;border:1px solid rgba(201,168,76,.35);border-radius:6px;background:rgba(201,168,76,.08);cursor:pointer;" onclick="openFpModal()" title="Click to change Float Path selection"></span>
+  <div class="sw">
+    <span class="si">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search critical activities…" oninput="onSearch()" disabled>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="si2">Projects <span class="sv" id="sp">—</span></div>
+  <div class="si2">Total Activities <span class="sv" id="sa">—</span></div>
+  <div class="si2"><span style="color:#f87171;">🔺</span>&nbsp;<span id="scLabel">Critical</span> <span class="sv" id="sc">—</span></div>
+  <div class="si2">In Progress <span class="sv" id="sip">—</span></div>
+  <div class="si2">Completed <span class="sv" id="sd">—</span></div>
+  <div class="si2" style="border-right:none;margin-left:auto;gap:14px;">
+    <div class="li"><div class="ld" style="background:#f87171"></div>Critical</div>
+    <div class="li"><div class="ld" style="background:var(--ns)"></div>Not Started</div>
+    <div class="li"><div class="ld" style="background:var(--ip)"></div>In Progress</div>
+    <div class="li"><div class="ld" style="background:var(--done)"></div>Completed</div>
+  </div>
+</div>
+
+<div id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="onDO(event)" ondragleave="onDL(event)" ondrop="onDD(event)">
+  <div class="di">🔗</div>
+  <div class="dt">Drop your XER file here</div>
+  <div class="ds">or click to browse — all processing happens in your browser</div>
+  <button class="btn bp" style="margin-top:8px" onclick="event.stopPropagation();document.getElementById('fileInput').click()">Choose File</button>
+</div>
+
+<div id="mainContent">
+  <div id="tablePart">
+    <div id="tableHeadWrap">
+      <table><colgroup id="headColGroup"></colgroup><thead><tr id="headerRow"></tr></thead></table>
+    </div>
+    <div id="tableBodyWrap">
+      <table><colgroup id="bodyColGroup"></colgroup><tbody id="tableBody"></tbody></table>
+    </div>
+  </div>
+  <div id="divider"></div>
+  <div id="ganttPart">
+    <div id="ganttHeadWrap">
+      <div id="ganttControls">
+        <span class="glabel" id="ganttLabel">Gantt Chart</span>
+        <button class="zbtn" onclick="zoomOut()">−</button>
+        <span class="zval" id="zoomVal">1×</span>
+        <button class="zbtn" onclick="zoomIn()">+</button>
+        <button class="cgbtn" onclick="closeGantt()">✕</button>
+      </div>
+      <div id="ganttAxisWrap"><div id="ganttAxisInner"></div></div>
+    </div>
+    <div id="ganttBodyWrap"><div id="ganttInner"></div></div>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="sdot" id="statusDot"></div>
+  <span id="statusText">Ready — load an XER file to begin</span>
+</div>
+
+</div><!-- .app -->
+
+<div id="fpModal">
+  <div class="fp-box">
+    <h3>Float Path Filter</h3>
+    <div class="fp-sub">Select how many float paths to display. Float Path 1 is the longest (most critical) chain. Higher numbers are near-critical chains in descending order.</div>
+    <div class="fp-paths-label">Number of Float Paths to Show</div>
+    <div class="fp-paths-row">
+      <input type="number" id="fpCountInput" min="1" max="99" value="1" oninput="onFpCountInput()">
+      <span class="fp-paths-hint" id="fpCountHint">paths available in this project</span>
+    </div>
+    <div class="fp-paths-label" style="margin-bottom:8px;">Quick Select</div>
+    <div class="fp-path-chips" id="fpChips"></div>
+    <div class="fp-box-btns">
+      <button class="btn bg" onclick="closeFpModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="applyFpModal()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<div id="exitModal">
+  <div class="exit-box">
+    <h3>Leave this tool?</h3>
+    <p>Your current XER session data will be cleared and you will need to upload the file again when you return.</p>
+    <div class="exit-btns">
+      <button class="btn bg" onclick="closeExitModal()" style="min-width:90px;">Cancel</button>
+      <button class="btn bp" style="min-width:90px;" onclick="confirmExit()">Leave</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ STATE ════════════════════════════════════════════════════════════════
+const S={
+  projects:{},wbsNodes:{},taskData:{},taskBudget:{},
+  currentProjId:null,
+  searchQuery:'',
+  sortCol:null,sortDir:1,
+  columns:[],colWidths:{},dragSrcIdx:null,
+  ganttOpen:false,ganttZoomIdx:2,
+  renderedRows:[],
+  wbsActsIndex:{},
+  wbsLevel:'All',
+  filterMode:'driving',   // 'driving' | 'critical' | 'floatpath'
+  fpCount:1,              // number of float paths to show (1..N)
+};
+const ZOOM=[.4,.6,1,1.5,2,3,4.5];
+const MONS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const ROW_H=30;
+
+// ═══ COLUMNS ══════════════════════════════════════════════════════════════
+function defCols(){return[
+  {key:'count',      label:'#',               sortable:false,width:50, align:'center'},
+  {key:'wbsPath',   label:'WBS',             sortable:true, width:280,align:'left'},
+  {key:'code',      label:'Activity ID',     sortable:true, width:120,align:'center'},
+  {key:'name',      label:'Activity Name',   sortable:false,width:280,align:'left'},
+  {key:'start',     label:'Start',           sortable:true, width:110,align:'center'},
+  {key:'finish',    label:'Finish',          sortable:true, width:110,align:'center'},
+  {key:'remainDrtn',label:'Rem. Dur. (CD)',  sortable:true, width:110,align:'center'},
+  {key:'pct',       label:'% Complete',      sortable:true, width:120,align:'center'},
+];}
+
+// ═══ PARSING ══════════════════════════════════════════════════════════════
+function parseDt(s){
+  if(!s||!s.trim())return'N/A';s=s.trim();
+  let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m)return fmtD(new Date(+m[1],+m[2]-1,+m[3]));
+  m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if(m)return fmtD(new Date(+m[3],+m[1]-1,+m[2]));
+  return s;
+}
+function fmtD(d){if(!d||isNaN(d))return'N/A';return`${d.getDate()}-${MONS[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`;}
+function toD(s){
+  if(!s||s==='N/A')return null;
+  const mn={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  const m=s.match(/^(\d+)-([A-Za-z]+)-(\d+)$/);
+  return m?new Date(2000+(+m[3]),mn[m[2]],+m[1]):null;
+}
+
+function procR(sec,r){
+  if(sec==='PROJECT'){const id=r.proj_id||'';S.projects[id]={id,name:r.proj_short_name||id,dataDate:r.last_recalc_date||'',critDrtn:parseFloat(r.critical_drtn_hr_cnt||'0')||0};}
+  else if(sec==='PROJWBS'){const id=r.wbs_id||'';S.wbsNodes[id]={id,name:r.wbs_name||'',shortName:r.wbs_short_name||'',parentId:r.parent_wbs_id||'',projId:r.proj_id||'',seq:parseFloat(r.seq_num||r.wbs_seq_num||'0')||0};}
+  else if(sec==='TASK'){
+    const id=r.task_id||'';
+    const aS=parseDt(r.act_start_date||''),aE=parseDt(r.act_end_date||'');
+    const eS=parseDt(r.early_start_date||r.target_start_date||'');
+    const eF=parseDt(r.early_end_date||r.target_end_date||'');
+    const rF=parseDt(r.reend_date||r.remain_early_end_date||'');
+    let dS,dF,st;
+    if(aS==='N/A'){dS=eS;dF=eF;st='ns';}
+    else if(aE==='N/A'){dS=aS;dF=rF!=='N/A'?rF:eF;st='ip';}
+    else{dS=aS;dF=aE;st='done';}
+    let pct;
+    if(r.complete_pct_type==='CP_Drtn'){const t=parseFloat(r.target_drtn_hr_cnt)||0,rm=parseFloat(r.remain_drtn_hr_cnt)||0;pct=t>0?Math.round((t-rm)/t*1000)/10:0;}
+    else pct=Math.round((parseFloat(r.phys_complete_pct||r.perf_complete_pct||r.complete_pct||'0')||0)*10)/10;
+    let rmDays=0;
+    if(st!=='done'){
+      const proj=S.projects[r.proj_id||''];
+      const dataDateRaw=proj?proj.dataDate:'';
+      const dataD=dataDateRaw?new Date(dataDateRaw.trim().slice(0,10)):null;
+      const finD=toD(dF);
+      if(dataD&&finD){rmDays=Math.max(0,Math.round((finD-dataD)/86400000));}
+    }
+    const drivingPath=(r.driving_path_flag||'').trim().toUpperCase()==='Y';
+    const totalFloat=parseFloat(r.total_float_hr_cnt||'9999')||9999;
+    const taskType=(r.task_type||'').trim();
+    const floatPath=parseInt(r.float_path||'0')||0; // 0 = not on any float path
+    S.taskData[id]={id,code:r.task_code||'',name:r.task_name||'',wbsId:r.wbs_id||'',projId:r.proj_id||'',
+      displayStart:dS,displayFinish:dF,actualStart:aS,actualEnd:aE,completePct:pct,status:st,remainDrtn:rmDays,
+      drivingPath,totalFloat,taskType,floatPath,
+      critical:drivingPath}; // default; recomputed in isCritical()
+  }
+}
+function parseXER(content){
+  S.projects={};S.wbsNodes={};S.taskData={};S.taskBudget={};S.wbsActsIndex={};
+  let tbl=null,flds=[];
+  for(const raw of content.split('\n')){
+    const l=raw.replace(/\r$/,'');
+    if(l.startsWith('%T\t')){tbl=l.slice(3).trim();flds=[];}
+    else if(l.startsWith('%F\t'))flds=l.slice(3).split('\t');
+    else if(l.startsWith('%R\t')){const v=l.slice(3).split('\t'),r={};flds.forEach((f,i)=>{r[f]=i<v.length?v[i]:'';});procR(tbl,r);}
+  }
+}
+
+// Returns true if task passes the current filter mode
+function isCritical(t){
+  if(S.filterMode==='driving') return t.drivingPath;
+  if(S.filterMode==='critical'){
+    const proj=S.projects[t.projId];
+    const thresh=proj?proj.critDrtn:0;
+    return t.taskType!=='TT_LOE'&&t.totalFloat<=thresh;
+  }
+  if(S.filterMode==='longestpath'){
+    return t.floatPath===1&&t.taskType!=='TT_LOE';
+  }
+  if(S.filterMode==='floatpath'){
+    return t.floatPath>=1&&t.floatPath<=S.fpCount;
+  }
+  return false;
+}
+
+// Max float path number in current project
+function maxFloatPath(){
+  let mx=0;
+  Object.values(S.taskData).filter(t=>t.projId===S.currentProjId).forEach(t=>{if(t.floatPath>mx)mx=t.floatPath;});
+  return mx;
+}
+
+function onFilterModeChange(){
+  const sel=document.getElementById('filterModeSelect');
+  S.filterMode=sel.value;
+  if(S.filterMode==='floatpath'){
+    openFpModal();
+  } else {
+    document.getElementById('fpActiveLabel').style.display='none';
+    renderTable();updateStats();
+  }
+}
+
+function openFpModal(){
+  const max=maxFloatPath();
+  const hint=document.getElementById('fpCountHint');
+  hint.textContent=max>0?`of ${max} float paths in this project`:'(no float_path data found in this XER)';
+  const inp=document.getElementById('fpCountInput');
+  inp.max=max||99;
+  inp.value=Math.min(S.fpCount,max||1);
+  buildFpChips(max);
+  document.getElementById('fpModal').classList.add('open');
+}
+function closeFpModal(){
+  document.getElementById('fpModal').classList.remove('open');
+  // If user cancels and mode was just switched to floatpath with no prior apply, revert
+  if(S.filterMode==='floatpath'&&S.fpCount<1){
+    S.filterMode='driving';
+    document.getElementById('filterModeSelect').value='driving';
+  }
+}
+function applyFpModal(){
+  const v=parseInt(document.getElementById('fpCountInput').value)||1;
+  S.fpCount=Math.max(1,v);
+  document.getElementById('fpModal').classList.remove('open');
+  const lbl=document.getElementById('fpActiveLabel');
+  lbl.style.display='';
+  lbl.textContent=`Float Path 1–${S.fpCount} ✎`;
+  renderTable();updateStats();
+}
+function onFpCountInput(){
+  const v=parseInt(document.getElementById('fpCountInput').value)||1;
+  buildFpChips(parseInt(document.getElementById('fpCountInput').max)||99,v);
+}
+function buildFpChips(max,current){
+  if(current===undefined)current=parseInt(document.getElementById('fpCountInput').value)||1;
+  const show=Math.min(max,10);
+  let html='';
+  for(let i=1;i<=show;i++){
+    html+=`<div class="fp-path-chip${i===current?' sel':''}" onclick="selectFpChip(${i})">${i===1?'Path 1 (Critical)':i===2?'Paths 1–2':'Paths 1–'+i}</div>`;
+  }
+  document.getElementById('fpChips').innerHTML=html||'<span style="font-size:11px;color:var(--td)">No float path data in this XER.</span>';
+}
+function selectFpChip(n){
+  document.getElementById('fpCountInput').value=n;
+  buildFpChips(parseInt(document.getElementById('fpCountInput').max)||99,n);
+}
+
+// Build full numbered WBS path: "1-Project · 2-Phase · 3-Sub"
+function wbsPath(wid){
+  const chain=[];
+  let id=wid;
+  let safety=0;
+  while(id&&safety++<20){
+    const w=S.wbsNodes[id];
+    if(!w)break;
+    chain.unshift(w);
+    id=w.parentId;
+  }
+  return chain.map((w,i)=>`${i+1}-${w.name||w.shortName||'?'}`).join(' · ');
+}
+// Return path truncated to N levels
+function wbsPathToLevel(wid, maxLevel){
+  const chain=[];
+  let id=wid;
+  let safety=0;
+  while(id&&safety++<20){
+    const w=S.wbsNodes[id];
+    if(!w)break;
+    chain.unshift(w);
+    id=w.parentId;
+  }
+  return chain.slice(0,maxLevel).map((w,i)=>`${i+1}-${w.name||w.shortName||'?'}`).join(' · ');
+}
+// Count WBS depth for an activity's wbs node
+function wbsDepth(wid){
+  let d=0,id=wid,safety=0;
+  while(id&&safety++<20){const w=S.wbsNodes[id];if(!w)break;d++;id=w.parentId;}
+  return d;
+}
+// Build WBS sort key using seq_num at each level for correct tree order
+function wbsSortKey(wid){
+  const chain=[];
+  let id=wid,safety=0;
+  while(id&&safety++<20){const w=S.wbsNodes[id];if(!w)break;chain.unshift(w);id=w.parentId;}
+  return chain.map(w=>String(w.seq||0).padStart(8,'0')).join('-');
+}
+// Max WBS depth across all nodes in current project
+function maxWbsDepth(){
+  let max=0;
+  Object.values(S.wbsNodes).filter(w=>w.projId===S.currentProjId).forEach(w=>{const d=wbsDepth(w.id);if(d>max)max=d;});
+  return max;
+}
+
+// ═══ SORT ═════════════════════════════════════════════════════════════════
+function srtV(act,col){
+  switch(col){
+    case'code':return act.code||'';
+    case'wbsPath':return wbsPath(act.wbsId)||'';
+    case'start':return toD(act.displayStart)||new Date(0);
+    case'finish':return toD(act.displayFinish)||new Date(0);
+    case'pct':return act.completePct||0;
+    case'remainDrtn':return act.remainDrtn||0;
+    default:return'';
+  }
+}
+function sortActs(a){
+  if(!S.sortCol)return a;
+  return[...a].sort((a,b)=>{const va=srtV(a,S.sortCol),vb=srtV(b,S.sortCol);if(va instanceof Date)return(va-vb)*S.sortDir;if(typeof va==='number')return(va-vb)*S.sortDir;return String(va).localeCompare(String(vb))*S.sortDir;});
+}
+function onSortCol(k){S.sortCol===k?S.sortDir*=-1:(S.sortCol=k,S.sortDir=1);renderHead();renderTable();}
+
+// ═══ HEADER ═══════════════════════════════════════════════════════════════
+function getTotalColWidth(){return S.columns.reduce((s,c)=>s+(S.colWidths[c.key]||c.width),0);}
+
+function syncColGroups(){
+  const cols=S.columns.map(c=>`<col style="width:${S.colWidths[c.key]||c.width}px">`).join('');
+  document.getElementById('headColGroup').innerHTML=cols;
+  document.getElementById('bodyColGroup').innerHTML=cols;
+}
+
+function renderHead(){
+  const w=getTotalColWidth();
+  document.querySelector('#tableHeadWrap table').style.width=w+'px';
+  document.querySelector('#tableBodyWrap table').style.width=w+'px';
+  syncColGroups();
+  document.getElementById('headerRow').innerHTML=S.columns.map((c,i)=>{
+    const cw=S.colWidths[c.key]||c.width;
+    const sc=c.sortable?' sortable'+(S.sortCol===c.key?(S.sortDir===1?' sa':' sd'):''):'';
+    const cc=c.align==='center'?' center':'';
+    return`<th class="${cc}${sc}" style="width:${cw}px;min-width:40px" data-col="${c.key}" data-idx="${i}"
+      draggable="true" ondragstart="cdS(event,${i})" ondragover="cdO(event,${i})"
+      ondrop="cdD(event,${i})" ondragleave="cdL(event)"
+      ondblclick="autoFitCol('${c.key}')"
+      ${c.sortable?`onclick="onSortCol('${c.key}')"`:''}
+    >${c.label}<span class="si3"></span><div class="rh" onmousedown="rhD(event,'${c.key}')" onclick="event.stopPropagation()"></div></th>`;
+  }).join('');
+}
+function cdS(e,i){S.dragSrcIdx=i;e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
+function cdO(e,i){e.preventDefault();if(i===S.dragSrcIdx)return;document.querySelectorAll('#headerRow th').forEach(t=>t.classList.remove('dov2'));e.currentTarget.classList.add('dov2');}
+function cdL(e){e.currentTarget.classList.remove('dov2');}
+function cdD(e,i){
+  e.preventDefault();document.querySelectorAll('#headerRow th').forEach(t=>{t.classList.remove('dov2');t.classList.remove('dragging');});
+  if(i===S.dragSrcIdx||S.dragSrcIdx===null)return;
+  const[mv]=S.columns.splice(S.dragSrcIdx,1);S.columns.splice(i,0,mv);
+  S.dragSrcIdx=null;renderHead();renderTable();
+}
+function rhD(e,key){
+  e.preventDefault();e.stopPropagation();
+  const sx=e.clientX;
+  const colDef=S.columns.find(c=>c.key===key);
+  const sw=S.colWidths[key]||colDef.width;
+  const colIdx=S.columns.findIndex(c=>c.key===key);
+  const th=document.querySelectorAll('#headerRow th')[colIdx];
+  const mm=ev=>{
+    const newW=Math.max(50,sw+(ev.clientX-sx));
+    S.colWidths[key]=newW;
+    if(th){th.style.width=newW+'px';}
+    // Update colgroup cols — single source of truth for alignment
+    const headCols=document.querySelectorAll('#headColGroup col');
+    const bodyCols=document.querySelectorAll('#bodyColGroup col');
+    if(headCols[colIdx]){headCols[colIdx].style.width=newW+'px';}
+    if(bodyCols[colIdx]){bodyCols[colIdx].style.width=newW+'px';}
+    const totalW=getTotalColWidth();
+    document.querySelector('#tableHeadWrap table').style.width=totalW+'px';
+    document.querySelector('#tableBodyWrap table').style.width=totalW+'px';
+  };
+  const mu=()=>{document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);document.body.style.cursor='';document.body.style.userSelect='';};
+  document.body.style.cursor='col-resize';document.body.style.userSelect='none';
+  document.addEventListener('mousemove',mm);document.addEventListener('mouseup',mu);
+}
+
+// Auto-fit column width on header double-click
+function autoFitCol(key){
+  const colDef=S.columns.find(c=>c.key===key);
+  if(!colDef)return;
+  const colIdx=S.columns.findIndex(c=>c.key===key);
+  // Measure header label width
+  const canvas=autoFitCol._canvas||(autoFitCol._canvas=document.createElement('canvas'));
+  const ctx=canvas.getContext('2d');
+  // Header: bold 10px uppercase Sora — approximate
+  ctx.font='700 10px Sora,sans-serif';
+  let maxW=ctx.measureText(colDef.label.toUpperCase()).width+24+16; // padding + sort icon space
+  // Measure all rendered data cells for this column
+  // Activity rows only (wbs and banners span)
+  const tbody=document.getElementById('tableBody');
+  const trs=tbody.querySelectorAll('tr:not(.wbs-hdr):not(.fp-banner)');
+  trs.forEach(tr=>{
+    const tds=tr.querySelectorAll('td');
+    const td=tds[colIdx];
+    if(!td)return;
+    // Use innerText to get plain text, strip HTML
+    const txt=td.innerText||'';
+    ctx.font='13px Sora,sans-serif';
+    const tw=ctx.measureText(txt).width+24; // 12px padding each side
+    if(tw>maxW)maxW=tw;
+  });
+  const newW=Math.max(50,Math.ceil(maxW));
+  S.colWidths[key]=newW;
+  renderHead();
+  // Re-sync table width
+  const totalW=getTotalColWidth();
+  document.querySelector('#tableHeadWrap table').style.width=totalW+'px';
+  document.querySelector('#tableBodyWrap table').style.width=totalW+'px';
+}
+
+// ═══ TABLE BODY ═══════════════════════════════════════════════════════════
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function hl(s,q){
+  const str=String(s??'');
+  if(!q)return esc(str);
+  const lo=str.toLowerCase(),ql=q.toLowerCase();
+  let out='',i=0;
+  while(i<str.length){
+    const k=lo.indexOf(ql,i);
+    if(k===-1){out+=esc(str.slice(i));break;}
+    out+=esc(str.slice(i,k))+'<span class="shmk">'+esc(str.slice(k,k+ql.length))+'</span>';
+    i=k+ql.length;
+  }
+  return out;
+}
+
+function cellH(col,act){
+  switch(col.key){
+    case'count':return`<span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--td)">1</span>`;
+    case'name':return`<span style="font-weight:500">${hl(act.name,S.searchQuery)}</span>`;
+    case'code':return`<span style="font-family:'Space Mono',monospace;font-size:11px">${hl(act.code,S.searchQuery)}</span>`;
+    case'wbsPath':return`<span style="font-size:11px;color:var(--tm)">${hl(wbsPath(act.wbsId),S.searchQuery)}</span>`;
+    case'start':{const aFlag=act.actualStart!=='N/A'&&act.actualStart===act.displayStart?'<span style="color:var(--accent);font-weight:700;margin-left:3px">A</span>':'';return act.displayStart+aFlag;}
+    case'finish':{const aFlag=act.actualEnd!=='N/A'&&act.actualEnd===act.displayFinish?'<span style="color:var(--accent);font-weight:700;margin-left:3px">A</span>':'';return act.displayFinish+aFlag;}
+    case'remainDrtn':return act.status==='done'?'<span style="color:var(--done)">0d</span>':`<span style="font-family:'Space Mono',monospace;font-size:11px">${act.remainDrtn}d</span>`;
+    case'pct':return`<div class="pbw"><div class="pb"><div class="pf" style="width:${act.completePct}%"></div></div><span>${act.completePct}%</span></div>`;
+  }
+  return'';
+}
+
+// Get ancestor WBS node at a specific depth level (1-based)
+function wbsAncestorAtLevel(wid, level){
+  const chain=[];
+  let id=wid, safety=0;
+  while(id&&safety++<20){const w=S.wbsNodes[id];if(!w)break;chain.unshift(w);id=w.parentId;}
+  return chain.length>=level?chain[level-1]:chain[chain.length-1]||null;
+}
+
+// Build the flat rows array for a given set of activities (WBS headers interleaved)
+// depthOffset shifts WBS badge numbering (used when float path banners add a top level)
+function buildWbsRows(acts, maxLvl, emittedWbs, depthOffset){
+  depthOffset=depthOffset||0;
+  const rows=[];
+  for(const act of acts){
+    if(maxLvl>0){
+      const chain=[];
+      let id=act.wbsId,safety=0;
+      while(id&&safety++<20){const w=S.wbsNodes[id];if(!w)break;chain.unshift(w);id=w.parentId;}
+      const levelsToShow=maxLvl===999?chain.length:Math.min(maxLvl,chain.length);
+      for(let i=0;i<levelsToShow;i++){
+        const node=chain[i];
+        if(!emittedWbs.has(node.id)){
+          emittedWbs.add(node.id);
+          rows.push({type:'wbs',node,depth:i+1+depthOffset});
+        }
+      }
+    }
+    rows.push({type:'act',act,depthOffset});
+  }
+  return rows;
+}
+
+function renderTable(){
+  const flt=S.searchQuery.toLowerCase();
+  const maxLvl=S.wbsLevel==='All'?999:parseInt(S.wbsLevel); // 0 = activities only, no WBS headers
+
+  let acts=Object.values(S.taskData).filter(t=>t.projId===S.currentProjId&&isCritical(t));
+  if(flt)acts=acts.filter(a=>a.name.toLowerCase().includes(flt)||a.code.toLowerCase().includes(flt)||wbsPath(a.wbsId).toLowerCase().includes(flt));
+  acts=[...acts].sort((a,b)=>{
+    const ka=wbsSortKey(a.wbsId),kb=wbsSortKey(b.wbsId);
+    if(ka!==kb)return ka.localeCompare(kb);
+    const da=toD(a.displayStart),db=toD(b.displayStart);
+    return da&&db?da-db:0;
+  });
+  if(S.sortCol)acts=sortActs(acts);
+
+  let rows=[];
+
+  if(S.filterMode==='floatpath'){
+    // Group by float path number, each group gets a banner row then WBS+acts nested inside
+    for(let fp=1;fp<=S.fpCount;fp++){
+      const fpActs=acts.filter(a=>a.floatPath===fp);
+      if(!fpActs.length)continue;
+      const label=fp===1?'Float Path 1 — Critical Path':`Float Path ${fp}`;
+      const count=fpActs.length;
+      rows.push({type:'fp-banner',fp,label,count});
+      const emittedWbs=new Set(); // reset per float path so WBS headers re-emit inside each group
+      rows.push(...buildWbsRows(fpActs,maxLvl,emittedWbs,1));
+    }
+  } else {
+    const emittedWbs=new Set();
+    rows=buildWbsRows(acts,maxLvl,emittedWbs,0);
+  }
+
+  S.renderedRows=rows;
+
+  // Build WBS activity count map: wbsId → count of activities in that subtree (across all rendered acts)
+  const wbsCountMap={};
+  for(const row of rows){
+    if(row.type==='act'){
+      let id=row.act.wbsId;let safety=0;
+      while(id&&safety++<30){
+        wbsCountMap[id]=(wbsCountMap[id]||0)+1;
+        const w=S.wbsNodes[id];id=w?w.parentId:null;
+      }
+    }
+  }
+
+  const w=getTotalColWidth();
+  document.querySelector('#tableBodyWrap table').style.width=w+'px';
+  syncColGroups();
+
+  const ncols=S.columns.length;
+  let html='';
+  for(const row of rows){
+    if(row.type==='fp-banner'){
+      const fpCountActual=rows.filter(r=>r.type==='act'&&r.act.floatPath===row.fp).length;
+      html+=`<tr class="fp-banner">
+        <td class="center" style="font-family:'Space Mono',monospace;font-size:11px;color:rgba(201,168,76,.7);font-weight:700;">${fpCountActual}</td>
+        <td colspan="${ncols-1}" style="padding:0 16px;">
+          <div class="fp-banner-label">
+            <span class="fp-banner-badge">Float Path ${row.fp}</span>
+            ${esc(row.label.replace(/^Float Path \d+ — /,''))}
+          </div>
+        </td></tr>`;
+    } else if(row.type==='wbs'){
+      const indent=(row.depth-1)*16;
+      const wbsCnt=wbsCountMap[row.node.id]||0;
+      const lbl=`<div class="wbs-hdr-label" style="padding-left:${indent}px"><span class="wbs-lvl-badge">${row.depth}</span>${esc(row.node.name||row.node.shortName||'')}</div>`;
+      html+=`<tr class="wbs-hdr">
+        <td class="center" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--tm);font-weight:600;">${wbsCnt}</td>
+        <td colspan="${ncols-1}" style="padding:0 12px;">${lbl}</td></tr>`;
+    } else {
+      const act=row.act;
+      const dOff=row.depthOffset||0;
+      const cls=(act.status==='ip'?'ir':act.status==='done'?'dr':'nr')+' crit'+(flt&&(act.name.toLowerCase().includes(flt)||act.code.toLowerCase().includes(flt)||wbsPath(act.wbsId).toLowerCase().includes(flt))?' shrow':'');
+      const cells=S.columns.map(c=>{
+        const cc=c.align==='center'?' class="center"':'';
+        let content;
+        if(c.key==='wbsPath'){
+          const w2=S.wbsNodes[act.wbsId];
+          const nodeName=w2?(w2.name||w2.shortName||''):'';
+          const indent=maxLvl===0?0:(maxLvl===999?wbsDepth(act.wbsId):Math.min(maxLvl,wbsDepth(act.wbsId)))*16+dOff*16;
+          content=`<span style="font-size:11px;color:var(--td);padding-left:${indent}px">${hl(nodeName,S.searchQuery)}</span>`;
+        } else {
+          content=cellH(c,act);
+        }
+        return`<td${cc}>${content}</td>`;
+      }).join('');
+      html+=`<tr class="${cls}">${cells}</tr>`;
+    }
+  }
+
+  const modeLabel=S.filterMode==='driving'?'driving_path_flag':S.filterMode==='critical'?'total_float_hr_cnt':S.filterMode==='longestpath'?'float_path (value = 1)':'float_path';
+  document.getElementById('tableBody').innerHTML=html||`<tr><td colspan="${ncols}" style="padding:40px;text-align:center;color:var(--tm)">${Object.values(S.taskData).filter(t=>t.projId===S.currentProjId).length>0?`No activities match the current filter — check ${modeLabel} in your XER.`:'No results found.'}</td></tr>`;
+
+  const tbw=document.getElementById('tableBodyWrap');
+  const thw=document.getElementById('tableHeadWrap');
+  tbw.onscroll=()=>{
+    thw.scrollLeft=tbw.scrollLeft;
+    if(S.ganttOpen)document.getElementById('ganttBodyWrap').scrollTop=tbw.scrollTop;
+  };
+  if(S.ganttOpen)renderGantt();
+}
+
+function populateWbsLevels(){
+  const max=maxWbsDepth();
+  const sel=document.getElementById('wbsLevelSelect');
+  sel.innerHTML='<option value="0">Activities Only</option><option value="All">All Levels</option>';
+  for(let i=1;i<=max;i++){sel.innerHTML+=`<option value="${i}">Level ${i}</option>`;}
+  sel.disabled=false;
+  // Preserve current selection if valid, else default to All
+  const cur=S.wbsLevel;
+  if(cur==='0'||cur==='All'||(parseInt(cur)>=1&&parseInt(cur)<=max)){sel.value=cur;}
+  else{sel.value='All';}
+  S.wbsLevel=sel.value;
+}
+function onWbsLevelChange(){
+  S.wbsLevel=document.getElementById('wbsLevelSelect').value;
+  renderTable();
+}
+function onSearch(){S.searchQuery=document.getElementById('searchInput').value;renderTable();}
+
+function onProjSel(){
+  const sel=document.getElementById('projectSelect');S.currentProjId=sel.value;
+  S.sortCol=null;S.sortDir=1;S.wbsLevel='All';
+  populateWbsLevels();
+  renderHead();renderTable();updateStats();
+}
+
+function updateStats(){
+  const all=Object.values(S.taskData).filter(t=>t.projId===S.currentProjId);
+  const crit=all.filter(t=>isCritical(t));
+  document.getElementById('sp').textContent=Object.keys(S.projects).length;
+  document.getElementById('sa').textContent=all.length;
+  document.getElementById('sc').textContent=crit.length;
+  document.getElementById('sip').textContent=crit.filter(x=>x.status==='ip').length;
+  document.getElementById('sd').textContent=crit.filter(x=>x.status==='done').length;
+  const lbl=S.filterMode==='longestpath'?'Longest Path':S.filterMode==='driving'?'Driving':S.filterMode==='floatpath'?'Float Path':'Critical';
+  document.getElementById('scLabel').textContent=lbl;
+}
+function setSt(msg,t){document.getElementById('statusText').textContent=msg;document.getElementById('statusDot').className='sdot'+(t==='ok'?' ok':t==='err'?' err':'');}
+
+// ═══ SPLITTER ═════════════════════════════════════════════════════════════
+function initSplitter(){
+  const div=document.getElementById('divider');
+  const mc=document.getElementById('mainContent');
+  let dragging=false,startX=0,startLeft=0;
+  div.addEventListener('mousedown',e=>{dragging=true;startX=e.clientX;startLeft=document.getElementById('tablePart').offsetWidth;div.classList.add('dragging');document.body.style.cursor='col-resize';document.body.style.userSelect='none';});
+  document.addEventListener('mousemove',e=>{if(!dragging)return;const total=mc.offsetWidth;const newLeft=Math.max(200,Math.min(total-200-5,startLeft+(e.clientX-startX)));document.getElementById('tablePart').style.width=newLeft+'px';document.getElementById('tablePart').style.flex='none';document.getElementById('ganttPart').style.width=(total-newLeft-5)+'px';document.getElementById('ganttPart').style.flex='none';});
+  document.addEventListener('mouseup',()=>{if(dragging){dragging=false;div.classList.remove('dragging');document.body.style.cursor='';document.body.style.userSelect='';}});
+}
+
+// ═══ GANTT ════════════════════════════════════════════════════════════════
+function zoomIn(){S.ganttZoomIdx=Math.min(ZOOM.length-1,S.ganttZoomIdx+1);document.getElementById('zoomVal').textContent=ZOOM[S.ganttZoomIdx]+'×';if(S.ganttOpen)renderGantt();}
+function zoomOut(){S.ganttZoomIdx=Math.max(0,S.ganttZoomIdx-1);document.getElementById('zoomVal').textContent=ZOOM[S.ganttZoomIdx]+'×';if(S.ganttOpen)renderGantt();}
+function toggleGantt(){S.ganttOpen?closeGantt():openGantt();}
+function openGantt(){
+  S.ganttOpen=true;
+  const mc=document.getElementById('mainContent');
+  const gp=document.getElementById('ganttPart');
+  const dv=document.getElementById('divider');
+  gp.classList.add('open');dv.style.display='block';
+  const total=mc.offsetWidth;
+  const tp=document.getElementById('tablePart');
+  if(!tp.style.width){tp.style.width=Math.round(total*.55)+'px';tp.style.flex='none';gp.style.width=Math.round(total*.45-5)+'px';gp.style.flex='none';}
+  renderGantt();
+  const tbw=document.getElementById('tableBodyWrap');
+  const gbw=document.getElementById('ganttBodyWrap');
+  tbw.onscroll=()=>{document.getElementById('tableHeadWrap').scrollLeft=tbw.scrollLeft;gbw.scrollTop=tbw.scrollTop;};
+  gbw.addEventListener('scroll',()=>{document.getElementById('ganttAxisWrap').scrollLeft=gbw.scrollLeft;});
+}
+function closeGantt(){
+  S.ganttOpen=false;document.getElementById('ganttPart').classList.remove('open');document.getElementById('divider').style.display='none';
+  const tp=document.getElementById('tablePart');tp.style.width='';tp.style.flex='1';
+}
+
+function gRange(acts){
+  const ds=[];
+  for(const a of acts){const s=toD(a.displayStart),f=toD(a.displayFinish);if(s)ds.push(s);if(f)ds.push(f);}
+  if(!ds.length)return null;
+  let mn=new Date(Math.min(...ds)),mx=new Date(Math.max(...ds));
+  mn=new Date(mn.getFullYear(),mn.getMonth()-1,1);
+  mx=new Date(mx.getFullYear(),mx.getMonth()+2,0);
+  return{mn,mx};
+}
+function buildMonths(mn,mx){const m=[];let c=new Date(mn.getFullYear(),mn.getMonth(),1);while(c<=mx){m.push(new Date(c));c=new Date(c.getFullYear(),c.getMonth()+1,1);}return m;}
+
+function renderGantt(){
+  const rows=S.renderedRows;
+  // Only activity rows for range calculation
+  const acts=rows.filter(r=>r.type==='act').map(r=>r.act);
+  const range=gRange(acts);
+  const gi=document.getElementById('ganttInner');
+  const ai=document.getElementById('ganttAxisInner');
+  if(!range){gi.innerHTML='';ai.innerHTML='';return;}
+  const MW=55*ZOOM[S.ganttZoomIdx];
+  const months=buildMonths(range.mn,range.mx);
+  const TW=months.length*MW;
+  const totalH=rows.reduce((s,r)=>s+(r.type==='fp-banner'?36:ROW_H),0);
+  const spanMs=range.mx-range.mn;
+  function xOf(d){return d?Math.max(0,Math.min(TW,((d-range.mn)/spanMs)*TW)):null;}
+  let axH='';
+  let grps=[],cy=null,cs=0,cc=0;
+  months.forEach((m,i)=>{const y=m.getFullYear();if(y!==cy){if(cy!==null)grps.push({y:cy,s:cs,c:cc});cy=y;cs=i;cc=1;}else cc++;});
+  if(cy!==null)grps.push({y:cy,s:cs,c:cc});
+  grps.forEach(g=>{const txt=g.c*MW>=30?g.y:'';axH+=`<div class="tyr" style="left:${g.s*MW}px;width:${g.c*MW}px">${txt}</div>`;});
+  months.forEach((m,i)=>{axH+=`<div class="tmo" style="left:${i*MW}px;width:${MW}px">${MONS[m.getMonth()]}</div>`;});
+  ai.style.width=TW+'px';ai.innerHTML=axH;
+  document.getElementById('ganttLabel').textContent=`Gantt · ${months.length} mo`;
+  let html=`<div style="position:relative;width:${TW}px;height:${totalH}px">`;
+  months.forEach((m,i)=>{const x=i*MW,yr=m.getMonth()===0;html+=`<div class="gvl ${yr?'yr':''}" style="left:${x}px;height:${totalH}px"></div>`;});
+  const proj=S.projects[S.currentProjId];
+  const ddRaw=proj?proj.dataDate:'';
+  const dataDateD=ddRaw?new Date(ddRaw.trim().slice(0,10)):new Date();
+  if(dataDateD>=range.mn&&dataDateD<=range.mx)html+=`<div class="gtd" style="left:${xOf(dataDateD)}px;height:${totalH}px" title="Data Date: ${fmtD(dataDateD)}"></div>`;
+  rows.forEach(row=>{
+    if(row.type==='fp-banner'){
+      // Float path banner — taller gold-tinted spacer row, height must match table row (36px hardcoded in CSS)
+      html+=`<div class="grow" style="height:36px;background:rgba(201,168,76,.07);border-top:2px solid rgba(201,168,76,.4);border-bottom:1px solid rgba(201,168,76,.25);box-sizing:border-box;"></div>`;
+    } else if(row.type==='wbs'){
+      // WBS header row — shaded spacer, no bar
+      html+=`<div class="grow" style="background:var(--surface2);border-bottom:1px solid var(--border2);"></div>`;
+    } else {
+      const act=row.act;
+      const sD=toD(act.displayStart),fD=toD(act.displayFinish);
+      const isMilestone=act.taskType==='TT_Mile'||act.taskType==='TT_FinMile'||act.taskType==='TT_StartMile';
+      html+=`<div class="grow">`;
+      if(isMilestone){
+        // Use finish date for milestone point (or start if finish unavailable)
+        const mD=fD||sD;
+        if(mD){
+          const mx=xOf(mD);
+          const sz=10;
+          html+=`<div style="position:absolute;top:50%;left:${mx-sz/2}px;width:${sz}px;height:${sz}px;background:rgba(248,113,113,.9);border:1.5px solid #f87171;transform:translateY(-50%) rotate(45deg);box-shadow:0 0 6px rgba(248,113,113,.5);" title="${esc(act.name)} — Milestone"></div>`;
+        }
+      } else if(sD&&fD){
+        const x1=xOf(sD),x2=xOf(fD),bw=Math.max(3,x2-x1),pw=(act.completePct/100)*bw;
+        html+=`<div class="gbar crit-bar" style="left:${x1}px;width:${bw}px" title="${esc(act.name)}"><div class="gpct" style="width:${pw}px"></div></div>`;
+      }
+      html+=`</div>`;
+    }
+  });
+  html+=`</div>`;
+  gi.innerHTML=html;
+  document.getElementById('ganttAxisWrap').scrollLeft=document.getElementById('ganttBodyWrap').scrollLeft;
+  document.getElementById('ganttBodyWrap').scrollTop=document.getElementById('tableBodyWrap').scrollTop;
+}
+
+// ═══ FILE ═════════════════════════════════════════════════════════════════
+function loadFileText(text,name){
+  try{
+    // Save to sessionStorage so other tools can pick it up
+    try{sessionStorage.setItem('pms_xer_current',text);sessionStorage.setItem('pms_xer_current_name',name||'file.xer');}catch(e){}
+    parseXER(text);
+    const projs=Object.values(S.projects);
+    if(!projs.length){setSt('No projects found.','err');return;}
+    const sel=document.getElementById('projectSelect');
+    sel.innerHTML=projs.map(p=>`<option value="${esc(p.id)}">${esc(p.name)} (${esc(p.id)})</option>`).join('');
+    sel.disabled=false;
+    document.getElementById('ganttBtn').disabled=false;
+    document.getElementById('searchInput').disabled=false;
+    document.getElementById('filterModeSelect').disabled=false;
+    document.getElementById('dropZone').style.display='none';
+    document.getElementById('closeBtn').style.display='inline-flex';
+    document.getElementById('mainContent').style.display='flex';
+    S.columns=defCols();S.colWidths={};
+    S.currentProjId=projs[0].id;sel.value=S.currentProjId;
+    S.filterMode='critical';S.fpCount=1;
+    document.getElementById('filterModeSelect').value='critical';
+    document.getElementById('fpActiveLabel').style.display='none';
+    onProjSel();openGantt();
+    const critCount=Object.values(S.taskData).filter(t=>t.projId===S.currentProjId&&isCritical(t)).length;
+    setSt(`Loaded: ${name}  ·  ${projs.length} proj  ·  ${Object.keys(S.taskData).length} activities  ·  ${critCount} on driving path`,'ok');
+  }catch(err){setSt('Error: '+err.message,'err');}
+}
+function loadFile(file){
+  if(!file)return;setSt('Parsing '+file.name+'…','');
+  const r=new FileReader();
+  r.onload=e=>loadFileText(e.target.result,file.name);
+  r.onerror=()=>setSt('Failed to read file.','err');
+  r.readAsText(file,'latin-1');
+}
+function closeFile(){
+  S.projects={};S.wbsNodes={};S.taskData={};S.taskBudget={};
+  S.currentProjId=null;S.searchQuery='';S.sortCol=null;S.sortDir=1;
+  S.ganttOpen=false;S.renderedRows=[];S.wbsLevel='All';S.filterMode='driving';S.fpCount=1;
+  const sel=document.getElementById('projectSelect');sel.innerHTML='<option>— load a file first —</option>';sel.disabled=true;
+  const wl=document.getElementById('wbsLevelSelect');wl.innerHTML='<option value="All">All</option>';wl.disabled=true;
+  document.getElementById('ganttBtn').disabled=true;
+  const fms=document.getElementById('filterModeSelect');fms.value='driving';fms.disabled=true;
+  document.getElementById('fpActiveLabel').style.display='none';
+  const si=document.getElementById('searchInput');si.disabled=true;si.value='';
+  ['sp','sa','sc','sip','sd'].forEach(id=>document.getElementById(id).textContent='—');
+  document.getElementById('tableBody').innerHTML='';
+  document.getElementById('dropZone').style.display='';
+  document.getElementById('mainContent').style.display='none';
+  document.getElementById('closeBtn').style.display='none';
+  document.getElementById('ganttPart').classList.remove('open');
+  document.getElementById('divider').style.display='none';
+  const tp=document.getElementById('tablePart');tp.style.width='';tp.style.flex='1';
+  setSt('Ready — load an XER file to begin','');
+}
+
+document.getElementById('fileInput').addEventListener('change',e=>{loadFile(e.target.files[0]);e.target.value='';});
+function onDO(e){e.preventDefault();document.getElementById('dropZone').classList.add('dov');}
+function onDL(){document.getElementById('dropZone').classList.remove('dov');}
+function onDD(e){e.preventDefault();onDL();loadFile(e.dataTransfer.files[0]);}
+window.addEventListener('DOMContentLoaded',initSplitter);
+
+// Auto-load from sessionStorage
+window.addEventListener('DOMContentLoaded',()=>{
+  try{
+    const stored=sessionStorage.getItem('pms_xer_current');
+    const name=sessionStorage.getItem('pms_xer_current_name')||'file.xer';
+    if(stored){
+      // Hide drop zone immediately — no flash
+      document.getElementById('dropZone').style.display='none';
+      setSt('Restoring file…','');
+      setTimeout(()=>{
+        try{
+          loadFileText(stored,name);
+        }catch(e){
+          document.getElementById('dropZone').style.display='';
+          document.getElementById('mainContent').style.display='none';
+          setSt('Ready — load an XER file to begin','');
+        }
+      },0);
+    } else {
+      document.getElementById('dropZone').style.display='';
+    }
+  }catch(e){
+    document.getElementById('dropZone').style.display='';
+  }
+});
+
+// ═══ THEME ════════════════════════════════════════════════════════════════
+function toggleTheme(){
+  const isLight=document.documentElement.classList.toggle('light');
+  document.getElementById('themeBtn').textContent=isLight?'🌙':'☀️';
+  try{localStorage.setItem('pms_cp_theme',isLight?'light':'dark');}catch(e){}
+}
+(function initTheme(){
+  try{const t=localStorage.getItem('pms_cp_theme');if(t==='light'){document.documentElement.classList.add('light');}}catch(e){}
+  window.addEventListener('DOMContentLoaded',()=>{
+    const btn=document.getElementById('themeBtn');
+    if(btn)btn.textContent=document.documentElement.classList.contains('light')?'🌙':'☀️';
+  });
+})();
+
+// ═══ EXIT MODAL ═══════════════════════════════════════════════════════════
+let _exitTarget='/';
+function askExit(url){_exitTarget=url||'/';document.getElementById('exitModal').classList.add('open');}
+function closeExitModal(){document.getElementById('exitModal').classList.remove('open');}
+function confirmExit(){try{sessionStorage.removeItem('pms_xer_current');sessionStorage.removeItem('pms_xer_current_name');}catch(e){}window.location.href=_exitTarget;}
+function switchTool(url){window.location.href=url;}
+</script>
+
+<!-- ══ PMAUTH OFFLINE STUB (local testing only) ══ -->
+<script>
+window.PMAuth = {
+  onAuthChange: function(cb) { cb(null, true); },
+  signOut: async function() {},
+  getUser: function() { return null; }
+};
+</script>
+<script>
+function goSignIn(){ window.location.href='/?signin=1'; }
+async function appSignOut(){ if(window.PMAuth){try{await PMAuth.signOut();}catch(e){}} window.location.href='/'; }
+function renderAppUserPill(user, licenseActive){
+  const slot=document.getElementById('appUserPill');
+  const btn=document.getElementById('signinBtn');
+  if(!slot||!btn)return;
+  if(user){
+    btn.style.display='none';
+    const displayName=(user.user_metadata&&user.user_metadata.full_name)?user.user_metadata.full_name.split(' ')[0]:(user.email?user.email.split('@')[0]:'Account');
+    const avatarUrl=user.user_metadata&&user.user_metadata.avatar_url;
+    const avatarHtml=avatarUrl?`<img class="nav-user-avatar" src="${avatarUrl}" alt="">`:`<div class="nav-user-avatar">${(displayName[0]||'U').toUpperCase()}</div>`;
+    const proBadge=licenseActive?'<span class="badge-pro">Pro</span>':'';
+    slot.style.display='';
+    slot.innerHTML=`<button class="nav-user-pill" onclick="appSignOut()" title="Click to sign out">${avatarHtml}<span class="nav-user-name">${displayName}${proBadge}</span><span class="nav-user-hint">↩</span></button>`;
+  }else{
+    slot.style.display='none';slot.innerHTML='';btn.style.display='';
+  }
+}
+(function(){
+  function start(){ PMAuth.onAuthChange(function(user,licenseActive){ renderAppUserPill(user,licenseActive); }); }
+  if(window.PMAuth)start();
+  else{ const iv=setInterval(function(){if(window.PMAuth){clearInterval(iv);start();}},50); setTimeout(function(){if(!window.PMAuth){clearInterval(iv);renderAppUserPill(null,false);}},4000); }
+})();
+</script>
+</body>
+</html>

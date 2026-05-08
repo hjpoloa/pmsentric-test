@@ -1,0 +1,3986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resource Loading Analyzer — Primavera P6 XER</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700&family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090E;
+  --deep: #0C1018;
+  --surface: #111926;
+  --surface2: #172030;
+  --border: #1C2A3A;
+  --border2: #243548;
+  --gold: #C8922A;
+  --gold-light: #E8B84B;
+  --gold-dim: #5C3F10;
+  --cyan: #00C9E0;
+  --cyan-dim: #003D45;
+  --cyan-bright: #40E0F0;
+  --red: #E05050;
+  --green: #34C98A;
+  --amber: #F0A030;
+  --white: #EAE8E3;
+  --muted: #8A8A8A;
+  --dim: #3A4A5A;
+  --rh: 32px;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: 'DM Mono', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: crosshair;
+}
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(0,201,224,.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,201,224,.018) 1px, transparent 1px);
+  background-size: 52px 52px;
+  pointer-events:none; z-index:0;
+}
+
+/* ── LAYOUT ── */
+.app { position:relative; z-index:1; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+/* ── HEADER ── */
+header {
+  display:flex; align-items:center; gap:14px;
+  padding:13px 24px;
+  border-bottom:1px solid var(--border);
+  background:rgba(7,9,14,.97);
+  backdrop-filter:blur(8px);
+  flex-shrink:0;
+}
+.logo-mark {
+  width:36px; height:36px;
+  background:linear-gradient(135deg, var(--gold), #8A5E10);
+  border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Space Mono',monospace;
+  font-size:11px; font-weight:700; color:#fff; letter-spacing:.05em;
+  flex-shrink:0;
+}
+.header-title { font-family:'Sora',sans-serif; font-size:15px; font-weight:700; letter-spacing:-.3px; color:var(--white); }
+.header-sub { font-size:11px; color:var(--muted); margin-top:1px; }
+.header-badge {
+  font-size:11px; font-weight:600; color:var(--gold); letter-spacing:.3px; margin-top:2px;
+  text-decoration:none;
+}
+.header-badge:hover { color:var(--gold-light); }
+.hactions { margin-left:auto; display:flex; align-items:center; gap:10px; }
+.btn {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:7px 16px; border-radius:7px;
+  font-family:'Sora',sans-serif; font-size:12px; font-weight:600;
+  cursor:pointer; border:none; transition:all .18s; white-space:nowrap;
+}
+.btn-primary { background:linear-gradient(135deg,var(--gold),#8A5E10); color:#000; font-weight:700; }
+.btn-primary:hover { box-shadow:0 0 20px rgba(200,146,42,.35); transform:translateY(-1px); }
+.btn-ghost { background:transparent; border:1px solid var(--border2); color:var(--muted); }
+.btn-ghost:hover { border-color:var(--gold); color:var(--gold); }
+.btn-ghost:disabled { opacity:.3; cursor:not-allowed; }
+.btn-danger { background:transparent; border:1px solid rgba(224,80,80,.4); color:var(--red); }
+.btn-danger:hover { background:rgba(224,80,80,.08); }
+
+/* ── TOOLBAR ── */
+.toolbar {
+  display:flex; align-items:center; gap:12px;
+  padding:9px 28px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  flex-shrink:0; flex-wrap:wrap;
+}
+.tl { font-size:10px; color:var(--dim); letter-spacing:.3em; text-transform:uppercase; }
+select {
+  background:var(--surface2); border:1px solid var(--border2);
+  color:var(--white); padding:6px 12px;
+  border-radius:5px; font-family:'DM Mono',monospace; font-size:11px;
+  cursor:pointer; outline:none; transition:border-color .18s;
+}
+select:focus { border-color:var(--cyan); }
+select:disabled { opacity:.35; cursor:not-allowed; }
+.view-tabs { display:flex; gap:2px; margin-left:auto; }
+.vtab {
+  padding:6px 16px; font-size:11px; font-family:'DM Mono',monospace;
+  background:transparent; border:1px solid var(--border2);
+  color:var(--muted); cursor:pointer; transition:all .18s; letter-spacing:.05em;
+}
+.vtab:first-child { border-radius:4px 0 0 4px; }
+.vtab:last-child { border-radius:0 4px 4px 0; }
+.vtab.active { background:var(--gold); color:#000; border-color:var(--gold); font-weight:700; }
+.vtab:not(.active):hover { border-color:var(--gold); color:var(--gold); }
+
+/* ── STATS BAR ── */
+.stats-bar {
+  display:flex; align-items:center;
+  padding:0 28px; border-bottom:1px solid var(--border);
+  background:rgba(12,16,24,.7); flex-shrink:0; height:30px;
+}
+.stat { display:flex; align-items:center; gap:6px; padding:0 14px; border-right:1px solid var(--border); height:100%; font-size:10px; color:var(--muted); }
+.stat:first-child { padding-left:0; }
+.stat:last-child { border-right:none; }
+.stat-val { font-weight:700; color:var(--white); font-family:'DM Mono',monospace; }
+.stat-val.gold { color:var(--gold); }
+.stat-val.cyan { color:var(--cyan); }
+.stat-val.green { color:var(--green); }
+.stat-val.red { color:var(--red); }
+
+/* ── DROP ZONE ── */
+#dropZone {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+  border:2px dashed var(--border2); border-radius:12px;
+  margin:28px; cursor:pointer; transition:all .25s;
+  background:var(--surface); position:relative; overflow:hidden;
+}
+#dropZone::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 0%, rgba(200,146,42,.04), transparent 60%);
+  pointer-events:none;
+}
+#dropZone:hover, #dropZone.dov { border-color:var(--gold); background:var(--surface2); }
+.drop-icon { font-size:52px; filter:drop-shadow(0 0 16px rgba(200,146,42,.25)); }
+.drop-title { font-family:'Sora',sans-serif; font-size:18px; font-weight:700; color:var(--white); }
+.drop-sub { font-size:13px; color:var(--muted); }
+#fileInput { display:none; }
+
+/* ── MAIN CONTENT ── */
+#mainContent { flex:1; display:none; flex-direction:column; overflow:hidden; }
+
+/* ── FILTER PANEL ── */
+.filter-panel {
+  display:flex; align-items:center; gap:12px;
+  padding:8px 28px; border-bottom:1px solid var(--border);
+  background:var(--deep); flex-shrink:0; flex-wrap:wrap;
+}
+.fp-label { font-size:10px; color:var(--dim); letter-spacing:.3em; text-transform:uppercase; }
+.fp-chips { display:flex; gap:6px; flex-wrap:wrap; }
+.chip {
+  font-size:10px; padding:4px 12px; border-radius:20px;
+  border:1px solid var(--border2); color:var(--muted);
+  cursor:pointer; transition:all .15s; background:var(--surface);
+  letter-spacing:.05em;
+}
+.chip.active { border-color:var(--gold); color:var(--gold); background:rgba(200,146,42,.08); }
+.chip:hover:not(.active) { border-color:var(--muted); color:var(--white); }
+.fp-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
+.period-sel { display:flex; gap:2px; }
+.psb {
+  padding:4px 10px; font-size:10px; font-family:'DM Mono',monospace;
+  background:var(--surface); border:1px solid var(--border2);
+  color:var(--muted); cursor:pointer; transition:all .15s;
+}
+.psb:first-child { border-radius:3px 0 0 3px; }
+.psb:last-child { border-radius:0 3px 3px 0; }
+.psb.active { background:var(--cyan-dim); border-color:var(--cyan); color:var(--cyan); }
+
+
+/* ── CHART AREA ── */
+#chartArea { flex:1; overflow:auto; padding:0; position:relative; }
+
+/* ── HISTOGRAM VIEW ── */
+#histogramView { display:none; padding:20px 28px; overflow-y:auto; }
+.chart-header { display:flex; align-items:center; gap:16px; margin-bottom:16px; }
+.chart-title { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:.08em; color:var(--white); }
+.chart-meta { font-size:10px; color:var(--muted); }
+.legend { display:flex; gap:16px; margin-left:auto; }
+.legend-item { display:flex; align-items:center; gap:6px; font-size:10px; color:var(--muted); }
+.legend-dot { width:8px; height:8px; border-radius:50%; }
+
+/* ── HISTOGRAM COLLAPSE/EXPAND ── */
+.histo-panel { }
+.histo-panel-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:8px;
+}
+.histo-panel-title-group { display:flex; align-items:center; gap:10px; }
+.histo-toggle-btns { display:flex; gap:4px; }
+.histo-btn {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:4px 10px; border-radius:4px; font-size:10px;
+  font-family:'DM Mono',monospace; letter-spacing:.05em;
+  cursor:pointer; border:1px solid var(--border2);
+  background:var(--surface2); color:var(--muted);
+  transition:all .15s; white-space:nowrap;
+}
+.histo-btn:hover { border-color:var(--gold); color:var(--gold); }
+.histo-btn.collapse-btn:hover { border-color:var(--red); color:var(--red); }
+.histo-body { transition:none; overflow:hidden; }
+.histo-body.collapsed { display:none; }
+
+.histogram-wrap {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:6px; overflow:hidden; position:relative;
+}
+.chart-canvas-wrap { position:relative; overflow-x:auto; overflow-y:hidden; }
+canvas#histoCanvas { display:block; }
+
+/* ── Histogram Data Table (below each chart) ── */
+.histo-data-wrap {
+  overflow-x:auto;
+  margin-top:10px;
+  border:1px solid var(--border);
+  border-radius:4px;
+  background:var(--surface);
+}
+.histo-data-table {
+  border-collapse:collapse;
+  font-family:'DM Mono', monospace;
+  font-size:10px;
+  width:max-content;
+  min-width:100%;
+}
+.histo-data-table th,
+.histo-data-table td {
+  padding:5px 8px;
+  text-align:center;
+  white-space:nowrap;
+  border-right:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+}
+.histo-data-table th:last-child,
+.histo-data-table td:last-child { border-right:none; }
+.histo-data-table tr:last-child td { border-bottom:none; }
+.histo-data-table thead th {
+  background:var(--surface2);
+  color:var(--muted);
+  font-weight:500;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  font-size:9px;
+  position:sticky; top:0;
+}
+.histo-data-table th.row-label,
+.histo-data-table td.row-label {
+  text-align:left;
+  background:var(--surface2);
+  color:var(--white);
+  font-weight:500;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  font-size:9px;
+  position:sticky; left:0;
+  z-index:2;
+  min-width:110px;
+  border-right:2px solid var(--border2);
+}
+.histo-data-table thead th.row-label { z-index:3; }
+.histo-data-table td.bud-gold  { color:var(--gold-light); }
+.histo-data-table td.bud-red   { color:var(--red); }
+.histo-data-table td.act-val   { color:var(--green); }
+.histo-data-table td.rem-val   { color:var(--cyan); }
+.histo-data-table td.zero-val  { color:var(--dim); }
+.histo-data-table tr.bud-row td.row-label.bud-gold { color:var(--gold-light); }
+.histo-data-table tr.bud-row td.row-label.bud-red  { color:var(--red); }
+.histo-data-table tr.act-row td.row-label { color:var(--green); }
+.histo-data-table tr.rem-row td.row-label { color:var(--cyan); }
+.axis-y-labels {
+  position:absolute; left:0; top:0; bottom:0; width:52px;
+  pointer-events:none;
+}
+.chart-tooltip {
+  position:fixed; background:var(--surface2); border:1px solid var(--border2);
+  padding:10px 14px; border-radius:5px; font-size:11px;
+  pointer-events:none; z-index:100; display:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+  min-width:160px;
+}
+.tt-label { font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:.06em; margin-bottom:6px; color:var(--white); }
+.tt-row { display:flex; justify-content:space-between; gap:16px; font-size:10px; color:var(--muted); margin-top:3px; }
+.tt-val { color:var(--white); font-weight:700; }
+
+/* ── TABLE VIEW ── */
+#tableView { display:none; }
+.res-table-wrap { overflow:auto; height:100%; }
+table.res-table { width:100%; border-collapse:collapse; }
+table.res-table th {
+  position:sticky; top:0; z-index:2;
+  background:var(--surface2); padding:0 16px; height:36px;
+  font-size:10px; letter-spacing:.25em; text-transform:uppercase;
+  color:var(--muted); text-align:left; border-bottom:2px solid var(--border2);
+  white-space:nowrap; cursor:pointer;
+}
+table.res-table th:hover { color:var(--gold); }
+table.res-table td {
+  padding:0 16px; height:var(--rh); font-size:11px;
+  border-bottom:1px solid rgba(28,42,58,.5);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  max-width:280px;
+}
+table.res-table tr:hover td { background:var(--surface2); }
+table.res-table .num { text-align:right; font-family:'DM Mono',monospace; }
+table.res-table .bar-cell { padding:0 16px; }
+.mini-bar { height:6px; border-radius:3px; background:var(--gold); opacity:.7; min-width:2px; }
+
+/* ── S-CURVE VIEW ── */
+#scurveView { display:none; padding:20px 28px; }
+
+/* ── EMPTY STATE ── */
+.empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:10px; color:var(--muted); font-size:12px; }
+.empty-icon { font-size:40px; opacity:.3; }
+
+/* ── STATUS BAR ── */
+.status-bar {
+  display:flex; align-items:center; gap:10px;
+  padding:6px 28px; border-top:1px solid var(--border);
+  background:var(--surface); font-size:10px; color:var(--muted);
+  flex-shrink:0; font-family:'DM Mono',monospace; letter-spacing:.05em;
+}
+.sdot { width:7px; height:7px; border-radius:50%; background:var(--dim); flex-shrink:0; }
+.sdot.ok { background:var(--green); }
+.sdot.err { background:var(--red); }
+.sdot.loading { background:var(--amber); animation:pulse 1s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+::-webkit-scrollbar { width:7px; height:7px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px; }
+::-webkit-scrollbar-thumb:hover { background:var(--dim); }
+
+/* ── EXPORT MODAL ── */
+#exportModal {
+  display:none; position:fixed; inset:0; z-index:9999;
+  background:rgba(0,0,0,.72); backdrop-filter:blur(4px);
+  align-items:center; justify-content:center;
+}
+#exportModal.open { display:flex; }
+.modal-box {
+  background:var(--surface); border:1px solid var(--border2);
+  border-radius:10px; padding:0; width:480px; max-width:95vw;
+  box-shadow:0 24px 60px rgba(0,0,0,.7);
+  overflow:hidden;
+}
+.modal-header {
+  display:flex; align-items:center; gap:12px;
+  padding:18px 22px; border-bottom:1px solid var(--border);
+  background:var(--deep);
+}
+.modal-header-icon { font-size:22px; }
+.modal-header-title { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:.08em; color:var(--white); }
+.modal-header-sub { font-size:10px; color:var(--muted); margin-top:2px; letter-spacing:.15em; }
+.modal-close { margin-left:auto; background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; padding:4px 6px; border-radius:4px; transition:color .15s; }
+.modal-close:hover { color:var(--red); }
+.modal-body { padding:20px 22px; }
+.modal-section-label {
+  font-size:10px; color:var(--dim); letter-spacing:.3em; text-transform:uppercase;
+  margin-bottom:10px;
+}
+.modal-fixed-sheets {
+  display:flex; flex-direction:column; gap:6px; margin-bottom:18px;
+}
+.modal-sheet-row {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 14px; border-radius:5px;
+  background:rgba(200,146,42,.06); border:1px solid rgba(200,146,42,.2);
+}
+.modal-sheet-row.checked { border-color:#e05050; background:rgba(224,80,80,.08); }
+.modal-sheet-row.checked .mat-checkbox { background:#e05050; border-color:#e05050; color:#fff; font-weight:700; }
+.modal-sheet-row:hover { cursor:default; }
+#dlyOptRow:hover { border-color:rgba(224,80,80,.5); }
+.modal-sheet-icon { font-size:14px; }
+.modal-sheet-name { font-size:11px; color:var(--white); flex:1; }
+.modal-sheet-badge {
+  font-size:9px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--gold); background:rgba(200,146,42,.1);
+  border:1px solid var(--gold-dim); padding:2px 8px; border-radius:2px;
+}
+.modal-divider { height:1px; background:var(--border); margin:4px 0 16px; }
+.mat-list { display:flex; flex-direction:column; gap:5px; max-height:220px; overflow-y:auto; }
+.mat-row {
+  display:flex; align-items:center; gap:10px;
+  padding:8px 12px; border-radius:5px; cursor:pointer;
+  border:1px solid var(--border); background:var(--surface2);
+  transition:border-color .15s, background .15s;
+}
+.mat-row:hover { border-color:var(--border2); background:var(--deep); }
+.mat-row.checked { border-color:var(--cyan); background:rgba(0,201,224,.06); }
+.mat-checkbox {
+  width:15px; height:15px; border-radius:3px;
+  border:1px solid var(--border2); background:var(--deep);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; font-size:10px; transition:all .15s;
+}
+.mat-row.checked .mat-checkbox { background:var(--cyan); border-color:var(--cyan); color:#000; font-weight:700; }
+.mat-name { font-size:11px; color:var(--white); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mat-unit { font-size:10px; color:var(--muted); }
+.mat-empty { font-size:11px; color:var(--muted); padding:16px; text-align:center; }
+.mat-select-all {
+  display:flex; align-items:center; gap:8px;
+  font-size:10px; color:var(--muted); cursor:pointer;
+  margin-bottom:8px; padding:4px 2px;
+}
+.mat-select-all:hover { color:var(--cyan); }
+.mat-search-wrap {
+  position:relative; margin-bottom:8px;
+}
+.mat-search-wrap input {
+  width:100%; background:var(--surface2); border:1px solid var(--border2);
+  color:var(--white); padding:7px 28px 7px 30px; border-radius:5px;
+  font-family:'Sora',sans-serif; font-size:11px; outline:none;
+  transition:border-color .15s;
+}
+.mat-search-wrap input:focus { border-color:var(--cyan); }
+.mat-search-wrap input::placeholder { color:var(--muted); }
+.mat-search-icon {
+  position:absolute; left:10px; top:50%; transform:translateY(-50%);
+  font-size:11px; color:var(--muted); pointer-events:none;
+}
+.mat-search-clear {
+  position:absolute; right:8px; top:50%; transform:translateY(-50%);
+  font-size:12px; color:var(--muted); cursor:pointer; background:none;
+  border:none; padding:2px 4px; line-height:1; display:none;
+}
+.mat-search-clear:hover { color:var(--cyan); }
+.modal-footer {
+  display:flex; align-items:center; gap:10px;
+  padding:14px 22px; border-top:1px solid var(--border);
+  background:var(--deep);
+}
+.modal-count { font-size:10px; color:var(--muted); flex:1; }
+.modal-count span { color:var(--cyan); font-weight:700; }
+
+/* Budget-source toggle (shown only when a baseline is loaded) */
+.budsrc-wrap {
+  margin-bottom:18px;
+  padding:12px 14px;
+  border:1px solid rgba(224,80,80,.25);
+  background:rgba(224,80,80,.04);
+  border-radius:6px;
+}
+.budsrc-wrap.disabled {
+  opacity:.5; border-color:var(--border); background:transparent;
+}
+.budsrc-label {
+  font-size:10px; color:var(--dim); letter-spacing:.3em; text-transform:uppercase;
+  margin-bottom:10px;
+}
+.budsrc-opts { display:flex; gap:8px; }
+.budsrc-opt {
+  flex:1; display:flex; align-items:center; gap:10px;
+  padding:8px 12px; border-radius:5px; cursor:pointer;
+  border:1px solid var(--border2); background:var(--surface2);
+  transition:border-color .15s, background .15s;
+}
+.budsrc-opt:hover { border-color:var(--border2); background:var(--deep); }
+.budsrc-opt.checked { border-color:var(--gold); background:rgba(200,146,42,.08); }
+.budsrc-opt[data-src="baseline"].checked { border-color:#e05050; background:rgba(224,80,80,.08); }
+.budsrc-wrap.disabled .budsrc-opt { pointer-events:none; cursor:not-allowed; }
+.budsrc-radio {
+  width:14px; height:14px; border-radius:50%;
+  border:1px solid var(--border2); background:var(--deep);
+  flex-shrink:0; position:relative;
+}
+.budsrc-opt.checked .budsrc-radio::after {
+  content:''; position:absolute; inset:3px; border-radius:50%; background:var(--gold);
+}
+.budsrc-opt[data-src="baseline"].checked .budsrc-radio::after { background:#e05050; }
+.budsrc-txt { font-size:11px; color:var(--white); flex:1; }
+.budsrc-txt .sub { display:block; font-size:9px; color:var(--muted); letter-spacing:.15em; margin-top:2px; text-transform:uppercase; }
+.budsrc-hint { font-size:9px; color:var(--muted); letter-spacing:.15em; margin-top:8px; text-transform:uppercase; }
+/* ── Auth pill ── */
+.nav-user-avatar{width:24px;height:24px;border-radius:50%;background:rgba(201,168,76,.25);color:var(--gold);font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.nav-user-avatar img{width:100%;height:100%;object-fit:cover;}
+.badge-pro{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.08em;padding:1px 5px;border-radius:3px;background:rgba(201,168,76,.2);color:var(--gold);border:1px solid rgba(201,168,76,.4);margin-left:5px;vertical-align:middle;text-transform:uppercase;}
+/* ── Exit confirmation modal ── */
+#exitModal{position:fixed;inset:0;background:rgba(7,9,14,.85);backdrop-filter:blur(6px);z-index:9999;display:none;align-items:center;justify-content:center;}
+#exitModal.open{display:flex;}
+.exit-box{background:#111926;border:1px solid #1C2A3A;border-radius:12px;padding:28px 32px;max-width:380px;width:90%;text-align:center;font-family:'DM Mono',monospace;}
+.exit-box h3{font-size:15px;font-weight:700;margin-bottom:8px;color:var(--white);letter-spacing:.05em;}
+.exit-box p{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:20px;}
+.exit-btns{display:flex;gap:10px;justify-content:center;}
+.btn-tool-switch{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:5px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;cursor:pointer;border:1px solid rgba(200,146,42,.35);background:rgba(200,146,42,.08);color:var(--gold);transition:all .18s;white-space:nowrap;text-decoration:none;letter-spacing:.03em;}
+.btn-tool-switch:hover{border-color:var(--gold);background:rgba(200,146,42,.18);}
+</style>
+</head>
+<body>
+<script>try{if(sessionStorage.getItem('pms_xer_current')){document.write('<style>#dropZone{display:none!important}</style>');}}catch(e){}</script>
+
+<div class="app">
+
+<!-- HEADER -->
+<header>
+  <div class="logo-mark">RL</div>
+  <div>
+    <div class="header-title">Resource Loading Analyzer</div>
+    <div class="header-sub">Primavera P6 · XER Format</div>
+  </div>
+  <a href="https://pmsentric.com/" target="_blank" rel="noopener" class="header-badge" style="text-decoration:none;cursor:pointer;">✦ PMSentric</a>
+  <div class="hactions">
+    <a href="#" class="btn btn-ghost" onclick="askExit('/');return false;" style="text-decoration:none;">← Home</a>
+    <a href="/iwpmsschedule-reader" class="btn-tool-switch" onclick="switchTool('/iwpmsschedule-reader');return false;">📋 Schedule Reader</a>
+    <a href="/iwpmscriticalpath" class="btn-tool-switch" onclick="switchTool('/iwpmscriticalpath');return false;">🔗 Critical Path</a>
+    <div id="appUserPill" style="display:none;"></div>
+    <button class="btn btn-ghost" id="signinBtn" onclick="goSignIn()" style="display:none;">Log In</button>
+    <button class="btn btn-danger" id="closeBtn" onclick="closeFile()" style="display:none">✕ Close</button>
+    <button class="btn btn-ghost" id="exportBtn" onclick="openExportModal()" style="display:none;border-color:rgba(52,201,138,.5);color:#34C98A;">⬇ Export Excel</button>
+    <span id="baselineChip" style="display:none;font-size:10px;color:var(--cyan);letter-spacing:.15em;background:rgba(0,201,224,.08);border:1px solid var(--cyan-dim);padding:5px 10px;border-radius:3px;">◆ BASELINE: <span id="baselineChipName">—</span> <span style="cursor:pointer;margin-left:8px;color:var(--red);font-weight:700;" onclick="clearBaseline()" title="Remove baseline">✕</span></span>
+    <button class="btn btn-ghost" id="baselineBtn" onclick="document.getElementById('baselineInput').click()" style="display:none;border-color:rgba(0,201,224,.5);color:var(--cyan);">📎 Load Baseline XER</button>
+    <input type="file" id="baselineInput" accept=".xer" style="display:none">
+    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">📂 Load XER File</button>
+    <input type="file" id="fileInput" accept=".xer">
+  </div>
+</header>
+
+<!-- Free-tier banner -->
+<div id="freeBanner2" style="display:flex;background:linear-gradient(90deg,rgba(200,146,42,.12),rgba(200,146,42,.04));border-bottom:1px solid rgba(200,146,42,.25);padding:8px 24px;font-size:12px;color:#e6d8b0;align-items:center;gap:12px;flex-wrap:wrap;">
+  <span style="font-family:'DM Mono',monospace;font-size:10px;padding:2px 6px;border-radius:3px;background:rgba(200,146,42,.2);color:#c8922a;border:1px solid rgba(200,146,42,.4);letter-spacing:.06em;text-transform:uppercase;">Free</span>
+  <span id="freeBannerMsg2">Free plan: resource data limited to first 100 activities. Subscribe to Pro to view all.</span>
+  <a href="/?page=pricing" style="margin-left:auto;color:#c8922a;font-weight:600;text-decoration:underline;">Upgrade to Pro →</a>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <span class="tl">Project</span>
+  <select id="projectSelect" disabled onchange="onProjChange()"><option>— load a file first —</option></select>
+  <span class="tl" style="margin-left:8px">👷 Labor</span>
+  <select id="laborSelect" disabled onchange="renderCurrent()"><option value="">— all labor —</option></select>
+  <span class="tl" style="margin-left:4px">🔧 Equipment</span>
+  <select id="equipSelect" disabled onchange="renderCurrent()"><option value="">— all equipment —</option></select>
+  <span class="tl" style="margin-left:4px">📦 Material</span>
+  <select id="materialSelect" disabled onchange="renderCurrent()"><option value="">— all material —</option></select>
+  <div class="view-tabs">
+    <button class="vtab active" onclick="switchView('histogram',this)">Histogram</button>
+    <button class="vtab" onclick="switchView('scurve',this)">S-Curve</button>
+    <button class="vtab" onclick="switchView('table',this)">Table</button>
+    <button class="vtab" onclick="switchView('expenses',this)">💰 Expenses</button>
+    <button class="vtab" id="delayedTabBtn" onclick="switchView('delayed',this)" style="display:none;border-color:rgba(224,80,80,.5);color:#e05050;">⏱ Delayed</button>
+
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat">Resources <span class="stat-val gold" id="stRes">—</span></div>
+  <div class="stat">Assignments <span class="stat-val cyan" id="stAsgn">—</span></div>
+  <div class="stat">Peak <span id="stPeakLabel">Units</span> <span class="stat-val" id="stPeak">—</span></div>
+  <div class="stat">Total Budgeted <span class="stat-val green" id="stBudget">—</span></div>
+  <div class="stat">Data Date <span class="stat-val" id="stDD">—</span></div>
+</div>
+
+<!-- DROP ZONE -->
+<div id="dropZone"
+  onclick="document.getElementById('fileInput').click()"
+  ondragover="evDO(event)" ondragleave="evDL(event)" ondrop="evDD(event)">
+  <div class="drop-icon">⚙️</div>
+  <div class="drop-title">Drop your XER file here</div>
+  <div class="drop-sub">or click to browse — all processing happens in your browser</div>
+  <button class="btn btn-primary" style="margin-top:8px" onclick="event.stopPropagation();document.getElementById('fileInput').click()">Choose File</button>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="mainContent">
+
+  <!-- FILTER PANEL -->
+  <div class="filter-panel">
+    <span class="fp-label">Filter</span>
+    <div class="fp-chips" id="roleChips"></div>
+    <div class="fp-right">
+      <span class="fp-label">Period</span>
+      <div class="period-sel">
+        <button class="psb active" data-period="week" onclick="setPeriod('week',this)">Week</button>
+        <button class="psb" data-period="month" onclick="setPeriod('month',this)">Month</button>
+        <button class="psb" data-period="quarter" onclick="setPeriod('quarter',this)">Quarter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHART AREA -->
+  <div id="chartArea">
+
+    <!-- HISTOGRAM VIEW — 3 panels -->
+    <div id="histogramView" style="padding:20px 28px;display:none;flex-direction:column;gap:24px;">
+
+      <!-- shared legend -->
+      <div style="display:flex;align-items:center;gap:20px;flex-shrink:0;">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.08em;color:var(--white);">Resource Loading Histograms</span>
+        <div class="legend" style="margin-left:auto;">
+          <div class="legend-item" id="legendBud"><div class="legend-dot" id="legendBudDot" style="background:var(--gold)"></div><span id="legendBudLabel">Budgeted</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--cyan)"></div>Remaining</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Actual</div>
+        </div>
+      </div>
+
+      <!-- MANPOWER -->
+      <div class="histo-panel">
+        <div class="histo-panel-header">
+          <div class="histo-panel-title-group">
+            <span style="font-size:16px;">👷</span>
+            <div>
+              <div class="chart-title">Manpower</div>
+              <div class="chart-meta" id="histoMetaLabor"></div>
+            </div>
+          </div>
+          <div class="histo-toggle-btns">
+            <button class="histo-btn collapse-btn" onclick="collapseHisto('labor')">➖ Collapse</button>
+            <button class="histo-btn" onclick="expandHisto('labor')">➕ Expand</button>
+          </div>
+        </div>
+        <div class="histo-body" id="histoBodyLabor">
+          <div class="histogram-wrap">
+            <div class="chart-canvas-wrap">
+              <canvas id="histoCanvasLabor"></canvas>
+            </div>
+            <div class="histo-data-wrap" id="histoDataLabor"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EQUIPMENT -->
+      <div class="histo-panel">
+        <div class="histo-panel-header">
+          <div class="histo-panel-title-group">
+            <span style="font-size:16px;">🔧</span>
+            <div>
+              <div class="chart-title">Equipment</div>
+              <div class="chart-meta" id="histoMetaEquip"></div>
+            </div>
+          </div>
+          <div class="histo-toggle-btns">
+            <button class="histo-btn collapse-btn" onclick="collapseHisto('equip')">➖ Collapse</button>
+            <button class="histo-btn" onclick="expandHisto('equip')">➕ Expand</button>
+          </div>
+        </div>
+        <div class="histo-body" id="histoBodyEquip">
+          <div class="histogram-wrap">
+            <div class="chart-canvas-wrap">
+              <canvas id="histoCanvasEquip"></canvas>
+            </div>
+            <div class="histo-data-wrap" id="histoDataEquip"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MATERIAL -->
+      <div id="materialHistoPanel" class="histo-panel">
+        <div class="histo-panel-header">
+          <div class="histo-panel-title-group">
+            <span style="font-size:16px;">📦</span>
+            <div>
+              <div class="chart-title">Material</div>
+              <div class="chart-meta" id="histoMetaMaterial"></div>
+            </div>
+          </div>
+          <div class="histo-toggle-btns">
+            <button class="histo-btn collapse-btn" onclick="collapseHisto('material')">➖ Collapse</button>
+            <button class="histo-btn" onclick="expandHisto('material')">➕ Expand</button>
+          </div>
+        </div>
+        <div class="histo-body" id="histoBodyMaterial">
+        <!-- Prompt shown when no material is selected -->
+        <div id="materialSelectPrompt" style="
+          display:flex; align-items:center; justify-content:center; gap:14px;
+          background:var(--surface); border:1px solid var(--border);
+          border-radius:6px; padding:32px 24px;
+          border-left:3px solid var(--gold);
+        ">
+          <span style="font-size:28px; opacity:.7;">📦</span>
+          <div>
+            <div style="font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:.08em; color:var(--gold); margin-bottom:4px;">
+              Select a Material to Show Histogram
+            </div>
+            <div style="font-size:11px; color:var(--muted); letter-spacing:.05em;">
+              Choose a material from the <strong style="color:var(--white);">📦 Material</strong> dropdown in the toolbar above to display its resource loading histogram.
+            </div>
+          </div>
+        </div>
+        <!-- Canvas shown only when a material is selected -->
+        <div id="materialCanvasWrap" style="display:none;" class="histogram-wrap">
+          <div class="chart-canvas-wrap">
+            <canvas id="histoCanvasMaterial"></canvas>
+          </div>
+          <div class="histo-data-wrap" id="histoDataMaterial"></div>
+        </div>
+        </div><!-- /histo-body -->
+      </div><!-- /histo-panel -->
+
+    </div>
+
+    <!-- S-CURVE VIEW -->
+    <div id="scurveView">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">(Cost) S-CURVE</div>
+          <div class="chart-meta" id="scurveMeta"></div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" id="scurveLegendDot" style="background:var(--gold)"></div><span id="scurveLegendLabel">Planned Cumulative</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Actual Cumulative</div>
+        </div>
+      </div>
+      <div class="histogram-wrap">
+        <div class="chart-canvas-wrap">
+          <canvas id="scurveCanvas"></canvas>
+        </div>
+        <div class="histo-data-wrap" id="scurveDataWrap"></div>
+      </div>
+    </div>
+
+    <!-- TABLE VIEW -->
+    <div id="tableView">
+      <div class="res-table-wrap" id="tableWrap">
+        <table class="res-table" id="resTable">
+          <thead><tr id="tableHead"></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EXPENSES VIEW -->
+    <div id="expensesView" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
+      <!-- Expenses header bar -->
+      <div style="display:flex;align-items:center;gap:16px;padding:12px 28px;border-bottom:1px solid var(--border);background:var(--deep);flex-shrink:0;flex-wrap:wrap;">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.08em;color:var(--white);">💰 Activity Expenses</span>
+        <span style="font-size:10px;color:var(--muted);letter-spacing:.15em;">BUDGETED · ACTUAL · REMAINING</span>
+        <!-- search -->
+        <div style="margin-left:auto;position:relative;">
+          <input id="expSearch" type="text" placeholder="Search activity…"
+            oninput="renderExpenses()"
+            style="background:var(--surface2);border:1px solid var(--border2);color:var(--white);padding:6px 10px 6px 28px;border-radius:5px;font-family:'DM Mono',monospace;font-size:11px;outline:none;width:220px;transition:border-color .18s;"
+            onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'">
+          <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--dim);pointer-events:none;">🔍</span>
+        </div>
+        <!-- source toggle -->
+        <div style="display:flex;gap:2px;">
+          <button class="psb active" id="expSrcAll"   onclick="setExpSrc('all',this)"   style="font-size:10px;">All Sources</button>
+          <button class="psb"        id="expSrcExpnd" onclick="setExpSrc('expnd',this)" style="font-size:10px;">Expenses Only</button>
+          <button class="psb"        id="expSrcRsrc"  onclick="setExpSrc('rsrc',this)"  style="font-size:10px;">Resources Only</button>
+        </div>
+      </div>
+      <!-- Summary cards -->
+      <div style="display:flex;gap:2px;padding:10px 28px;flex-shrink:0;flex-wrap:wrap;gap:10px;" id="expSummaryCards"></div>
+      <!-- Table -->
+      <div style="flex:1;overflow:auto;">
+        <table class="res-table" id="expTable" style="min-width:900px;">
+          <thead>
+            <tr id="expTableHead">
+              <th onclick="expSort('code')"   style="cursor:pointer;min-width:110px;">Act. ID <span id="expSortIcon_code"></span></th>
+              <th onclick="expSort('name')"   style="cursor:pointer;min-width:220px;">Activity Name <span id="expSortIcon_name"></span></th>
+              <th onclick="expSort('wbs')"    style="cursor:pointer;min-width:140px;">WBS <span id="expSortIcon_wbs"></span></th>
+              <th onclick="expSort('status')" style="cursor:pointer;min-width:90px;">Status <span id="expSortIcon_status"></span></th>
+              <th class="num" onclick="expSort('budgeted')" style="cursor:pointer;min-width:130px;">Budgeted ($) <span id="expSortIcon_budgeted"></span></th>
+              <th class="num" onclick="expSort('actual')"   style="cursor:pointer;min-width:130px;">Actual ($) <span id="expSortIcon_actual"></span></th>
+              <th class="num" onclick="expSort('remaining')" style="cursor:pointer;min-width:130px;">Remaining ($) <span id="expSortIcon_remaining"></span></th>
+              <th class="num" onclick="expSort('variance')"  style="cursor:pointer;min-width:130px;">Variance ($) <span id="expSortIcon_variance"></span></th>
+              <th style="min-width:120px;">Spend %</th>
+            </tr>
+          </thead>
+          <tbody id="expTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COMPARE VIEW -->
+    <div id="compareView" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
+      <!-- Compare header bar -->
+      <div style="display:flex;align-items:center;gap:16px;padding:12px 28px;border-bottom:1px solid var(--border);background:var(--deep);flex-shrink:0;flex-wrap:wrap;">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.08em;color:var(--white);">📊 Resource Comparison</span>
+        <span style="font-size:10px;color:var(--muted);letter-spacing:.15em;">BASELINE vs UPDATE · Δ = UPDATE − BASELINE</span>
+        <div style="margin-left:auto;position:relative;">
+          <input id="cmpSearch" type="text" placeholder="Search resource…"
+            oninput="renderCompare()"
+            style="background:var(--surface2);border:1px solid var(--border2);color:var(--white);padding:6px 10px 6px 28px;border-radius:5px;font-family:'DM Mono',monospace;font-size:11px;outline:none;width:220px;transition:border-color .18s;"
+            onfocus="this.style.borderColor='var(--cyan)'" onblur="this.style.borderColor='var(--border2)'">
+          <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--dim);pointer-events:none;">🔍</span>
+        </div>
+        <div style="display:flex;gap:2px;">
+          <button class="psb active" id="cmpFltAll"  onclick="setCmpFlt('all',this)"  style="font-size:10px;">All</button>
+          <button class="psb"        id="cmpFltDiff" onclick="setCmpFlt('diff',this)" style="font-size:10px;">Changed Only</button>
+          <button class="psb"        id="cmpFltNew"  onclick="setCmpFlt('new',this)"  style="font-size:10px;">New / Removed</button>
+        </div>
+      </div>
+      <!-- Summary cards -->
+      <div style="display:flex;gap:10px;padding:10px 28px;flex-shrink:0;flex-wrap:wrap;" id="cmpSummaryCards"></div>
+      <!-- Table -->
+      <div style="flex:1;overflow:auto;">
+        <table class="res-table" id="cmpTable" style="min-width:1200px;">
+          <thead>
+            <tr>
+              <th onclick="cmpSort('name')"    style="cursor:pointer;min-width:220px;">Resource <span id="cmpSortIcon_name"></span></th>
+              <th onclick="cmpSort('type')"    style="cursor:pointer;min-width:90px;">Type <span id="cmpSortIcon_type"></span></th>
+              <th style="min-width:60px;">Unit</th>
+              <th class="num" onclick="cmpSort('bBudQty')" style="cursor:pointer;min-width:110px;color:var(--muted);">Baseline Qty <span id="cmpSortIcon_bBudQty"></span></th>
+              <th class="num" onclick="cmpSort('uBudQty')" style="cursor:pointer;min-width:110px;color:var(--cyan);">Update Qty <span id="cmpSortIcon_uBudQty"></span></th>
+              <th class="num" onclick="cmpSort('dBudQty')" style="cursor:pointer;min-width:110px;">Δ Qty <span id="cmpSortIcon_dBudQty"></span></th>
+              <th class="num" onclick="cmpSort('bBudCost')" style="cursor:pointer;min-width:130px;color:var(--muted);">Baseline Cost <span id="cmpSortIcon_bBudCost"></span></th>
+              <th class="num" onclick="cmpSort('uBudCost')" style="cursor:pointer;min-width:130px;color:var(--cyan);">Update Cost <span id="cmpSortIcon_uBudCost"></span></th>
+              <th class="num" onclick="cmpSort('dBudCost')" style="cursor:pointer;min-width:130px;">Δ Cost <span id="cmpSortIcon_dBudCost"></span></th>
+              <th class="num" onclick="cmpSort('dPct')" style="cursor:pointer;min-width:100px;">Δ %</th>
+              <th style="min-width:80px;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="cmpTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DELAYED VIEW -->
+    <div id="delayedView" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
+      <!-- Delayed header bar -->
+      <div style="display:flex;align-items:center;gap:16px;padding:12px 28px;border-bottom:1px solid var(--border);background:var(--deep);flex-shrink:0;flex-wrap:wrap;">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.08em;color:var(--white);">⏱ Delayed Activities</span>
+        <span style="font-size:10px;color:var(--muted);letter-spacing:.15em;">CURRENT FINISH LATER THAN BASELINE · VARIANCE = CURRENT − BASELINE (CAL. DAYS)</span>
+        <label style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--white-dim,#9aa3b2);cursor:pointer;user-select:none;letter-spacing:.05em;">
+          <input id="dlyHideZeroCost" type="checkbox" onchange="renderDelayed()" style="accent-color:#e05050;cursor:pointer;">
+          Hide Remaining Cost = 0
+        </label>
+        <div style="position:relative;">
+          <input id="dlySearch" type="text" placeholder="Search activity id or name…"
+            oninput="renderDelayed()"
+            style="background:var(--surface2);border:1px solid var(--border2);color:var(--white);padding:6px 10px 6px 28px;border-radius:5px;font-family:'DM Mono',monospace;font-size:11px;outline:none;width:240px;transition:border-color .18s;"
+            onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--border2)'">
+          <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--dim);pointer-events:none;">🔍</span>
+        </div>
+      </div>
+      <!-- Summary cards -->
+      <div style="display:flex;gap:10px;padding:10px 28px;flex-shrink:0;flex-wrap:wrap;" id="dlySummaryCards"></div>
+      <!-- Table -->
+      <div style="flex:1;overflow:auto;">
+        <table class="res-table" id="dlyTable" style="min-width:1100px;">
+          <thead>
+            <tr>
+              <th onclick="dlySort('code')"          style="cursor:pointer;min-width:130px;">Activity ID <span id="dlySortIcon_code"></span></th>
+              <th onclick="dlySort('name')"          style="cursor:pointer;min-width:260px;">Activity Name <span id="dlySortIcon_name"></span></th>
+              <th onclick="dlySort('bFinish')"       style="cursor:pointer;min-width:120px;color:var(--muted);">Baseline Finish <span id="dlySortIcon_bFinish"></span></th>
+              <th onclick="dlySort('uFinish')"       style="cursor:pointer;min-width:120px;color:var(--cyan);">Current Finish <span id="dlySortIcon_uFinish"></span></th>
+              <th class="num" onclick="dlySort('variance')" style="cursor:pointer;min-width:110px;color:#e05050;">Variance (d) <span id="dlySortIcon_variance"></span></th>
+              <th class="num" onclick="dlySort('remainCost')" style="cursor:pointer;min-width:150px;">Remaining Cost <span id="dlySortIcon_remainCost"></span></th>
+            </tr>
+          </thead>
+          <tbody id="dlyTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+</div><!-- #mainContent -->
+
+<!-- EXPORT MODAL -->
+<div id="exportModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-header-icon">⬇</div>
+      <div>
+        <div class="modal-header-title">Export to Excel</div>
+        <div class="modal-header-sub">Select sheets to include in the export</div>
+      </div>
+      <button class="modal-close" onclick="closeExportModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Budget source toggle (baseline vs current schedule) -->
+      <div class="budsrc-wrap disabled" id="budSrcWrap">
+        <div class="budsrc-label">Budget Values Source</div>
+        <div class="budsrc-opts">
+          <div class="budsrc-opt checked" data-src="current" id="budSrcCurrent" onclick="setBudgetSource('current')">
+            <div class="budsrc-radio"></div>
+            <div class="budsrc-txt">Current Schedule<span class="sub">Updated XER</span></div>
+          </div>
+          <div class="budsrc-opt" data-src="baseline" id="budSrcBaseline" onclick="setBudgetSource('baseline')">
+            <div class="budsrc-radio"></div>
+            <div class="budsrc-txt">Baseline<span class="sub">Baseline XER</span></div>
+          </div>
+        </div>
+        <div class="budsrc-hint" id="budSrcHint">◆ No baseline loaded — current schedule values will be exported</div>
+      </div>
+
+      <!-- Fixed sheets always included -->
+      <div class="modal-section-label">Always Included</div>
+      <div class="modal-fixed-sheets">
+        <div class="modal-sheet-row">
+          <span class="modal-sheet-icon">👷</span>
+          <span class="modal-sheet-name">Manpower Histogram</span>
+          <span class="modal-sheet-badge">Fixed</span>
+        </div>
+        <div class="modal-sheet-row">
+          <span class="modal-sheet-icon">🔧</span>
+          <span class="modal-sheet-name">Equipment Histogram</span>
+          <span class="modal-sheet-badge">Fixed</span>
+        </div>
+        <div class="modal-sheet-row">
+          <span class="modal-sheet-icon">📈</span>
+          <span class="modal-sheet-name">S-Curve (Cost)</span>
+          <span class="modal-sheet-badge">Fixed</span>
+        </div>
+      </div>
+
+      <!-- Optional sheets (depend on loaded data) -->
+      <div id="optionalSheetsSection" style="display:none;">
+        <div class="modal-divider"></div>
+        <div class="modal-section-label">Optional Sheets</div>
+        <div class="modal-fixed-sheets">
+          <div class="modal-sheet-row" id="dlyOptRow" onclick="toggleDlyExport()" style="cursor:pointer;">
+            <span class="mat-checkbox" id="dlyExportCb" style="display:inline-flex;align-items:center;justify-content:center;"></span>
+            <span class="modal-sheet-icon">⏱</span>
+            <span class="modal-sheet-name">Delayed Activities <span style="color:var(--muted);font-size:10px;">(requires baseline)</span></span>
+            <span class="modal-sheet-badge" style="background:rgba(224,80,80,.12);color:#e05050;border-color:rgba(224,80,80,.4)">Optional</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-divider"></div>
+
+      <!-- Material selection -->
+      <div class="modal-section-label">📦 Materials — Select for Export</div>
+      <div class="mat-search-wrap">
+        <span class="mat-search-icon">🔍</span>
+        <input type="text" id="matSearchInput" placeholder="Search materials…" oninput="filterMaterialList()" autocomplete="off">
+        <button type="button" class="mat-search-clear" id="matSearchClear" onclick="clearMaterialSearch()" title="Clear">✕</button>
+      </div>
+      <div class="mat-select-all" id="matSelectAll" onclick="toggleAllMaterials()">
+        <span id="matSelectAllIcon">☐</span> Select / Deselect All
+      </div>
+      <div class="mat-list" id="matList">
+        <div class="mat-empty">No materials found in this project.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-count">Selected: <span id="matSelectedCount">0</span> material(s)</div>
+      <button class="btn btn-ghost" onclick="closeExportModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmExport()" id="modalExportBtn">⬇ Export</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLTIP -->
+<div class="chart-tooltip" id="tooltip">
+  <div class="tt-label" id="ttLabel"></div>
+  <div class="tt-row"><span>Budgeted</span><span class="tt-val" id="ttBud"></span></div>
+  <div class="tt-row"><span>Actual</span><span class="tt-val" id="ttAct"></span></div>
+  <div class="tt-row"><span>Remaining</span><span class="tt-val" id="ttRem"></span></div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="sdot" id="sdot"></div>
+  <span id="statusText">Ready — load a Primavera P6 XER file to begin</span>
+</div>
+
+</div><!-- .app -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const S = {
+  projects: {},
+  resources: {},    // rsrc_id -> {id,name,type,unit}
+  uom: {},          // unit_id -> unit_abbrev (from UOM table)
+  wbsNodes: {},
+  tasks: {},        // task_id -> task
+  assignments: [],  // TASKRSRC rows
+  expenses: [],     // PROJCOST rows
+  currentProj: null,
+  period: 'week',
+  activeView: 'histogram',
+  roleFilter: null, // rsrc type filter
+  dataDate: null,
+  budCostFilter: false, // show only assignments with budgetCost > 0
+};
+
+const MONS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const QTRN = ['Q1','Q2','Q3','Q4'];
+
+// ═══════════════════════════════════════════════════════════════
+// XER PARSER
+// ═══════════════════════════════════════════════════════════════
+function parseXER(content) {
+  S.projects = {}; S.resources = {}; S.uom = {}; S.wbsNodes = {}; S.tasks = {}; S.assignments = []; S.expenses = [];
+  let tbl = null, flds = [];
+  for (const rawLine of content.split('\n')) {
+    const line = rawLine.replace(/\r$/, '');
+    if (line.startsWith('%T\t')) { tbl = line.slice(3).trim(); flds = []; }
+    else if (line.startsWith('%F\t')) flds = line.slice(3).split('\t');
+    else if (line.startsWith('%R\t')) {
+      const vals = line.slice(3).split('\t');
+      const row = {};
+      flds.forEach((f, i) => { row[f] = i < vals.length ? vals[i] : ''; });
+      handleRow(tbl, row);
+    }
+  }
+  buildIndices();
+  // Resolve unit_id -> unit_abbrev for all resources now that UOM table is fully parsed
+  for (const res of Object.values(S.resources)) {
+    if (res.unitId && S.uom[res.unitId]) {
+      res.unit = S.uom[res.unitId];
+    }
+  }
+}
+
+function parseDate(s) {
+  if (!s || !s.trim()) return null;
+  s = s.trim();
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+  const m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m2) return new Date(+m2[3], +m2[1]-1, +m2[2]);
+  return null;
+}
+
+function fmtDate(d) {
+  if (!d) return 'N/A';
+  return `${d.getDate()}-${MONS[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`;
+}
+
+function handleRow(tbl, r) {
+  if (tbl === 'UOM') {
+    const id = r.unit_id || '';
+    if (id) S.uom[id] = r.unit_abbrev || r.unit_name || id;
+  } else if (tbl === 'PROJECT') {
+    const id = r.proj_id || '';
+    S.projects[id] = {
+      id, name: r.proj_short_name || id,
+      dataDate: parseDate(r.last_recalc_date || r.plan_end_date || '')
+    };
+  } else if (tbl === 'RSRC') {
+    const id = r.rsrc_id || '';
+    S.resources[id] = {
+      id, name: r.rsrc_name || id,
+      shortName: r.rsrc_short_name || '',
+      type: r.rsrc_type || 'RT_Labor',
+      unit: r.unit_id || '',   // raw unit_id, resolved after full parse
+      unitId: r.unit_id || '',
+      maxQty: parseFloat(r.clndr_data || '0') || 0
+    };
+  } else if (tbl === 'PROJWBS') {
+    const id = r.wbs_id || '';
+    S.wbsNodes[id] = { id, name: r.wbs_name || '', projId: r.proj_id || '' };
+  } else if (tbl === 'TASK') {
+    const id = r.task_id || '';
+    const aS = parseDate(r.act_start_date || '');
+    const aE = parseDate(r.act_end_date || '');
+    const eS = parseDate(r.early_start_date || r.target_start_date || '');
+    const eF = parseDate(r.early_end_date || r.target_end_date || '');
+    const rF = parseDate(r.reend_date || r.remain_early_end_date || '');
+    let dS, dF, st;
+    if (!aS) { dS = eS; dF = eF; st = 'ns'; }
+    else if (!aE) { dS = aS; dF = rF || eF; st = 'ip'; }
+    else { dS = aS; dF = aE; st = 'done'; }
+    S.tasks[id] = {
+      id, code: r.task_code || '', name: r.task_name || '',
+      wbsId: r.wbs_id || '', projId: r.proj_id || '',
+      start: dS, finish: dF, actualStart: aS, actualEnd: aE,
+      status: st,
+      pct: parseFloat(r.phys_complete_pct || r.perf_complete_pct || r.complete_pct || '0') || 0,
+      drtn: parseFloat(r.target_drtn_hr_cnt || '0') || 0,
+      taskBudgetCost: parseFloat(r.target_cost || '0') || 0,
+      taskActualCost: parseFloat(r.act_cost || r.act_total_cost || '0') || 0,
+      taskRemainCost: parseFloat(r.remain_cost || '0') || 0,
+    };
+  } else if (tbl === 'TASKRSRC') {
+    S.assignments.push({
+      taskId: r.task_id || '',
+      rsrcId: r.rsrc_id || '',
+      projId: r.proj_id || '',
+      budgetQty: parseFloat(r.target_qty || '0') || 0,
+      actualQty: parseFloat(r.act_reg_qty || r.act_qty || '0') || 0,
+      remainQty: parseFloat(r.remain_qty || '0') || 0,
+      budgetCost: parseFloat(r.target_cost || '0') || 0,
+      actualCost: parseFloat(r.act_reg_cost || r.act_cost || '0') || 0,
+      remainCost: parseFloat(r.remain_cost || '0') || 0,
+      rateType: r.rate_type || '',
+    });
+  } else if (tbl === 'PROJCOST') {
+    // Project/Activity Expenses — cost assigned directly to activities (not via resources).
+    // P6 XER field names: target_cost (budget), act_cost (actual), remain_cost (remaining).
+    // proj_id may or may not be present — resolve via the task when missing.
+    const budgetCost = parseFloat(r.target_cost || r.base_cost || '0') || 0;
+    const actualCost = parseFloat(r.act_cost || r.actual_cost || r.act_total_cost || '0') || 0;
+    const remainCost = parseFloat(r.remain_cost || '0') || 0;
+    const taskId = r.task_id || '';
+    // Accept rows that have any cost value (budget OR actual OR remain)
+    if (budgetCost > 0 || actualCost > 0 || remainCost > 0) {
+      S.expenses.push({
+        taskId,
+        projId: r.proj_id || '',
+        expenseName: r.cost_name || r.acct_name || r.expend_name || r.wbs_name || '',
+        vendor: r.vendor_name || '',
+        poNumber: r.po_number || '',
+        costItemId: r.cost_item_id || '',
+        budgetCost,
+        actualCost,
+        remainCost,
+      });
+    }
+  }
+}
+
+function buildIndices() {
+  // nothing extra needed; assignments array is already filtered by projId per view
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PROJECT / RESOURCE SELECTS
+// ═══════════════════════════════════════════════════════════════
+function onProjChange() {
+  S.currentProj = document.getElementById('projectSelect').value;
+  const proj = S.projects[S.currentProj];
+  S.dataDate = proj ? proj.dataDate : null;
+  populateResourceSelect();
+  buildRoleChips();
+  updateStats();
+  renderCurrent();
+}
+
+function populateResourceSelect() {
+  const asgns = S.assignments.filter(a => {
+    const t = S.tasks[a.taskId];
+    return t && t.projId === S.currentProj;
+  });
+  const rsrcIds = [...new Set(asgns.map(a => a.rsrcId))].filter(id => S.resources[id]);
+  rsrcIds.sort((a,b) => (S.resources[a].name).localeCompare(S.resources[b].name));
+
+  // Build a map: rsrcId -> total budgetCost across all assignments for current project
+  const rsrcBudgetCost = {};
+  for (const a of asgns) {
+    rsrcBudgetCost[a.rsrcId] = (rsrcBudgetCost[a.rsrcId] || 0) + (a.budgetCost || 0);
+  }
+
+  const TYPE_MAP = { RT_Labor: 'labor', RT_Equip: 'equip', RT_Material: 'material', RT_Mat: 'material' };
+  const buckets = { labor: [], equip: [], material: [] };
+
+  for (const id of rsrcIds) {
+    const r = S.resources[id];
+    const key = TYPE_MAP[r.type] || 'material';
+    // Exclude material resources that have budgetCost > 0
+    if (key === 'material' && (rsrcBudgetCost[id] || 0) > 0) continue;
+    buckets[key].push(id);
+  }
+
+  const configs = [
+    { selId: 'laborSelect',    allLabel: '— all labor —',     ids: buckets.labor },
+    { selId: 'equipSelect',    allLabel: '— all equipment —', ids: buckets.equip },
+    { selId: 'materialSelect', allLabel: '— all material —',  ids: buckets.material },
+  ];
+
+  for (const cfg of configs) {
+    const sel = document.getElementById(cfg.selId);
+    sel.innerHTML = '<option value="">' + cfg.allLabel + '</option>' +
+      cfg.ids.map(id => '<option value="' + esc(id) + '">' + esc(S.resources[id].name) + '</option>').join('');
+    sel.disabled = cfg.ids.length === 0;
+  }
+}
+
+function buildRoleChips() {
+  const asgns = S.assignments.filter(a => {
+    const t = S.tasks[a.taskId];
+    return t && t.projId === S.currentProj;
+  });
+
+  // Build rsrcId -> total budgetCost for current project
+  const rsrcBudgetCost = {};
+  for (const a of asgns) {
+    rsrcBudgetCost[a.rsrcId] = (rsrcBudgetCost[a.rsrcId] || 0) + (a.budgetCost || 0);
+  }
+
+  const types = [...new Set(asgns.map(a => {
+    const r = S.resources[a.rsrcId];
+    return r ? r.type : null;
+  }).filter(Boolean))].filter(type => {
+    // Exclude Material type if ALL material resources have budgetCost > 0
+    const isMat = type === 'RT_Material' || type === 'RT_Mat';
+    if (!isMat) return true;
+    // Check if there's at least one material resource with budgetCost == 0
+    const matAsgns = asgns.filter(a => {
+      const r = S.resources[a.rsrcId];
+      return r && (r.type === 'RT_Material' || r.type === 'RT_Mat');
+    });
+    return matAsgns.some(a => (rsrcBudgetCost[a.rsrcId] || 0) === 0);
+  });
+
+  const labels = { RT_Labor:'Labor', RT_Equip:'Equipment', RT_Material:'Material', RT_Mat:'Material' };
+  const wrap = document.getElementById('roleChips');
+  wrap.innerHTML = ['All', ...types].map((t, i) => {
+    const label = i === 0 ? 'All' : (labels[t] || t);
+    const val = i === 0 ? '' : t;
+    return `<div class="chip ${i===0?'active':''}" data-type="${val}" onclick="setRoleFilter(this)">${label}</div>`;
+  }).join('');
+  S.roleFilter = null;
+}
+
+function setRoleFilter(el) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  S.roleFilter = el.dataset.type || null;
+  updateStats();
+  renderCurrent();
+}
+
+function setPeriod(p, el) {
+  document.querySelectorAll('.psb').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  S.period = p;
+  renderCurrent();
+}
+
+function switchView(view, el) {
+  document.querySelectorAll('.vtab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  S.activeView = view;
+  document.getElementById('histogramView').style.display = 'none';
+  document.getElementById('scurveView').style.display = 'none';
+  document.getElementById('tableView').style.display = 'none';
+  document.getElementById('expensesView').style.display = 'none';
+  document.getElementById('compareView').style.display = 'none';
+  document.getElementById('delayedView').style.display = 'none';
+
+  renderCurrent();
+}
+
+function renderCurrent() {
+  if (!S.currentProj) return;
+  updateStats();
+  const v = S.activeView;
+  document.getElementById('histogramView').style.display = v==='histogram' ? 'flex' : 'none';
+  document.getElementById('scurveView').style.display = v==='scurve' ? 'block' : 'none';
+  document.getElementById('tableView').style.display = v==='table' ? 'block' : 'none';
+  document.getElementById('expensesView').style.display = v==='expenses' ? 'flex' : 'none';
+  document.getElementById('compareView').style.display = v==='compare' ? 'flex' : 'none';
+  document.getElementById('delayedView').style.display = v==='delayed' ? 'flex' : 'none';
+  if (v === 'histogram') renderHistogram();
+  else if (v === 'scurve') renderSCurve();
+  else if (v === 'table') renderTable();
+  else if (v === 'expenses') renderExpenses();
+  else if (v === 'compare') renderCompare();
+  else if (v === 'delayed') renderDelayed();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DATA: get filtered assignments + period buckets
+// ═══════════════════════════════════════════════════════════════
+function getFilteredAssignments() {
+  const selLabor    = document.getElementById('laborSelect').value;
+  const selEquip    = document.getElementById('equipSelect').value;
+  const selMaterial = document.getElementById('materialSelect').value;
+  const TYPE_MAP = { RT_Labor: 'labor', RT_Equip: 'equip', RT_Material: 'material', RT_Mat: 'material' };
+  return S.assignments.filter(a => {
+    const t = S.tasks[a.taskId];
+    if (!t || t.projId !== S.currentProj) return false;
+    const rsrc = S.resources[a.rsrcId];
+    const rType = rsrc ? (TYPE_MAP[rsrc.type] || 'material') : 'material';
+    if (S.roleFilter) {
+      if (!rsrc || rsrc.type !== S.roleFilter) return false;
+    }
+    if (rType === 'labor'    && selLabor    && a.rsrcId !== selLabor)    return false;
+    if (rType === 'equip'    && selEquip    && a.rsrcId !== selEquip)    return false;
+    if (rType === 'material' && selMaterial && a.rsrcId !== selMaterial) return false;
+    if (S.budCostFilter && !(a.budgetCost > 0)) return false;
+    return true;
+  });
+}
+
+function periodKey(d, period) {
+  if (!d) return null;
+  if (period === 'week') {
+    // ISO week start (Monday)
+    const day = new Date(d); day.setHours(0,0,0,0);
+    const dow = (day.getDay() + 6) % 7;
+    day.setDate(day.getDate() - dow);
+    return day.getTime();
+  } else if (period === 'month') {
+    return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+  } else { // quarter
+    const q = Math.floor(d.getMonth() / 3);
+    return new Date(d.getFullYear(), q*3, 1).getTime();
+  }
+}
+
+function periodLabel(ts, period) {
+  const d = new Date(ts);
+  if (period === 'week') return `${d.getDate()}-${MONS[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`;
+  if (period === 'month') return `${MONS[d.getMonth()]} ${d.getFullYear()}`;
+  const q = Math.floor(d.getMonth() / 3);
+  return `${QTRN[q]} ${d.getFullYear()}`;
+}
+
+function spreadQuantity(asgn, period) {
+  // Spread budget/actual/remain evenly across the task duration by period
+  const task = S.tasks[asgn.taskId];
+  if (!task || !task.start || !task.finish) return {};
+  const start = task.start, finish = task.finish;
+  const buckets = {};
+  // enumerate all period starts between start and finish
+  let cur = new Date(periodKey(start, period));
+  let maxIter = 500;
+  while (cur <= finish && maxIter-- > 0) {
+    buckets[cur.getTime()] = { bud:0, act:0, rem:0 };
+    if (period === 'week') cur = new Date(cur.getTime() + 7*86400000);
+    else if (period === 'month') cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+    else cur = new Date(cur.getFullYear(), cur.getMonth()+3, 1);
+  }
+  const keys = Object.keys(buckets).map(Number);
+  const n = keys.length || 1;
+
+  // For Labor and Equipment, divide monthly (or per-period) quantity by 260
+  const rsrc = S.resources[asgn.rsrcId];
+  const isLaborOrEquip = rsrc && (rsrc.type === 'RT_Labor' || rsrc.type === 'RT_Equip');
+  const divisor = isLaborOrEquip ? 260 : 1;
+
+  for (const k of keys) {
+    buckets[k].bud = (asgn.budgetQty / n) / divisor;
+    buckets[k].act = (asgn.actualQty / n) / divisor;
+    buckets[k].rem = (asgn.remainQty / n) / divisor;
+  }
+  return buckets;
+}
+
+function buildTimeSeries(asgns, period) {
+  const map = {}; // ts -> {bud,act,rem}
+  for (const a of asgns) {
+    const spread = spreadQuantity(a, period);
+    for (const [ts, vals] of Object.entries(spread)) {
+      if (!map[ts]) map[ts] = { bud:0, act:0, rem:0 };
+      map[ts].bud += vals.bud;
+      map[ts].act += vals.act;
+      map[ts].rem += vals.rem;
+    }
+  }
+  const sorted = Object.keys(map).map(Number).sort((a,b) => a-b);
+  return sorted.map(ts => ({ ts, label: periodLabel(ts, period), ...map[ts] }));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BASELINE BUDGET SERIES — spreads baseline budgetQty over baseline task dates
+// Returns a map: ts -> budgeted quantity (baseline), keyed by the same
+// period buckets as the main series so the two can be aligned on the same axis.
+// ═══════════════════════════════════════════════════════════════
+function spreadBaselineBudgetQty(asgn, period) {
+  const task = B.tasks[asgn.taskId];
+  if (!task || !task.start || !task.finish) return {};
+  const buckets = {};
+  let cur = new Date(periodKey(task.start, period));
+  let maxIter = 500;
+  while (cur <= task.finish && maxIter-- > 0) {
+    buckets[cur.getTime()] = 0;
+    if (period === 'week') cur = new Date(cur.getTime() + 7*86400000);
+    else if (period === 'month') cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+    else cur = new Date(cur.getFullYear(), cur.getMonth()+3, 1);
+  }
+  const keys = Object.keys(buckets).map(Number);
+  const n = keys.length || 1;
+  // Match the main-file divisor logic: Labor/Equip quantities get divided by 260
+  const rsrc = B.resources[asgn.rsrcId];
+  const isLaborOrEquip = rsrc && (rsrc.type === 'RT_Labor' || rsrc.type === 'RT_Equip');
+  const divisor = isLaborOrEquip ? 260 : 1;
+  for (const k of keys) buckets[k] = (asgn.budgetQty / n) / divisor;
+  return buckets;
+}
+
+function buildBaselineBudgetMap(bAsgns, period) {
+  // Returns { ts -> budgetQty } for the baseline, filtered to the same
+  // project + resource-type + resource selection as the main panel.
+  const map = {};
+  for (const a of bAsgns) {
+    const spread = spreadBaselineBudgetQty(a, period);
+    for (const [ts, v] of Object.entries(spread)) {
+      map[ts] = (map[ts] || 0) + v;
+    }
+  }
+  return map;
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// HISTOGRAM — three separate panels
+// ═══════════════════════════════════════════════════════════════
+function renderHistogram() {
+  // Keep the shared legend swatch in sync with whether the budget bars are
+  // being sourced from the Baseline XER (red) or the Updated XER (gold).
+  const legendDot = document.getElementById('legendBudDot');
+  const legendLbl = document.getElementById('legendBudLabel');
+  if (legendDot && legendLbl) {
+    if (B.loaded && findBaselineProject()) {
+      legendDot.style.background = 'var(--red)';
+      legendLbl.textContent = 'Budgeted (Baseline)';
+    } else {
+      legendDot.style.background = 'var(--gold)';
+      legendLbl.textContent = 'Budgeted';
+    }
+  }
+  renderHistogramPanel('RT_Labor',    'histoCanvasLabor',    'histoMetaLabor',    'Manpower');
+  renderHistogramPanel('RT_Equip',    'histoCanvasEquip',    'histoMetaEquip',    'Equipment Units');
+
+  const selMaterial = document.getElementById('materialSelect').value;
+  const prompt = document.getElementById('materialSelectPrompt');
+  const canvasWrap = document.getElementById('materialCanvasWrap');
+  if (selMaterial) {
+    prompt.style.display = 'none';
+    canvasWrap.style.display = 'block';
+    renderHistogramPanel(['RT_Material','RT_Mat'], 'histoCanvasMaterial', 'histoMetaMaterial', 'Material Qty');
+  } else {
+    prompt.style.display = 'flex';
+    canvasWrap.style.display = 'none';
+    document.getElementById('histoMetaMaterial').textContent = '';
+  }
+}
+
+function renderHistogramPanel(rsrcType, canvasId, metaId, yAxisLabel) {
+  // Derive the data-table container id from the canvas id
+  // (histoCanvasLabor -> histoDataLabor, etc.)
+  const dataId = canvasId.replace('histoCanvas', 'histoData');
+  // rsrcType may be a string or array of strings (for aliases like RT_Material/RT_Mat)
+  const rsrcTypes = Array.isArray(rsrcType) ? rsrcType : [rsrcType];
+  // Filter assignments for this specific resource type only,
+  // still respecting the individual resource dropdown for that type
+  const TYPE_MAP = { RT_Labor:'labor', RT_Equip:'equip', RT_Material:'material', RT_Mat:'material' };
+  const selLabor    = document.getElementById('laborSelect').value;
+  const selEquip    = document.getElementById('equipSelect').value;
+  const selMaterial = document.getElementById('materialSelect').value;
+
+  const asgns = S.assignments.filter(a => {
+    const t = S.tasks[a.taskId];
+    if (!t || t.projId !== S.currentProj) return false;
+    const rsrc = S.resources[a.rsrcId];
+    if (!rsrc || !rsrcTypes.includes(rsrc.type)) return false;
+    if (rsrcTypes.includes('RT_Labor')    && selLabor    && a.rsrcId !== selLabor)    return false;
+    if (rsrcTypes.includes('RT_Equip')    && selEquip    && a.rsrcId !== selEquip)    return false;
+    if ((rsrcTypes.includes('RT_Material') || rsrcTypes.includes('RT_Mat')) && selMaterial && a.rsrcId !== selMaterial) return false;
+    if (S.budCostFilter && !(a.budgetCost > 0)) return false;
+    return true;
+  });
+
+  const ca = document.getElementById(canvasId);
+  const series = buildTimeSeries(asgns, S.period);
+
+  // If a baseline is loaded, REPLACE the budget values in the series with the
+  // baseline budget series (filtered to same proj + resource-type + selection).
+  // The Actual / Remaining columns keep coming from the Updated XER as before.
+  let baselineActive = false;
+  if (B.loaded) {
+    const bProjId = findBaselineProject();
+    if (bProjId) {
+      const bAsgns = B.assignments.filter(a => {
+        if (a.projId !== bProjId) return false;
+        const t = B.tasks[a.taskId];
+        if (!t || t.projId !== bProjId) return false;
+        const rsrc = B.resources[a.rsrcId];
+        if (!rsrc || !rsrcTypes.includes(rsrc.type)) return false;
+        // Match dropdown selection by rsrcId. Baseline & Updated share P6 IDs
+        // when the files come from the same project lineage, which is the
+        // normal baseline-vs-update scenario this feature is built for.
+        if (rsrcTypes.includes('RT_Labor')    && selLabor    && a.rsrcId !== selLabor)    return false;
+        if (rsrcTypes.includes('RT_Equip')    && selEquip    && a.rsrcId !== selEquip)    return false;
+        if ((rsrcTypes.includes('RT_Material') || rsrcTypes.includes('RT_Mat')) && selMaterial && a.rsrcId !== selMaterial) return false;
+        return true;
+      });
+      const baseMap = buildBaselineBudgetMap(bAsgns, S.period);
+      // Merge any baseline-only periods into the series so red bars render
+      // even on dates where the Updated XER has nothing.
+      const seenTs = new Set(series.map(s => s.ts));
+      for (const tsStr of Object.keys(baseMap)) {
+        const ts = +tsStr;
+        if (!seenTs.has(ts)) {
+          series.push({ ts, label: periodLabel(ts, S.period), bud: 0, act: 0, rem: 0 });
+        }
+      }
+      series.sort((a, b) => a.ts - b.ts);
+      // Replace bud with baseline budget value (0 if baseline has nothing there)
+      for (const s of series) s.bud = baseMap[s.ts] || 0;
+      baselineActive = true;
+    }
+  }
+
+  if (!series.length) {
+    ca.width = 900; ca.height = 220;
+    const ctx = ca.getContext('2d');
+    ctx.fillStyle = '#111926'; ctx.fillRect(0,0,900,220);
+    ctx.fillStyle = '#3A4A5A'; ctx.font = '12px DM Mono'; ctx.textAlign='center';
+    ctx.fillText('No data for this resource type / selection.', 450, 110);
+    document.getElementById(metaId).textContent = '0 assignments';
+    const dataEl = document.getElementById(dataId);
+    if (dataEl) dataEl.innerHTML = '';
+    return;
+  }
+
+  document.getElementById(metaId).textContent = `${asgns.length} assignments · ${series.length} ${S.period}s`;
+
+  const PAD = { top:42, right:24, bottom:52, left:66 };
+  const barW = Math.max(10, Math.min(56, Math.floor(900 / series.length) - 4));
+  const W = Math.max(900, series.length * (barW + 4) + PAD.left + PAD.right);
+  const H = 240;
+  const INNER_W = W - PAD.left - PAD.right;
+  const INNER_H = H - PAD.top - PAD.bottom;
+
+  ca.width = W; ca.height = H;
+  const ctx = ca.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#111926'; ctx.fillRect(0,0,W,H);
+
+  // Max value
+  const maxVal = Math.max(...series.map(b => Math.max(b.bud, b.act + b.rem)));
+  const yMax = maxVal > 0 ? maxVal * 1.15 : 10;
+
+  // Grid lines + Y labels
+  const nGrid = 5;
+  ctx.strokeStyle = 'rgba(28,42,58,.8)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= nGrid; i++) {
+    const y = PAD.top + INNER_H - (i/nGrid)*INNER_H;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + INNER_W, y); ctx.stroke();
+    const label = (Math.round((i/nGrid)*yMax * 10)/10).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:1});
+    ctx.fillStyle = '#3A4A5A'; ctx.font = '9px DM Mono'; ctx.textAlign='right';
+    ctx.fillText(label, PAD.left-6, y+3);
+  }
+
+  // Data date line
+  if (S.dataDate) {
+    const ddTs = periodKey(S.dataDate, S.period);
+    const ddIdx = series.findIndex(b => b.ts >= ddTs);
+    if (ddIdx >= 0) {
+      const x = PAD.left + ddIdx*(barW+4) + barW/2;
+      ctx.strokeStyle = 'rgba(240,160,48,.6)'; ctx.lineWidth = 2; ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(x, PAD.top); ctx.lineTo(x, PAD.top+INNER_H); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='rgba(240,160,48,.8)'; ctx.font='bold 9px DM Mono'; ctx.textAlign='center';
+      ctx.fillText('DD', x, PAD.top-4);
+    }
+  }
+
+  // Bars
+  series.forEach((b, i) => {
+    const x  = PAD.left + i*(barW+4);
+    const by = PAD.top + INNER_H;
+    const bH = Math.max(0,(b.bud/yMax)*INNER_H);
+    const aH = Math.max(0,(b.act/yMax)*INNER_H);
+    const rH = Math.max(0,(b.rem/yMax)*INNER_H);
+
+    // Budget background — RED when plotted from the Baseline XER, GOLD otherwise
+    const budFillStyle    = baselineActive ? 'rgba(224,80,80,.22)' : 'rgba(200,146,42,.22)';
+    const budStrokeStyle  = baselineActive ? 'rgba(224,80,80,.85)' : 'rgba(200,146,42,.7)';
+    ctx.fillStyle = budFillStyle;
+    ctx.fillRect(x, by-bH, barW, bH);
+    // Actual
+    if (aH > 0) { ctx.fillStyle = '#34C98A'; ctx.fillRect(x, by-aH, barW, aH); }
+    // Remaining stacked
+    if (rH > 0) { ctx.fillStyle = '#00C9E0'; ctx.fillRect(x, by-aH-rH, barW, rH); }
+    // Budget outline
+    ctx.strokeStyle = budStrokeStyle; ctx.lineWidth = 1.5;
+    ctx.strokeRect(x+0.5, by-bH+0.5, barW-1, bH-1);
+
+    // Value labels on top of bars — REMOVED (data now shown in table below)
+
+    // X labels
+    if (i % Math.ceil(series.length/20) === 0 || series.length <= 20) {
+      ctx.fillStyle = '#3A4A5A'; ctx.font = '8px DM Mono'; ctx.textAlign='center';
+      ctx.save(); ctx.translate(x+barW/2, by+8); ctx.rotate(-Math.PI/5);
+      ctx.fillText(b.label, 0, 0); ctx.restore();
+    }
+  });
+
+  // Y axis label
+  ctx.save(); ctx.translate(14, PAD.top + INNER_H/2);
+  ctx.rotate(-Math.PI/2); ctx.fillStyle = '#5A6A7A'; ctx.font = '9px DM Mono'; ctx.textAlign='center';
+  ctx.fillText(yAxisLabel, 0, 0); ctx.restore();
+
+  // Hover
+  ca.onmousemove = (e) => {
+    const rect = ca.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const i = Math.floor((mx - PAD.left) / (barW+4));
+    if (i >= 0 && i < series.length) {
+      const b = series[i];
+      const tt = document.getElementById('tooltip');
+      tt.style.display='block'; tt.style.left=(e.clientX+14)+'px'; tt.style.top=(e.clientY-20)+'px';
+      document.getElementById('ttLabel').textContent = b.label;
+      document.getElementById('ttBud').textContent   = b.bud.toFixed(2);
+      document.getElementById('ttAct').textContent   = b.act.toFixed(2);
+      document.getElementById('ttRem').textContent   = b.rem.toFixed(2);
+    }
+  };
+  ca.onmouseleave = () => { document.getElementById('tooltip').style.display='none'; };
+
+  // Render the data table below the chart
+  renderHistogramDataTable(dataId, series, baselineActive);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Build the Budgeted / Actual / Remaining data table shown below
+// each histogram. Columns = periods on the x-axis.
+// Budgeted row colour: RED if Baseline XER loaded, GOLD otherwise.
+// ═══════════════════════════════════════════════════════════════
+function renderHistogramDataTable(dataId, series, baselineActive) {
+  const el = document.getElementById(dataId);
+  if (!el) return;
+
+  const fmtNum = v => {
+    if (v == null || isNaN(v)) return '0';
+    const a = Math.abs(v);
+    if (a === 0)         return '0';
+    if (a < 1)           return v.toFixed(2);
+    if (a < 100)         return v.toFixed(1);
+    return Math.round(v).toLocaleString('en-US');
+  };
+
+  const budCls = baselineActive ? 'bud-red' : 'bud-gold';
+  const budLabel = baselineActive ? 'Budgeted (Baseline)' : 'Budgeted';
+
+  let head = '<tr><th class="row-label">Period</th>';
+  let budR = `<tr class="bud-row"><td class="row-label ${budCls}">${budLabel}</td>`;
+  let actR = '<tr class="act-row"><td class="row-label">Actual</td>';
+  let remR = '<tr class="rem-row"><td class="row-label">Remaining</td>';
+
+  for (const b of series) {
+    head += `<th>${b.label}</th>`;
+    budR += `<td class="${b.bud > 0 ? budCls : 'zero-val'}">${fmtNum(b.bud)}</td>`;
+    actR += `<td class="${b.act > 0 ? 'act-val' : 'zero-val'}">${fmtNum(b.act)}</td>`;
+    remR += `<td class="${b.rem > 0 ? 'rem-val' : 'zero-val'}">${fmtNum(b.rem)}</td>`;
+  }
+  head += '</tr>';
+  budR += '</tr>';
+  actR += '</tr>';
+  remR += '</tr>';
+
+  el.innerHTML = `<table class="histo-data-table"><thead>${head}</thead><tbody>${budR}${actR}${remR}</tbody></table>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// S-CURVE — cost series builder (resources + expenses)
+// ═══════════════════════════════════════════════════════════════
+function spreadCost(taskId, budgetCost, actualCost, period) {
+  // Spread a lump cost evenly across the task's duration periods.
+  // Falls back through several date sources so expenses on WBS/summary
+  // tasks (which often have null start/finish) are never silently dropped.
+  const task = S.tasks[taskId];
+  if (!task) return {};
+
+  // Date resolution: display dates → actual dates → data date (single point)
+  let startD = task.start || task.actualStart || null;
+  let finishD = task.finish || task.actualEnd || task.start || task.actualStart || null;
+
+  // Final fallback: pin to data date so the cost appears as a single period bucket
+  if (!startD) startD  = S.dataDate || new Date();
+  if (!finishD) finishD = startD;
+
+  const buckets = {};
+  let cur = new Date(periodKey(startD, period));
+  let maxIter = 500;
+  while (cur <= finishD && maxIter-- > 0) {
+    buckets[cur.getTime()] = { bud: 0, act: 0 };
+    if (period === 'week') cur = new Date(cur.getTime() + 7 * 86400000);
+    else if (period === 'month') cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+    else cur = new Date(cur.getFullYear(), cur.getMonth() + 3, 1);
+  }
+  // Guarantee at least one bucket even when start === finish falls on period boundary
+  if (!Object.keys(buckets).length) {
+    buckets[periodKey(startD, period)] = { bud: 0, act: 0 };
+  }
+  const keys = Object.keys(buckets).map(Number);
+  const n = keys.length || 1;
+  for (const k of keys) {
+    buckets[k].bud = budgetCost / n;
+    buckets[k].act = actualCost / n;
+  }
+  return buckets;
+}
+
+function buildCostTimeSeries(period) {
+  // Merge resource assignment costs (budgetCost>0 OR actualCost>0) + expenses
+  const map = {}; // ts -> {bud, act}
+
+  // 1. Resource assignments
+  const rsrcAsgns = S.assignments.filter(a => {
+    const t = S.tasks[a.taskId];
+    return t && t.projId === S.currentProj && (a.budgetCost > 0 || a.actualCost > 0);
+  });
+  for (const a of rsrcAsgns) {
+    const spread = spreadCost(a.taskId, a.budgetCost, a.actualCost, period);
+    for (const [ts, vals] of Object.entries(spread)) {
+      if (!map[ts]) map[ts] = { bud: 0, act: 0 };
+      map[ts].bud += vals.bud;
+      map[ts].act += vals.act;
+    }
+  }
+
+  // 2. Activity expenses (PROJCOST)
+  const expns = S.expenses.filter(e => {
+    const t = S.tasks[e.taskId];
+    if (!t) return false;
+    // proj_id on PROJCOST is unreliable in some P6 exports — resolve via the task
+    const projId = e.projId || t.projId;
+    return projId === S.currentProj && (e.budgetCost > 0 || e.actualCost > 0 || e.remainCost > 0);
+  });
+  for (const e of expns) {
+    const spread = spreadCost(e.taskId, e.budgetCost, e.actualCost, period);
+    for (const [ts, vals] of Object.entries(spread)) {
+      if (!map[ts]) map[ts] = { bud: 0, act: 0 };
+      map[ts].bud += vals.bud;
+      map[ts].act += vals.act;
+    }
+  }
+
+  // 3. Task-level cost (target_cost / act_cost on the TASK record itself)
+  // Build a set of taskIds already covered by TASKRSRC or PROJCOST
+  const coveredByRsrc = new Set(rsrcAsgns.map(a => a.taskId));
+  const coveredByExp  = new Set(expns.map(e => e.taskId));
+  // For tasks with cost but NO resource or expense coverage, use task-level cost directly
+  // For tasks already partially covered, add the gap (task cost minus sum of resource + expense cost)
+  const rsrcCostByTask = {};
+  for (const a of rsrcAsgns) rsrcCostByTask[a.taskId] = (rsrcCostByTask[a.taskId] || 0) + a.budgetCost;
+  const expCostByTask  = {};
+  for (const e of expns)    expCostByTask[e.taskId]  = (expCostByTask[e.taskId]  || 0) + e.budgetCost;
+  const rsrcActByTask  = {};
+  for (const a of rsrcAsgns) rsrcActByTask[a.taskId] = (rsrcActByTask[a.taskId] || 0) + a.actualCost;
+  const expActByTask   = {};
+  for (const e of expns)    expActByTask[e.taskId]   = (expActByTask[e.taskId]  || 0) + e.actualCost;
+
+  for (const t of Object.values(S.tasks)) {
+    if (t.projId !== S.currentProj) continue;
+    if (!(t.taskBudgetCost > 0 || t.taskActualCost > 0)) continue;
+    const alreadyBud = (rsrcCostByTask[t.id] || 0) + (expCostByTask[t.id] || 0);
+    const alreadyAct = (rsrcActByTask[t.id]  || 0) + (expActByTask[t.id]  || 0);
+    const gapBud = t.taskBudgetCost - alreadyBud;
+    const gapAct = t.taskActualCost - alreadyAct;
+    if (gapBud > 0.001 || gapAct > 0.001) {
+      const spread = spreadCost(t.id, Math.max(0, gapBud), Math.max(0, gapAct), period);
+      for (const [ts, vals] of Object.entries(spread)) {
+        if (!map[ts]) map[ts] = { bud: 0, act: 0 };
+        map[ts].bud += vals.bud;
+        map[ts].act += vals.act;
+      }
+    }
+  }
+
+  const sorted = Object.keys(map).map(Number).sort((a, b) => a - b);
+  return sorted.map(ts => ({ ts, label: periodLabel(ts, period), bud: map[ts].bud, act: map[ts].act }));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BASELINE COST SERIES — budget-only cumulative from the Baseline XER.
+// Mirrors buildCostTimeSeries but reads resources, expenses and task-level
+// cost from the B.* dataset and spreads over baseline task dates.
+// Returns an array of { ts, bud } buckets aligned to the chosen period.
+// ═══════════════════════════════════════════════════════════════
+function spreadCostBaseline(taskId, budgetCost, period) {
+  const task = B.tasks[taskId];
+  if (!task) return {};
+  let startD = task.start || null;
+  let finishD = task.finish || task.start || null;
+  if (!startD) startD = S.dataDate || new Date();
+  if (!finishD) finishD = startD;
+  const buckets = {};
+  let cur = new Date(periodKey(startD, period));
+  let maxIter = 500;
+  while (cur <= finishD && maxIter-- > 0) {
+    buckets[cur.getTime()] = 0;
+    if (period === 'week') cur = new Date(cur.getTime() + 7 * 86400000);
+    else if (period === 'month') cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+    else cur = new Date(cur.getFullYear(), cur.getMonth() + 3, 1);
+  }
+  if (!Object.keys(buckets).length) buckets[periodKey(startD, period)] = 0;
+  const keys = Object.keys(buckets).map(Number);
+  const n = keys.length || 1;
+  for (const k of keys) buckets[k] = budgetCost / n;
+  return buckets;
+}
+
+function buildBaselineCostTimeSeries(period) {
+  const bProjId = findBaselineProject();
+  if (!bProjId) return [];
+  const map = {}; // ts -> bud
+
+  // 1. Resource assignments
+  const rsrcAsgns = B.assignments.filter(a => {
+    const t = B.tasks[a.taskId];
+    return t && t.projId === bProjId && a.budgetCost > 0;
+  });
+  for (const a of rsrcAsgns) {
+    const spread = spreadCostBaseline(a.taskId, a.budgetCost, period);
+    for (const [ts, v] of Object.entries(spread)) map[ts] = (map[ts] || 0) + v;
+  }
+
+  // 2. Activity expenses
+  const expns = B.expenses.filter(e => {
+    const t = B.tasks[e.taskId];
+    if (!t) return false;
+    const projId = e.projId || t.projId;
+    return projId === bProjId && e.budgetCost > 0;
+  });
+  for (const e of expns) {
+    const spread = spreadCostBaseline(e.taskId, e.budgetCost, period);
+    for (const [ts, v] of Object.entries(spread)) map[ts] = (map[ts] || 0) + v;
+  }
+
+  // 3. Task-level cost gap (target_cost on TASK not already covered by TASKRSRC/PROJCOST)
+  const rsrcCostByTask = {};
+  for (const a of rsrcAsgns) rsrcCostByTask[a.taskId] = (rsrcCostByTask[a.taskId] || 0) + a.budgetCost;
+  const expCostByTask = {};
+  for (const e of expns) expCostByTask[e.taskId] = (expCostByTask[e.taskId] || 0) + e.budgetCost;
+  for (const t of Object.values(B.tasks)) {
+    if (t.projId !== bProjId) continue;
+    if (!(t.taskBudgetCost > 0)) continue;
+    const already = (rsrcCostByTask[t.id] || 0) + (expCostByTask[t.id] || 0);
+    const gap = t.taskBudgetCost - already;
+    if (gap > 0.001) {
+      const spread = spreadCostBaseline(t.id, gap, period);
+      for (const [ts, v] of Object.entries(spread)) map[ts] = (map[ts] || 0) + v;
+    }
+  }
+
+  const sorted = Object.keys(map).map(Number).sort((a, b) => a - b);
+  return sorted.map(ts => ({ ts, bud: map[ts] }));
+}
+
+
+function renderSCurve() {
+  const series = buildCostTimeSeries(S.period);
+
+  // When a baseline is loaded, replace the planned (budget) values with the
+  // Baseline XER's cost series. Actual comes from the Updated XER as before.
+  let baselineActive = false;
+  if (B.loaded && findBaselineProject()) {
+    const baseSeries = buildBaselineCostTimeSeries(S.period);
+    const baseMap = {};
+    for (const b of baseSeries) baseMap[b.ts] = b.bud;
+    // Merge any baseline-only periods into series so red planned curve renders
+    // past/before the updated-schedule periods if baseline ran longer/shorter.
+    const seenTs = new Set(series.map(s => s.ts));
+    for (const tsStr of Object.keys(baseMap)) {
+      const ts = +tsStr;
+      if (!seenTs.has(ts)) {
+        series.push({ ts, label: periodLabel(ts, S.period), bud: 0, act: 0 });
+      }
+    }
+    series.sort((a, b) => a.ts - b.ts);
+    for (const s of series) s.bud = baseMap[s.ts] || 0;
+    baselineActive = true;
+  }
+
+  // Keep the S-Curve legend swatch in sync with where the planned line comes from
+  const scLegendDot = document.getElementById('scurveLegendDot');
+  const scLegendLbl = document.getElementById('scurveLegendLabel');
+  if (scLegendDot && scLegendLbl) {
+    if (baselineActive) {
+      scLegendDot.style.background = 'var(--red)';
+      scLegendLbl.textContent = 'Planned Cumulative (Baseline)';
+    } else {
+      scLegendDot.style.background = 'var(--gold)';
+      scLegendLbl.textContent = 'Planned Cumulative';
+    }
+  }
+
+  if (!series.length) {
+    const ca = document.getElementById('scurveCanvas');
+    ca.width=600; ca.height=300;
+    const ctx=ca.getContext('2d'); ctx.fillStyle='#111926'; ctx.fillRect(0,0,600,300);
+    ctx.fillStyle='#3A4A5A'; ctx.font='13px DM Mono'; ctx.textAlign='center';
+    ctx.fillText('No cost data (resources or expenses) for this project.',300,155);
+    const scDataEl = document.getElementById('scurveDataWrap');
+    if (scDataEl) scDataEl.innerHTML = '';
+    return;
+  }
+  const rsrcCount = S.assignments.filter(a => { const t=S.tasks[a.taskId]; return t&&t.projId===S.currentProj&&(a.budgetCost>0||a.actualCost>0); }).length;
+  const expCount  = S.expenses.filter(e => { const t=S.tasks[e.taskId]; return t&&(e.projId||t.projId)===S.currentProj&&(e.budgetCost>0||e.actualCost>0||e.remainCost>0); }).length;
+  const taskCostCount = Object.values(S.tasks).filter(t => t.projId===S.currentProj&&(t.taskBudgetCost>0||t.taskActualCost>0)).length;
+  document.getElementById('scurveMeta').textContent = `${series.length} ${S.period}s · ${rsrcCount} resource assignments · ${expCount} expenses · ${taskCostCount} activities w/ cost`;
+
+  // Build cumulative — Actual stops accumulating at Data Date
+  let cumBud=0, cumAct=0;
+  const ddTs = S.dataDate ? periodKey(S.dataDate, S.period) : null;
+  const cumSeries = series.map(b => {
+    cumBud += b.bud;
+    const actThisPeriod = (ddTs === null || b.ts <= ddTs) ? b.act : 0;
+    cumAct += actThisPeriod;
+    return { ts:b.ts, label:b.label, bud:b.bud, act:actThisPeriod, cumBud, cumAct };
+  });
+
+  const PAD = {top:42, right:24, bottom:52, left:72};
+  const W = Math.max(900, series.length * 28 + PAD.left + PAD.right);
+  const H = 320;
+  const INNER_W = W-PAD.left-PAD.right;
+  const INNER_H = H-PAD.top-PAD.bottom;
+  const ca = document.getElementById('scurveCanvas');
+  ca.width=W; ca.height=H;
+  const ctx=ca.getContext('2d');
+  ctx.fillStyle='#111926'; ctx.fillRect(0,0,W,H);
+
+  const yMax = cumSeries[cumSeries.length-1].cumBud * 1.1 || 10;
+  const nGrid=5;
+  ctx.strokeStyle='rgba(28,42,58,.8)'; ctx.lineWidth=1;
+  for(let i=0;i<=nGrid;i++){
+    const y=PAD.top+INNER_H-(i/nGrid)*INNER_H;
+    ctx.beginPath(); ctx.moveTo(PAD.left,y); ctx.lineTo(PAD.left+INNER_W,y); ctx.stroke();
+    ctx.fillStyle='#3A4A5A'; ctx.font='9px DM Mono'; ctx.textAlign='right';
+    ctx.fillText((Math.round((i/nGrid)*yMax*10)/10).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:1}), PAD.left-6, y+3);
+  }
+
+  const xOf = i => PAD.left + (i/(cumSeries.length-1||1))*INNER_W;
+  const yOf = v => PAD.top + INNER_H - (v/yMax)*INNER_H;
+
+  // Planned colour switches to red when sourced from the Baseline XER
+  const plannedFill    = baselineActive ? 'rgba(224,80,80,.10)' : 'rgba(200,146,42,.07)';
+  const plannedStroke  = baselineActive ? 'rgba(224,80,80,.95)' : 'rgba(200,146,42,.9)';
+  const plannedDotFill = baselineActive ? 'rgba(224,80,80,.95)' : 'rgba(200,146,42,.95)';
+  const plannedLblFill = baselineActive ? 'rgba(224,80,80,.95)' : 'rgba(200,146,42,.9)';
+
+  // Planned area fill
+  ctx.beginPath();
+  cumSeries.forEach((b,i)=>{ i===0?ctx.moveTo(xOf(i),yOf(b.cumBud)):ctx.lineTo(xOf(i),yOf(b.cumBud)); });
+  ctx.lineTo(xOf(cumSeries.length-1), PAD.top+INNER_H);
+  ctx.lineTo(PAD.left, PAD.top+INNER_H);
+  ctx.closePath();
+  ctx.fillStyle=plannedFill; ctx.fill();
+
+  // Planned line
+  ctx.beginPath(); ctx.strokeStyle=plannedStroke; ctx.lineWidth=2.5;
+  cumSeries.forEach((b,i)=>{ i===0?ctx.moveTo(xOf(i),yOf(b.cumBud)):ctx.lineTo(xOf(i),yOf(b.cumBud)); });
+  ctx.stroke();
+
+  // Actual line (green) — stops at Data Date
+  const ddIdxForLine = ddTs !== null ? cumSeries.findIndex(b => b.ts > ddTs) : -1;
+  const actualEndIdx = ddIdxForLine >= 0 ? ddIdxForLine : cumSeries.length;
+  const actualPts = cumSeries.slice(0, actualEndIdx).filter(b => b.cumAct > 0);
+  if (actualPts.length > 1) {
+    ctx.beginPath(); ctx.strokeStyle='rgba(52,201,138,.9)'; ctx.lineWidth=2.5;
+    let started = false;
+    cumSeries.slice(0, actualEndIdx).forEach((b, i) => {
+      if (b.cumAct > 0) {
+        if (!started) { ctx.moveTo(xOf(i), yOf(b.cumAct)); started = true; }
+        else { ctx.lineTo(xOf(i), yOf(b.cumAct)); }
+      }
+    });
+    ctx.stroke();
+  }
+
+  // Data point dots + value labels on S-Curve
+  const showScVal = cumSeries.length <= 52;
+  const dotStep = Math.ceil(cumSeries.length / 20);
+  cumSeries.forEach((b, i) => {
+    // Planned dot + label
+    if (i % dotStep === 0 || i === cumSeries.length - 1) {
+      const px = xOf(i), py = yOf(b.cumBud);
+      ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI*2);
+      ctx.fillStyle = plannedDotFill; ctx.fill();
+      if (showScVal && b.cumBud >= 0.01) {
+        const lbl = b.cumBud >= 1000000 ? (b.cumBud/1000000).toFixed(1)+'M' :
+                    b.cumBud >= 1000 ? (b.cumBud/1000).toFixed(1)+'k' : b.cumBud.toFixed(0);
+        ctx.fillStyle = plannedLblFill; ctx.font = 'bold 8px DM Mono'; ctx.textAlign = 'center';
+        ctx.fillText(lbl, px, py - 7);
+      }
+    }
+  });
+
+  // Actual dots + labels
+  cumSeries.slice(0, actualEndIdx).forEach((b, i) => {
+    if (b.cumAct > 0 && (i % dotStep === 0 || i === actualEndIdx - 1)) {
+      const px = xOf(i), py = yOf(b.cumAct);
+      ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(52,201,138,.95)'; ctx.fill();
+      if (showScVal) {
+        const lbl = b.cumAct >= 1000000 ? (b.cumAct/1000000).toFixed(1)+'M' :
+                    b.cumAct >= 1000 ? (b.cumAct/1000).toFixed(1)+'k' : b.cumAct.toFixed(0);
+        ctx.fillStyle = 'rgba(52,201,138,.9)'; ctx.font = 'bold 8px DM Mono'; ctx.textAlign = 'center';
+        ctx.fillText(lbl, px, py + 14);
+      }
+    }
+  });
+
+  // Data Date vertical line on S-Curve
+  if (S.dataDate) {
+    const ddTs2 = periodKey(S.dataDate, S.period);
+    const ddIdx2 = cumSeries.findIndex(b => b.ts >= ddTs2);
+    if (ddIdx2 >= 0) {
+      const xDD = xOf(ddIdx2);
+      ctx.strokeStyle='rgba(240,160,48,.75)'; ctx.lineWidth=2; ctx.setLineDash([5,5]);
+      ctx.beginPath(); ctx.moveTo(xDD, PAD.top); ctx.lineTo(xDD, PAD.top+INNER_H); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='rgba(240,160,48,.9)'; ctx.font='bold 9px DM Mono'; ctx.textAlign='center';
+      ctx.fillText('DD', xDD, PAD.top-6);
+    }
+  }
+
+  // X labels
+  cumSeries.forEach((b,i)=>{
+    if(i % Math.ceil(cumSeries.length/18) === 0 || cumSeries.length<=18){
+      ctx.fillStyle='#3A4A5A'; ctx.font='8px DM Mono'; ctx.textAlign='center';
+      ctx.save(); ctx.translate(xOf(i), PAD.top+INNER_H+8); ctx.rotate(-Math.PI/5);
+      ctx.fillText(b.label,0,0); ctx.restore();
+    }
+  });
+
+  // Y label
+  ctx.save(); ctx.translate(14, PAD.top+INNER_H/2);
+  ctx.rotate(-Math.PI/2); ctx.fillStyle='#3A4A5A'; ctx.font='9px DM Mono'; ctx.textAlign='center';
+  ctx.fillText('Cumulative Cost',0,0); ctx.restore();
+
+  // Hover
+  ca.onmousemove = (e) => {
+    const rect=ca.getBoundingClientRect();
+    const mx=e.clientX-rect.left;
+    const i=Math.round((mx-PAD.left)/INNER_W*(cumSeries.length-1));
+    if(i>=0&&i<cumSeries.length){
+      const b=cumSeries[i];
+      const tt=document.getElementById('tooltip');
+      tt.style.display='block'; tt.style.left=(e.clientX+14)+'px'; tt.style.top=(e.clientY-20)+'px';
+      document.getElementById('ttLabel').textContent=b.label;
+      document.getElementById('ttBud').textContent=b.cumBud.toFixed(2);
+      document.getElementById('ttAct').textContent=b.cumAct.toFixed(2);
+      document.getElementById('ttRem').textContent='—';
+    }
+  };
+  ca.onmouseleave=()=>{document.getElementById('tooltip').style.display='none';};
+
+  // Render the data table below the S-curve
+  renderSCurveDataTable(cumSeries, baselineActive);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Build the Period Budgeted / Period Actual / Cumulative Budgeted
+// / Cumulative Actual table shown below the S-curve.
+// Budgeted rows: RED if Baseline XER loaded, GOLD otherwise.
+// ═══════════════════════════════════════════════════════════════
+function renderSCurveDataTable(cumSeries, baselineActive) {
+  const el = document.getElementById('scurveDataWrap');
+  if (!el) return;
+
+  const fmtCost = v => {
+    if (v == null || isNaN(v) || v === 0) return '0';
+    const a = Math.abs(v);
+    if (a >= 1000000) return (v / 1000000).toFixed(2) + 'M';
+    if (a >= 1000)    return (v / 1000).toFixed(1) + 'k';
+    return Math.round(v).toLocaleString('en-US');
+  };
+
+  const budCls = baselineActive ? 'bud-red' : 'bud-gold';
+  const budLabel = baselineActive ? 'Budgeted (Baseline)' : 'Budgeted';
+  const cumBudLabel = baselineActive ? 'Cum. Budgeted (Baseline)' : 'Cum. Budgeted';
+
+  let head = '<tr><th class="row-label">Period</th>';
+  let budR    = `<tr class="bud-row"><td class="row-label ${budCls}">${budLabel}</td>`;
+  let actR    = '<tr class="act-row"><td class="row-label">Actual</td>';
+  let cumBudR = `<tr class="bud-row"><td class="row-label ${budCls}">${cumBudLabel}</td>`;
+  let cumActR = '<tr class="act-row"><td class="row-label">Cum. Actual</td>';
+
+  for (const b of cumSeries) {
+    head    += `<th>${b.label}</th>`;
+    budR    += `<td class="${b.bud    > 0 ? budCls   : 'zero-val'}">${fmtCost(b.bud)}</td>`;
+    actR    += `<td class="${b.act    > 0 ? 'act-val': 'zero-val'}">${fmtCost(b.act)}</td>`;
+    cumBudR += `<td class="${b.cumBud > 0 ? budCls   : 'zero-val'}">${fmtCost(b.cumBud)}</td>`;
+    cumActR += `<td class="${b.cumAct > 0 ? 'act-val': 'zero-val'}">${fmtCost(b.cumAct)}</td>`;
+  }
+  head    += '</tr>';
+  budR    += '</tr>';
+  actR    += '</tr>';
+  cumBudR += '</tr>';
+  cumActR += '</tr>';
+
+  el.innerHTML = `<table class="histo-data-table"><thead>${head}</thead><tbody>${budR}${actR}${cumBudR}${cumActR}</tbody></table>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TABLE VIEW
+// ═══════════════════════════════════════════════════════════════
+function renderTable() {
+  const asgns = getFilteredAssignments();
+  // Group by resource
+  const byRes = {};
+  for (const a of asgns) {
+    const rid = a.rsrcId;
+    if (!byRes[rid]) byRes[rid] = { bud:0, act:0, rem:0, cost:0, actCost:0, count:0 };
+    byRes[rid].bud += a.budgetQty;
+    byRes[rid].act += a.actualQty;
+    byRes[rid].rem += a.remainQty;
+    byRes[rid].cost += a.budgetCost;
+    byRes[rid].actCost += a.actualCost;
+    byRes[rid].count++;
+  }
+  const rows = Object.entries(byRes).map(([rid, v]) => {
+    const r = S.resources[rid] || { name:rid, type:'—', unit:'—' };
+    return { ...v, name:r.name, type:r.type, unit:r.unit, rid };
+  }).sort((a,b) => b.bud - a.bud);
+
+  const maxBud = rows.length ? Math.max(...rows.map(r=>r.bud)) : 1;
+  const typeLabels = { RT_Labor:'Labor', RT_Equip:'Equipment', RT_Material:'Material', RT_Mat:'Material' };
+
+  document.getElementById('tableHead').innerHTML = `
+    <th>Resource</th><th>Type</th><th>Unit</th>
+    <th class="num">Budget Qty</th><th class="num">Actual Qty</th>
+    <th class="num">Remain Qty</th><th class="num">Budget Cost</th>
+    <th class="num">Actual Cost</th><th class="num">Assignments</th>
+    <th style="min-width:100px">Budget Bar</th>`;
+
+  document.getElementById('tableBody').innerHTML = rows.map(r => `
+    <tr>
+      <td title="${esc(r.name)}">${esc(r.name)}</td>
+      <td>${typeLabels[r.type]||r.type||'—'}</td>
+      <td>${esc(r.unit)||'—'}</td>
+      <td class="num">${r.bud.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td class="num" style="color:var(--green)">${r.act.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td class="num" style="color:var(--cyan)">${r.rem.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td class="num">${r.cost.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td class="num" style="color:var(--green)">${r.actCost.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td class="num">${r.count}</td>
+      <td class="bar-cell"><div class="mini-bar" style="width:${Math.max(2,Math.round(r.bud/maxBud*100))}px"></div></td>
+    </tr>`).join('') || `<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">No data</td></tr>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════════════════════
+function updateStats() {
+  const filteredAsgns = getFilteredAssignments();
+  const rsrcIds = [...new Set(filteredAsgns.map(a=>a.rsrcId))];
+  const peak = Math.max(0, ...(buildTimeSeries(filteredAsgns,S.period).map(b=>b.bud)||[0]));
+  const totalBud = filteredAsgns.reduce((s,a)=>s+a.budgetQty,0);
+  const proj = S.projects[S.currentProj];
+  // Dynamic Peak label
+  const TYPE_LABELS = { RT_Labor:'Labor Units', RT_Equip:'Equip. Units', RT_Material:'Material Units', RT_Mat:'Material Units' };
+  let peakLabel = 'Units';
+  if (S.roleFilter && TYPE_LABELS[S.roleFilter]) {
+    peakLabel = TYPE_LABELS[S.roleFilter];
+  } else {
+    const selLabor    = document.getElementById('laborSelect').value;
+    const selEquip    = document.getElementById('equipSelect').value;
+    const selMaterial = document.getElementById('materialSelect').value;
+    if (selMaterial) peakLabel = 'Material Units';
+    else if (selEquip) peakLabel = 'Equip. Units';
+    else if (selLabor) peakLabel = 'Labor Units';
+  }
+  function fmtNum(n, decimals=1) {
+    return Number(n).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  }
+  document.getElementById('stPeakLabel').textContent = peakLabel;
+  document.getElementById('stRes').textContent = rsrcIds.length.toLocaleString('en-US');
+  document.getElementById('stAsgn').textContent = filteredAsgns.length.toLocaleString('en-US');
+  document.getElementById('stPeak').textContent = isFinite(peak) ? fmtNum(peak) : '0.0';
+  document.getElementById('stBudget').textContent = fmtNum(totalBud);
+  document.getElementById('stDD').textContent = proj && proj.dataDate ? fmtDate(proj.dataDate) : '—';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FILE HANDLING
+// ═══════════════════════════════════════════════════════════════
+function setSt(msg, type) {
+  document.getElementById('statusText').textContent = msg;
+  document.getElementById('sdot').className = 'sdot' + (type==='ok'?' ok':type==='err'?' err':type==='loading'?' loading':'');
+}
+
+// Internal flag — when true, loadFileText / loadBaselineFileText were
+// triggered by an inbound parent message and must NOT re-broadcast.
+let __xerSyncInbound=false;
+function __xerBroadcast(msg){try{parent.postMessage(msg,'*');}catch(e){}}
+
+function loadFileText(text,name){
+  try {
+    parseXER(text);
+    const projs = Object.values(S.projects);
+    if (!projs.length) { setSt('No projects found in file.', 'err'); return; }
+
+    const sel = document.getElementById('projectSelect');
+    sel.innerHTML = projs.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+    sel.disabled = false;
+
+    document.getElementById('dropZone').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'flex';
+    document.getElementById('closeBtn').style.display = 'inline-flex';
+    document.getElementById('exportBtn').style.display = 'inline-flex';
+    document.getElementById('baselineBtn').style.display = 'inline-flex';
+
+    S.currentProj = projs[0].id;
+    sel.value = S.currentProj;
+    onProjChange();
+
+    setSt(`${name} · ${projs.length} project(s) · ${Object.keys(S.resources).length} resources · ${S.assignments.length} assignments`, 'ok');
+    if(!__xerSyncInbound)__xerBroadcast({type:'xer:current:load',text:text,name:name});
+  } catch(err) {
+    setSt('Parse error: ' + err.message, 'err');
+  }
+}
+
+function loadFile(file) {
+  if (!file) return;
+  setSt(`Parsing ${file.name}…`, 'loading');
+  const reader = new FileReader();
+  reader.onload = e => loadFileText(e.target.result,file.name);
+  reader.onerror = () => setSt('Failed to read file.', 'err');
+  reader.readAsText(file, 'latin-1');
+}
+
+function closeFile() {
+  S.projects={}; S.resources={}; S.wbsNodes={}; S.tasks={}; S.assignments=[];
+  S.currentProj=null; S.dataDate=null;
+  const sel=document.getElementById('projectSelect');
+  sel.innerHTML='<option>— load a file first —</option>';sel.disabled=true;
+  const rConfigs=[{id:'laborSelect',label:'— all labor —'},{id:'equipSelect',label:'— all equipment —'},{id:'materialSelect',label:'— all material —'}];
+  rConfigs.forEach(c=>{const el=document.getElementById(c.id);el.innerHTML='<option>'+c.label+'</option>';el.disabled=true;});
+  document.getElementById('roleChips').innerHTML='';
+  ['stRes','stAsgn','stPeak','stBudget','stDD'].forEach(id=>document.getElementById(id).textContent='—');
+  document.getElementById('dropZone').style.display='';
+  document.getElementById('mainContent').style.display='none';
+  document.getElementById('closeBtn').style.display='none';
+  document.getElementById('exportBtn').style.display='none';
+  document.getElementById('baselineBtn').style.display='none';
+  // Clear baseline silently — the xer:current:close broadcast implicitly covers it
+  const _prev=__xerSyncInbound;__xerSyncInbound=true;
+  try{clearBaseline();}finally{__xerSyncInbound=_prev;}
+  setSt('Ready — load a Primavera P6 XER file to begin','');
+  if(!__xerSyncInbound)__xerBroadcast({type:'xer:current:close'});
+}
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+document.getElementById('fileInput').addEventListener('change', e=>{loadFile(e.target.files[0]);e.target.value='';});
+function evDO(e){e.preventDefault();document.getElementById('dropZone').classList.add('dov');}
+function evDL(){document.getElementById('dropZone').classList.remove('dov');}
+function evDD(e){e.preventDefault();evDL();loadFile(e.dataTransfer.files[0]);}
+
+// ══════════════════════════════════════════════════════════════════════════
+// BASELINE COMPARISON — parallel dataset + compare view
+// ══════════════════════════════════════════════════════════════════════════
+const B = {
+  loaded: false,
+  fileName: '',
+  projects: {},
+  resources: {},
+  uom: {},
+  tasks: {},
+  assignments: [],
+  expenses: [],
+};
+const CMP = {
+  sortCol: 'dBudCost',
+  sortDir: -1,
+  filter: 'all', // all | diff | new
+};
+
+// Parse XER content into the baseline B object (mirror of handleRow/parseXER)
+function parseXER_baseline(content) {
+  B.projects = {}; B.resources = {}; B.uom = {}; B.tasks = {}; B.assignments = []; B.expenses = [];
+  let tbl = null, flds = [];
+  for (const rawLine of content.split('\n')) {
+    const line = rawLine.replace(/\r$/, '');
+    if (line.startsWith('%T\t')) { tbl = line.slice(3).trim(); flds = []; }
+    else if (line.startsWith('%F\t')) flds = line.slice(3).split('\t');
+    else if (line.startsWith('%R\t')) {
+      const vals = line.slice(3).split('\t');
+      const row = {};
+      flds.forEach((f, i) => { row[f] = i < vals.length ? vals[i] : ''; });
+      handleRow_baseline(tbl, row);
+    }
+  }
+  // Resolve unit_id -> unit_abbrev
+  for (const res of Object.values(B.resources)) {
+    if (res.unitId && B.uom[res.unitId]) res.unit = B.uom[res.unitId];
+  }
+}
+
+function handleRow_baseline(tbl, r) {
+  if (tbl === 'UOM') {
+    const id = r.unit_id || '';
+    if (id) B.uom[id] = r.unit_abbrev || r.unit_name || id;
+  } else if (tbl === 'PROJECT') {
+    const id = r.proj_id || '';
+    B.projects[id] = { id, name: r.proj_short_name || id };
+  } else if (tbl === 'RSRC') {
+    const id = r.rsrc_id || '';
+    B.resources[id] = {
+      id, name: r.rsrc_name || id,
+      shortName: r.rsrc_short_name || '',
+      type: r.rsrc_type || 'RT_Labor',
+      unit: r.unit_id || '',
+      unitId: r.unit_id || '',
+    };
+  } else if (tbl === 'TASK') {
+    const id = r.task_id || '';
+    // Mirror the main parser's date resolution so baseline task dates are
+    // available for spreading baseline budget quantities across time.
+    const aS = parseDate(r.act_start_date || '');
+    const aE = parseDate(r.act_end_date || '');
+    const eS = parseDate(r.early_start_date || r.target_start_date || '');
+    const eF = parseDate(r.early_end_date || r.target_end_date || '');
+    const rF = parseDate(r.reend_date || r.remain_early_end_date || '');
+    let dS, dF;
+    if (!aS) { dS = eS; dF = eF; }
+    else if (!aE) { dS = aS; dF = rF || eF; }
+    else { dS = aS; dF = aE; }
+    B.tasks[id] = {
+      id, code: r.task_code || '', name: r.task_name || '',
+      projId: r.proj_id || '', start: dS, finish: dF,
+      taskBudgetCost: parseFloat(r.target_cost || '0') || 0,
+      taskActualCost: parseFloat(r.act_cost || r.act_total_cost || '0') || 0,
+      taskRemainCost: parseFloat(r.remain_cost || '0') || 0,
+    };
+  } else if (tbl === 'TASKRSRC') {
+    B.assignments.push({
+      taskId: r.task_id || '',
+      rsrcId: r.rsrc_id || '',
+      projId: r.proj_id || '',
+      budgetQty: parseFloat(r.target_qty || '0') || 0,
+      actualQty: parseFloat(r.act_reg_qty || r.act_qty || '0') || 0,
+      remainQty: parseFloat(r.remain_qty || '0') || 0,
+      budgetCost: parseFloat(r.target_cost || '0') || 0,
+      actualCost: parseFloat(r.act_reg_cost || r.act_cost || '0') || 0,
+      remainCost: parseFloat(r.remain_cost || '0') || 0,
+    });
+  } else if (tbl === 'PROJCOST') {
+    const budgetCost = parseFloat(r.target_cost || r.base_cost || '0') || 0;
+    const actualCost = parseFloat(r.act_cost || r.actual_cost || r.act_total_cost || '0') || 0;
+    const remainCost = parseFloat(r.remain_cost || '0') || 0;
+    if (budgetCost > 0 || actualCost > 0 || remainCost > 0) {
+      B.expenses.push({
+        taskId: r.task_id || '',
+        projId: r.proj_id || '',
+        budgetCost, actualCost, remainCost,
+      });
+    }
+  }
+}
+
+function loadBaselineFileText(text,name){
+  try {
+    parseXER_baseline(text);
+    const projs = Object.values(B.projects);
+    if (!projs.length) { setSt('No projects found in baseline file.', 'err'); return; }
+    B.loaded = true;
+    B.fileName = name;
+    document.getElementById('baselineChip').style.display = 'inline-flex';
+    document.getElementById('baselineChipName').textContent = name;
+    document.getElementById('baselineBtn').style.display = 'none';
+    // Activate Delayed tab now that baseline is loaded
+    const dlyBtn = document.getElementById('delayedTabBtn');
+    if (dlyBtn) dlyBtn.style.display = 'inline-flex';
+    setSt(`Baseline loaded: ${name} · ${projs.length} project(s) · ${Object.keys(B.resources).length} resources · ${B.assignments.length} assignments`, 'ok');
+    // Refresh histogram so budget bars switch to Baseline XER (red) immediately
+    if (S.activeView === 'histogram') renderHistogram();
+    else if (S.activeView === 'scurve') renderSCurve();
+    else if (S.activeView === 'delayed') renderDelayed();
+    if(!__xerSyncInbound)__xerBroadcast({type:'xer:baseline:load',text:text,name:name});
+  } catch (err) {
+    setSt('Baseline parse error: ' + err.message, 'err');
+  }
+}
+
+function loadBaselineFile(file) {
+  if (!file) return;
+  setSt(`Parsing baseline ${file.name}…`, 'loading');
+  const reader = new FileReader();
+  reader.onload = e => loadBaselineFileText(e.target.result,file.name);
+  reader.onerror = () => setSt('Failed to read baseline file.', 'err');
+  reader.readAsText(file, 'latin-1');
+}
+
+function clearBaseline() {
+  B.loaded = false; B.fileName = '';
+  B.projects = {}; B.resources = {}; B.uom = {}; B.tasks = {}; B.assignments = []; B.expenses = [];
+  document.getElementById('baselineChip').style.display = 'none';
+  // If baseline button is hidden because main file loaded, restore it
+  if (document.getElementById('mainContent').style.display === 'flex') {
+    document.getElementById('baselineBtn').style.display = 'inline-flex';
+  }
+  // Hide Delayed tab (baseline required)
+  const dlyBtn = document.getElementById('delayedTabBtn');
+  if (dlyBtn) dlyBtn.style.display = 'none';
+  // If user was on compare or delayed view, bounce back to histogram
+  if (S.activeView === 'compare' || S.activeView === 'delayed') {
+    const histoTab = document.querySelector('.vtab');
+    if (histoTab) switchView('histogram', histoTab);
+  }
+  // Refresh histogram so budget bars revert to gold (Updated XER)
+  if (S.activeView === 'histogram') renderHistogram();
+  else if (S.activeView === 'scurve') renderSCurve();
+  if(!__xerSyncInbound)__xerBroadcast({type:'xer:baseline:clear'});
+}
+
+// Find matching project in baseline — prefer exact proj_id match, else first project
+function findBaselineProject() {
+  if (!B.loaded) return null;
+  if (B.projects[S.currentProj]) return S.currentProj;
+  const ids = Object.keys(B.projects);
+  return ids.length ? ids[0] : null;
+}
+
+function buildCompareRows() {
+  if (!B.loaded || !S.currentProj) return [];
+  const bProjId = findBaselineProject();
+
+  // UPDATE: aggregate current project assignments by resource name (use name as join key,
+  // falling back to id if no name) — rsrc_id differs between files.
+  const joinKey = (rsrc) => (rsrc && rsrc.name ? rsrc.name.trim().toLowerCase() : '');
+
+  const uMap = {}; // key -> {name,type,unit,budQty,actQty,remQty,budCost,actCost,count}
+  for (const a of S.assignments) {
+    const t = S.tasks[a.taskId];
+    if (!t || t.projId !== S.currentProj) continue;
+    const r = S.resources[a.rsrcId];
+    if (!r) continue;
+    const k = joinKey(r);
+    if (!k) continue;
+    if (!uMap[k]) uMap[k] = { key:k, name:r.name, type:r.type, unit:r.unit||'', budQty:0, actQty:0, remQty:0, budCost:0, actCost:0, count:0 };
+    uMap[k].budQty += a.budgetQty;
+    uMap[k].actQty += a.actualQty;
+    uMap[k].remQty += a.remainQty;
+    uMap[k].budCost += a.budgetCost;
+    uMap[k].actCost += a.actualCost;
+    uMap[k].count++;
+  }
+
+  // BASELINE: aggregate same way
+  const bMap = {};
+  for (const a of B.assignments) {
+    const t = B.tasks[a.taskId];
+    if (!t || (bProjId && t.projId !== bProjId)) continue;
+    const r = B.resources[a.rsrcId];
+    if (!r) continue;
+    const k = joinKey(r);
+    if (!k) continue;
+    if (!bMap[k]) bMap[k] = { key:k, name:r.name, type:r.type, unit:r.unit||'', budQty:0, actQty:0, remQty:0, budCost:0, actCost:0, count:0 };
+    bMap[k].budQty += a.budgetQty;
+    bMap[k].actQty += a.actualQty;
+    bMap[k].remQty += a.remainQty;
+    bMap[k].budCost += a.budgetCost;
+    bMap[k].actCost += a.actualCost;
+    bMap[k].count++;
+  }
+
+  // Union of keys
+  const allKeys = new Set([...Object.keys(uMap), ...Object.keys(bMap)]);
+  const rows = [];
+  for (const k of allKeys) {
+    const u = uMap[k];
+    const b = bMap[k];
+    const meta = u || b;
+    const bBudQty  = b ? b.budQty  : 0;
+    const uBudQty  = u ? u.budQty  : 0;
+    const bBudCost = b ? b.budCost : 0;
+    const uBudCost = u ? u.budCost : 0;
+    const bActCost = b ? b.actCost : 0;
+    const uActCost = u ? u.actCost : 0;
+    const dBudQty  = uBudQty  - bBudQty;
+    const dBudCost = uBudCost - bBudCost;
+    const dActCost = uActCost - bActCost;
+    const dPct = bBudCost !== 0 ? (dBudCost / bBudCost) * 100 : (uBudCost > 0 ? 100 : 0);
+    let status;
+    if (u && !b) status = 'new';
+    else if (!u && b) status = 'removed';
+    else if (Math.abs(dBudQty) < 0.01 && Math.abs(dBudCost) < 0.01) status = 'same';
+    else status = 'changed';
+    rows.push({
+      key:k,
+      name: meta.name,
+      type: meta.type,
+      unit: meta.unit,
+      bBudQty, uBudQty, dBudQty,
+      bBudCost, uBudCost, dBudCost,
+      bActCost, uActCost, dActCost,
+      dPct, status,
+    });
+  }
+  return rows;
+}
+
+function setCmpFlt(f, el) {
+  document.querySelectorAll('#cmpFltAll,#cmpFltDiff,#cmpFltNew').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  CMP.filter = f;
+  renderCompare();
+}
+
+function cmpSort(col) {
+  if (CMP.sortCol === col) CMP.sortDir *= -1;
+  else { CMP.sortCol = col; CMP.sortDir = (col === 'name' || col === 'type') ? 1 : -1; }
+  renderCompare();
+}
+
+function renderCompare() {
+  if (!B.loaded) {
+    document.getElementById('cmpTableBody').innerHTML =
+      `<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--muted)">Load a baseline XER to compare.</td></tr>`;
+    document.getElementById('cmpSummaryCards').innerHTML = '';
+    return;
+  }
+
+  let rows = buildCompareRows();
+
+  // search filter
+  const q = (document.getElementById('cmpSearch')?.value || '').trim().toLowerCase();
+  if (q) rows = rows.filter(r => r.name.toLowerCase().includes(q));
+
+  // status filter
+  if (CMP.filter === 'diff') rows = rows.filter(r => r.status === 'changed' || r.status === 'new' || r.status === 'removed');
+  else if (CMP.filter === 'new') rows = rows.filter(r => r.status === 'new' || r.status === 'removed');
+
+  // sort
+  rows.sort((a,b) => {
+    const va = a[CMP.sortCol], vb = b[CMP.sortCol];
+    if (typeof va === 'number') return (va - vb) * CMP.sortDir;
+    return String(va||'').localeCompare(String(vb||'')) * CMP.sortDir;
+  });
+
+  // Summary cards
+  const allRows = buildCompareRows();
+  const nChanged = allRows.filter(r => r.status === 'changed').length;
+  const nNew = allRows.filter(r => r.status === 'new').length;
+  const nRemoved = allRows.filter(r => r.status === 'removed').length;
+  const nSame = allRows.filter(r => r.status === 'same').length;
+  const totBaseCost = allRows.reduce((s,r)=>s+r.bBudCost,0);
+  const totUpdCost  = allRows.reduce((s,r)=>s+r.uBudCost,0);
+  const totDeltaCost = totUpdCost - totBaseCost;
+  const totDeltaPct = totBaseCost !== 0 ? (totDeltaCost / totBaseCost) * 100 : 0;
+
+  const fmtM = n => Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const deltaColor = totDeltaCost > 0 ? 'var(--red)' : (totDeltaCost < 0 ? 'var(--green)' : 'var(--muted)');
+  const card = (label, val, color) =>
+    `<div style="flex:1;min-width:150px;background:var(--surface);border:1px solid var(--border2);border-radius:5px;padding:10px 14px;">
+      <div style="font-size:9px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;">${label}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:16px;color:${color||'var(--white)'};font-weight:700;margin-top:3px;">${val}</div>
+    </div>`;
+  document.getElementById('cmpSummaryCards').innerHTML = [
+    card('Total Resources',   allRows.length.toLocaleString(), 'var(--white)'),
+    card('Changed',            nChanged.toLocaleString(),        'var(--amber)'),
+    card('New in Update',      nNew.toLocaleString(),            'var(--cyan)'),
+    card('Removed',            nRemoved.toLocaleString(),        'var(--red)'),
+    card('Unchanged',          nSame.toLocaleString(),           'var(--muted)'),
+    card('Baseline Cost',     '$'+fmtM(totBaseCost),             'var(--muted)'),
+    card('Update Cost',       '$'+fmtM(totUpdCost),              'var(--cyan)'),
+    card('Δ Cost',            (totDeltaCost>=0?'+':'')+'$'+fmtM(totDeltaCost)+' ('+(totDeltaPct>=0?'+':'')+totDeltaPct.toFixed(1)+'%)', deltaColor),
+  ].join('');
+
+  // sort icons
+  ['name','type','bBudQty','uBudQty','dBudQty','bBudCost','uBudCost','dBudCost'].forEach(c => {
+    const el = document.getElementById('cmpSortIcon_' + c);
+    if (el) el.textContent = (CMP.sortCol === c) ? (CMP.sortDir === 1 ? '▲' : '▼') : '';
+  });
+
+  const typeLabels = { RT_Labor:'Labor', RT_Equip:'Equipment', RT_Material:'Material', RT_Mat:'Material' };
+  const fmt2 = n => Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const statusBadge = s => {
+    const map = {
+      same:    ['Same',    'var(--muted)', 'rgba(138,138,138,.15)'],
+      changed: ['Changed', 'var(--amber)', 'rgba(240,160,48,.15)'],
+      new:     ['New',     'var(--cyan)',  'rgba(0,201,224,.15)'],
+      removed: ['Removed', 'var(--red)',   'rgba(224,80,80,.15)'],
+    };
+    const [lbl,c,bg] = map[s] || map.same;
+    return `<span style="font-size:9px;letter-spacing:.2em;color:${c};background:${bg};padding:2px 8px;border-radius:3px;">${lbl.toUpperCase()}</span>`;
+  };
+  const deltaCell = (v, decimals=2) => {
+    if (Math.abs(v) < 0.01) return `<span style="color:var(--muted)">0${decimals?'.'+'0'.repeat(decimals):''}</span>`;
+    const col = v > 0 ? 'var(--red)' : 'var(--green)';
+    const sign = v > 0 ? '+' : '';
+    return `<span style="color:${col};font-weight:600">${sign}${Number(v).toLocaleString('en-US',{minimumFractionDigits:decimals,maximumFractionDigits:decimals})}</span>`;
+  };
+  const pctCell = (v) => {
+    if (!isFinite(v) || Math.abs(v) < 0.05) return `<span style="color:var(--muted)">—</span>`;
+    const col = v > 0 ? 'var(--red)' : 'var(--green)';
+    const sign = v > 0 ? '+' : '';
+    return `<span style="color:${col};font-weight:600">${sign}${v.toFixed(1)}%</span>`;
+  };
+
+  document.getElementById('cmpTableBody').innerHTML = rows.length ? rows.map(r => `
+    <tr>
+      <td title="${esc(r.name)}">${esc(r.name)}</td>
+      <td>${typeLabels[r.type]||r.type||'—'}</td>
+      <td>${esc(r.unit)||'—'}</td>
+      <td class="num" style="color:var(--muted)">${fmt2(r.bBudQty)}</td>
+      <td class="num" style="color:var(--cyan)">${fmt2(r.uBudQty)}</td>
+      <td class="num">${deltaCell(r.dBudQty)}</td>
+      <td class="num" style="color:var(--muted)">${fmt2(r.bBudCost)}</td>
+      <td class="num" style="color:var(--cyan)">${fmt2(r.uBudCost)}</td>
+      <td class="num">${deltaCell(r.dBudCost)}</td>
+      <td class="num">${pctCell(r.dPct)}</td>
+      <td>${statusBadge(r.status)}</td>
+    </tr>`).join('') :
+    `<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--muted)">No resources match the current filter.</td></tr>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  DELAYED ACTIVITIES — current finish later than baseline finish
+//  Variance (d) = (currentFinish − baselineFinish) in calendar days
+//  Only activities with variance > 0 are shown (i.e. DELAYED).
+//  Remaining Cost = sum of remainCost across all assignments + expenses
+//  for each task (uses current/updated XER figures).
+// ══════════════════════════════════════════════════════════════════════════
+const DLY = { sortCol:'variance', sortDir:-1 };
+
+// Build the rows: join S.tasks (current) ↔ B.tasks (baseline) by task_code.
+// Only returns rows where baseline finish and current finish both exist AND
+// the current finish is strictly later than the baseline finish.
+function buildDelayedRows() {
+  if (!B.loaded || !S.currentProj) return [];
+  const bProjId = findBaselineProject();
+  if (!bProjId) return [];
+
+  // Index baseline tasks (for the matched project) by task_code
+  const bByCode = {};
+  for (const bt of Object.values(B.tasks)) {
+    if (bt.projId !== bProjId) continue;
+    if (!bt.code) continue;
+    bByCode[bt.code] = bt;
+  }
+
+  // Remaining cost per task_id from assignments + expenses (current XER)
+  const remByTask = {};
+  for (const a of S.assignments) {
+    const t = S.tasks[a.taskId];
+    if (!t || t.projId !== S.currentProj) continue;
+    remByTask[a.taskId] = (remByTask[a.taskId] || 0) + (a.remainCost || 0);
+  }
+  for (const e of S.expenses) {
+    const t = S.tasks[e.taskId];
+    if (!t || t.projId !== S.currentProj) continue;
+    remByTask[e.taskId] = (remByTask[e.taskId] || 0) + (e.remainCost || 0);
+  }
+
+  const rows = [];
+  for (const ut of Object.values(S.tasks)) {
+    if (ut.projId !== S.currentProj) continue;
+    if (!ut.code) continue;
+    const bt = bByCode[ut.code];
+    if (!bt) continue;
+    const uF = ut.finish;   // current finish (Date)
+    const bF = bt.finish;   // baseline finish (Date)
+    if (!uF || !bF) continue;
+    const varDays = Math.round((uF - bF) / 86400000);
+    if (varDays <= 0) continue; // not delayed
+    rows.push({
+      code: ut.code,
+      name: ut.name || '',
+      bFinish: bF,
+      uFinish: uF,
+      variance: varDays,
+      remainCost: remByTask[ut.id] || 0,
+    });
+  }
+  return rows;
+}
+
+function dlySort(col) {
+  if (DLY.sortCol === col) DLY.sortDir *= -1;
+  else { DLY.sortCol = col; DLY.sortDir = (col === 'variance' || col === 'remainCost') ? -1 : 1; }
+  renderDelayed();
+}
+
+function renderDelayed() {
+  if (!B.loaded || !S.currentProj) {
+    document.getElementById('dlyTableBody').innerHTML =
+      `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">Load a baseline XER to see delayed activities.</td></tr>`;
+    document.getElementById('dlySummaryCards').innerHTML = '';
+    return;
+  }
+
+  let rows = buildDelayedRows();
+
+  // Hide rows with Remaining Cost = 0
+  const hideZero = !!(document.getElementById('dlyHideZeroCost') && document.getElementById('dlyHideZeroCost').checked);
+  if (hideZero) rows = rows.filter(r => (r.remainCost || 0) > 0);
+
+  // Search filter
+  const q = (document.getElementById('dlySearch').value || '').trim().toLowerCase();
+  if (q) rows = rows.filter(r => (r.code||'').toLowerCase().includes(q) || (r.name||'').toLowerCase().includes(q));
+
+  // Sort
+  rows.sort((a,b) => {
+    let va = a[DLY.sortCol], vb = b[DLY.sortCol];
+    if (va instanceof Date) va = va.getTime();
+    if (vb instanceof Date) vb = vb.getTime();
+    if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * DLY.sortDir;
+    return String(va||'').localeCompare(String(vb||'')) * DLY.sortDir;
+  });
+
+  // Sort icons
+  ['code','name','bFinish','uFinish','variance','remainCost'].forEach(c => {
+    const el = document.getElementById('dlySortIcon_' + c);
+    if (el) el.textContent = (DLY.sortCol === c) ? (DLY.sortDir === 1 ? '▲' : '▼') : '';
+  });
+
+  // Summary cards
+  const totRows = rows.length;
+  const totRem  = rows.reduce((s, r) => s + r.remainCost, 0);
+  const maxVar  = rows.length ? Math.max(...rows.map(r => r.variance)) : 0;
+  const avgVar  = rows.length ? (rows.reduce((s, r) => s + r.variance, 0) / rows.length) : 0;
+  const allRows = buildDelayedRows(); // total without search/zero filter
+  const card = (lbl, val, color) =>
+    `<div style="flex:1;min-width:140px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${color};padding:10px 14px;border-radius:5px;">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;">${lbl}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:18px;color:${color};font-weight:600;margin-top:3px;">${val}</div>
+    </div>`;
+  const fmtC = n => n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('dlySummaryCards').innerHTML = `
+    ${card('⏱ Delayed Activities', totRows + ((q || hideZero) ? ` <span style="font-size:10px;color:var(--muted)">/ ${allRows.length}</span>` : ''), '#e05050')}
+    ${card('📅 Max Slip (days)', maxVar + 'd', '#e05050')}
+    ${card('📊 Avg Slip (days)', avgVar.toFixed(1) + 'd', 'var(--gold)')}
+    ${card('💰 Total Remaining Cost', '$' + fmtC(totRem), 'var(--cyan)')}
+  `;
+
+  // Rows
+  const body = document.getElementById('dlyTableBody');
+  if (!rows.length) {
+    body.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">${(q || hideZero) ? 'No delayed activities match the current filters.' : 'No delayed activities found — all tasks finish on/before baseline.'}</td></tr>`;
+    return;
+  }
+  const trHtml = rows.map(r => `
+    <tr>
+      <td style="font-family:'DM Mono',monospace;color:var(--cyan)">${esc2(r.code)}</td>
+      <td title="${esc2(r.name)}">${esc2(r.name)}</td>
+      <td style="color:var(--muted)">${esc2(fmtDate(r.bFinish))}</td>
+      <td style="color:var(--cyan)">${esc2(fmtDate(r.uFinish))}</td>
+      <td class="num" style="color:#e05050;font-weight:600">+${r.variance}d</td>
+      <td class="num">$${fmtC(r.remainCost)}</td>
+    </tr>`).join('');
+  // Total row
+  const totalRow = `
+    <tr style="background:var(--surface2);font-weight:700;border-top:2px solid var(--border2)">
+      <td colspan="5" style="text-align:right;color:var(--gold);letter-spacing:.08em">TOTAL REMAINING COST</td>
+      <td class="num" style="color:var(--gold);font-weight:700">$${fmtC(totRem)}</td>
+    </tr>`;
+  body.innerHTML = trHtml + totalRow;
+}
+
+document.getElementById('baselineInput').addEventListener('change', e => {
+  loadBaselineFile(e.target.files[0]);
+  e.target.value = '';
+});
+
+/* ── Cross-tab XER sync bridge (kept for legacy compatibility) ─────────── */
+window.addEventListener('message',ev=>{
+  const m=ev.data||{};
+  if(!m||typeof m.type!=='string')return;
+  __xerSyncInbound=true;
+  try{
+    if(m.type==='xer:current:load'){loadFileText(m.text,m.name||'file.xer');}
+    else if(m.type==='xer:baseline:load'){loadBaselineFileText(m.text,m.name||'baseline.xer');}
+    else if(m.type==='xer:current:close'){if(document.getElementById('mainContent').style.display==='flex')closeFile();}
+    else if(m.type==='xer:baseline:clear'){if(B.loaded)clearBaseline();}
+  }finally{__xerSyncInbound=false;}
+});
+window.addEventListener('load',()=>{try{parent.postMessage({type:'xer:ready'},'*');}catch(e){}});
+</script>
+
+<!-- ══ PMAUTH OFFLINE STUB (local testing only) ══ -->
+<script>
+window.PMAuth = {
+  onAuthChange: function(cb) { cb(null, true); },
+  signOut: async function() {},
+  getUser: function() { return null; }
+};
+</script>
+
+<!-- ══ Free-tier cap for Resource Analyzer ══ -->
+<script>
+const R2_FREE_CAP=100;
+let _isPro2=true; // OFFLINE STUB
+let _currentUser2=null;
+let _r2_projCounts={};
+let _r2_removedTasks={};
+let _r2_removedAssignments=[];
+let _r2_removedExpenses=[];
+
+function goSignIn(){ window.location.href = '/?signin=1'; }
+
+async function appSignOut(){
+  if(window.PMAuth){ try { await PMAuth.signOut(); } catch(e){} }
+  window.location.href = '/';
+}
+
+// ── Exit confirmation ──────────────────────────────────────────────────
+let _exitTarget = '/';
+function askExit(url){ _exitTarget = url||'/'; document.getElementById('exitModal').classList.add('open'); }
+function closeExitModal(){ document.getElementById('exitModal').classList.remove('open'); }
+function confirmExit(){ try{sessionStorage.removeItem('pms_xer_current');sessionStorage.removeItem('pms_xer_current_name');}catch(e){} window.location.href = _exitTarget; }
+function switchTool(url){ window.location.href = url; }
+
+// ── SessionStorage XER bridge ──────────────────────────────────────────
+const _ra_origLoadFileText = window.loadFileText;
+window.loadFileText = function(text, name){
+  try{ sessionStorage.setItem('pms_xer_current', text); sessionStorage.setItem('pms_xer_current_name', name||'file.xer'); }catch(e){}
+  _ra_origLoadFileText(text, name);
+};
+const _ra_origCloseFile3 = window.closeFile;
+window.closeFile = function(){
+  _ra_origCloseFile3 && _ra_origCloseFile3();
+  try{ sessionStorage.removeItem('pms_xer_current'); sessionStorage.removeItem('pms_xer_current_name'); }catch(e){}
+};
+// Auto-load from session if available
+(function(){
+  try{
+    const stored = sessionStorage.getItem('pms_xer_current');
+    const name   = sessionStorage.getItem('pms_xer_current_name') || 'file.xer';
+    if(stored){ setTimeout(()=>{ if(window.loadFileText) window.loadFileText(stored, name); }, 300); }
+  }catch(e){}
+})();
+
+function renderAppUserPill(user, licenseActive){
+  const slot = document.getElementById('appUserPill');
+  const btn  = document.getElementById('signinBtn');
+  if(!slot || !btn) return;
+  if(user){
+    btn.style.display = 'none';
+    const displayName = (user.user_metadata && user.user_metadata.full_name)
+      ? user.user_metadata.full_name.split(' ')[0]
+      : (user.email ? user.email.split('@')[0] : 'Account');
+    const avatarUrl = user.user_metadata && user.user_metadata.avatar_url;
+    const avatarHtml = avatarUrl
+      ? `<img class="nav-user-avatar" src="${avatarUrl}" alt="">`
+      : `<div class="nav-user-avatar">${(displayName[0]||'U').toUpperCase()}</div>`;
+    const proBadge = licenseActive ? '<span class="badge-pro">Pro</span>' : '';
+    slot.style.display = '';
+    slot.innerHTML =
+      `<button class="btn btn-ghost nav-user-pill" onclick="appSignOut()" title="Click to sign out" style="display:flex;align-items:center;gap:6px;padding:4px 10px;">` +
+        avatarHtml +
+        `<span style="font-size:12px;font-weight:600;">${displayName}${proBadge}</span>` +
+        `<span style="opacity:.5;font-size:10px;">↩</span>` +
+      `</button>`;
+  } else {
+    slot.style.display = 'none';
+    slot.innerHTML = '';
+    btn.style.display = '';
+  }
+}
+
+function updateFreeBanner2(){
+  const banner=document.getElementById('freeBanner2');
+  const msg=document.getElementById('freeBannerMsg2');
+  if(!banner||!msg)return;
+  if(_isPro2){banner.style.display='none';return;}
+  const pid=S.currentProj;
+  const total=pid?(_r2_projCounts[pid]||0):0;
+  if(total>R2_FREE_CAP){
+    msg.textContent=`Free plan: showing resources for first ${R2_FREE_CAP} of ${total} activities. Subscribe to Pro to view all.`;
+  }else{
+    msg.textContent='Free plan: resource data limited to first 100 activities. Subscribe to Pro to view all.';
+  }
+  banner.style.display='flex';
+}
+
+function r2EnforceFreeCap(){
+  if(_isPro2)return;
+  _r2_removedTasks={};_r2_removedAssignments=[];_r2_removedExpenses=[];
+  _r2_projCounts={};
+  for(const t of Object.values(S.tasks))_r2_projCounts[t.projId]=(_r2_projCounts[t.projId]||0)+1;
+  const allowed={};
+  const seenPerProj={};
+  for(const[id,t]of Object.entries(S.tasks)){
+    const pid=t.projId;
+    seenPerProj[pid]=(seenPerProj[pid]||0)+1;
+    if(seenPerProj[pid]<=R2_FREE_CAP){allowed[id]=true;}
+    else{_r2_removedTasks[id]=t;}
+  }
+  for(const id of Object.keys(_r2_removedTasks))delete S.tasks[id];
+  _r2_removedAssignments=S.assignments.filter(a=>!allowed[a.taskId]);
+  S.assignments=S.assignments.filter(a=>allowed[a.taskId]);
+  _r2_removedExpenses=S.expenses.filter(e=>!allowed[e.taskId]);
+  S.expenses=S.expenses.filter(e=>allowed[e.taskId]);
+}
+
+function r2RestoreAll(){
+  for(const[id,t]of Object.entries(_r2_removedTasks))S.tasks[id]=t;
+  S.assignments=[...S.assignments,..._r2_removedAssignments];
+  S.expenses=[...S.expenses,..._r2_removedExpenses];
+  _r2_removedTasks={};_r2_removedAssignments=[];_r2_removedExpenses=[];
+}
+
+// ── Boot: subscribe to PMAuth ──────────────────────────────────────────
+(function initWebsiteAuth(){
+  function start(){
+    PMAuth.onAuthChange(function(user, licenseActive){
+      const wasPro2 = _isPro2;
+      _currentUser2 = user || null;
+      _isPro2 = !!(user && licenseActive);
+      renderAppUserPill(_currentUser2, _isPro2);
+      if(_isPro2 && !wasPro2 && Object.keys(_r2_removedTasks).length){
+        r2RestoreAll();
+        onProjChange();
+      }
+      updateFreeBanner2();
+    });
+  }
+  if(window.PMAuth) start();
+  else {
+    const iv = setInterval(function(){
+      if(window.PMAuth){ clearInterval(iv); start(); }
+    }, 50);
+    setTimeout(function(){
+      if(!window.PMAuth){
+        clearInterval(iv);
+        renderAppUserPill(null, false);
+      }
+    }, 4000);
+  }
+})();
+
+// Hook into parseXER
+const _r2_origParseXER=window.parseXER;
+window.parseXER=function(content){
+  _r2_origParseXER(content);
+  r2EnforceFreeCap();
+};
+
+// Hook into onProjChange to update banner
+const _r2_origOnProjChange=window.onProjChange;
+window.onProjChange=function(){
+  _r2_origOnProjChange();
+  updateFreeBanner2();
+};
+
+// Hook into closeFile to reset cap state
+const _r2_origCloseFile=window.closeFile;
+window.closeFile=function(){
+  _r2_origCloseFile();
+  _r2_projCounts={};_r2_removedTasks={};_r2_removedAssignments=[];_r2_removedExpenses=[];
+  updateFreeBanner2();
+};
+</script>
+<!-- JSZip for raw OpenXML generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+// ══════════════════════════════════════════════════════════════════════════
+//  RAW OPENXML EXPORT — dynamic native Excel charts via JSZip
+//  No ExcelJS. We write the .xlsx zip structure by hand.
+// ══════════════════════════════════════════════════════════════════════════
+
+// ── helpers ───────────────────────────────────────────────────────────────
+function xmlEsc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function colLetter(n){
+  let s=''; while(n>0){s=String.fromCharCode(65+(n-1)%26)+s;n=Math.floor((n-1)/26);} return s;
+}
+
+// ── shared style IDs (index into styles.xml) ─────────────────────────────
+// 0 = normal, 1 = header, 2 = alt row, 3 = total, 4 = number normal, 5 = number alt
+// 6 = gold number, 7 = green number, 8 = cyan number
+
+// ── Build styles.xml ──────────────────────────────────────────────────────
+function buildStyles(){
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="6">
+    <font><sz val="10"/><name val="Calibri"/></font>
+    <font><sz val="10"/><b/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>
+    <font><sz val="10"/><b/><name val="Calibri"/></font>
+    <font><sz val="10"/><color rgb="FFC8922A"/><name val="Calibri"/></font>
+    <font><sz val="10"/><color rgb="FF34C98A"/><name val="Calibri"/></font>
+    <font><sz val="10"/><color rgb="FF00C9E0"/><name val="Calibri"/></font>
+  </fonts>
+  <fills count="5">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF1F3864"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF2F2F2"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFD9E2F3"/></patternFill></fill>
+  </fills>
+  <borders count="2">
+    <border><left/><right/><top/><bottom/></border>
+    <border><left/><right/><top/><bottom style="thin"><color rgb="FF000000"/></bottom></border>
+  </borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="9">
+    <xf numFmtId="0"  fontId="0" fillId="0" borderId="0" xfId="0"/>
+    <xf numFmtId="0"  fontId="1" fillId="2" borderId="1" xfId="0"><alignment horizontal="center" vertical="middle"/></xf>
+    <xf numFmtId="0"  fontId="0" fillId="3" borderId="0" xfId="0"/>
+    <xf numFmtId="0"  fontId="2" fillId="2" borderId="0" xfId="0"><alignment horizontal="right" vertical="middle"/></xf>
+    <xf numFmtId="4"  fontId="0" fillId="0" borderId="0" xfId="0"><alignment horizontal="right"/></xf>
+    <xf numFmtId="4"  fontId="0" fillId="3" borderId="0" xfId="0"><alignment horizontal="right"/></xf>
+    <xf numFmtId="4"  fontId="3" fillId="0" borderId="0" xfId="0"><alignment horizontal="right"/></xf>
+    <xf numFmtId="4"  fontId="4" fillId="0" borderId="0" xfId="0"><alignment horizontal="right"/></xf>
+    <xf numFmtId="4"  fontId="5" fillId="0" borderId="0" xfId="0"><alignment horizontal="right"/></xf>
+  </cellXfs>
+</styleSheet>`;
+}
+
+// ── Build a worksheet XML from rows array ─────────────────────────────────
+// rows: [{cells:[{v,t,s}]}]  t='n'|'s'|'f'  s=styleIdx
+// noDrawing=true → omit the <drawing r:id="rId1"/> element (for data-only sheets)
+function buildSheet(rows, colWidths, sharedStrings, noDrawing){
+  // collect shared strings index
+  const ssIdx={};
+  function ss(v){
+    const k=String(v);
+    if(ssIdx[k]===undefined){ssIdx[k]=sharedStrings.length;sharedStrings.push(k);}
+    return ssIdx[k];
+  }
+
+  let colsXml='<cols>';
+  colWidths.forEach((w,i)=>{colsXml+=`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`;});
+  colsXml+='</cols>';
+
+  let rowsXml='';
+  rows.forEach((row,ri)=>{
+    const rn=ri+1;
+    let cells='';
+    row.cells.forEach((cell,ci)=>{
+      const cn=colLetter(ci+1)+rn;
+      const s=cell.s??0;
+      if(cell.t==='f'){
+        cells+=`<c r="${cn}" s="${s}"><f>${xmlEsc(cell.v)}</f></c>`;
+      } else if(cell.t==='n'||typeof cell.v==='number'){
+        cells+=`<c r="${cn}" t="n" s="${s}"><v>${cell.v}</v></c>`;
+      } else {
+        const si=ss(String(cell.v??''));
+        cells+=`<c r="${cn}" t="s" s="${s}"><v>${si}</v></c>`;
+      }
+    });
+    const ht=row.ht?` ht="${row.ht}" customHeight="1"`:'';
+    rowsXml+=`<row r="${rn}"${ht}>${cells}</row>`;
+  });
+
+  const drawingTag = noDrawing ? '' : '<drawing r:id="rId1"/>';
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+           xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheetViews><sheetView workbookViewId="0" showGridLines="1"/></sheetViews>
+  ${colsXml}
+  <sheetData>${rowsXml}</sheetData>
+  ${drawingTag}
+</worksheet>`;
+}
+
+// ── Build sharedStrings.xml ───────────────────────────────────────────────
+function buildSharedStrings(arr){
+  const items=arr.map(s=>`<si><t xml:space="preserve">${xmlEsc(s)}</t></si>`).join('');
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${arr.length}" uniqueCount="${arr.length}">${items}</sst>`;
+}
+
+// ── Build chart XML (clustered bar OR line) ───────────────────────────────
+function buildBarChartXml(sheetName, title, dataStartRow, dataEndRow, periodLabel){
+  // series references: col B=Budgeted, C=Actual, D=Remaining
+  const cats=`<c:cat><c:strRef><c:f>'${sheetName}'!$A$${dataStartRow}:$A$${dataEndRow}</c:f></c:strRef></c:cat>`;
+  function ser(idx,colLet,name,color){
+    return `<c:ser>
+      <c:idx val="${idx}"/><c:order val="${idx}"/>
+      <c:tx><c:strRef><c:f>'${sheetName}'!$${colLet}$2</c:f></c:strRef></c:tx>
+      <c:spPr><a:solidFill xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:srgbClr val="${color}"/></a:solidFill></c:spPr>
+      ${cats}
+      <c:val><c:numRef><c:f>'${sheetName}'!$${colLet}$${dataStartRow}:$${colLet}$${dataEndRow}</c:f></c:numRef></c:val>
+    </c:ser>`;
+  }
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"
+              xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+              xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <c:chart>
+    <c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${xmlEsc(title+' ('+periodLabel+')')}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>
+    <c:autoTitleDeleted val="0"/>
+    <c:plotArea>
+      <c:layout/>
+      <c:barChart>
+        <c:barDir val="col"/>
+        <c:grouping val="clustered"/>
+        <c:varyColors val="0"/>
+        ${ser(0,'B','Budgeted','C8922A')}
+        ${ser(1,'C','Actual','34C98A')}
+        ${ser(2,'D','Remaining','00C9E0')}
+        <c:axId val="1"/><c:axId val="2"/>
+      </c:barChart>
+      <c:catAx><c:axId val="1"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/><c:crossAx val="2"/></c:catAx>
+      <c:valAx><c:axId val="2"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="l"/><c:numFmt formatCode="#,##0.00"/><c:crossAx val="1"/></c:valAx>
+    </c:plotArea>
+    <c:legend><c:legendPos val="b"/></c:legend>
+    <c:plotVisOnly val="1"/>
+  </c:chart>
+</c:chartSpace>`;
+}
+
+function buildLineChartXml(sheetName, title, dataStartRow, dataEndRow, periodLabel){
+  const cats=`<c:cat><c:strRef><c:f>'${sheetName}'!$A$${dataStartRow}:$A$${dataEndRow}</c:f></c:strRef></c:cat>`;
+  function ser(idx,colLet,name,color){
+    return `<c:ser>
+      <c:idx val="${idx}"/><c:order val="${idx}"/>
+      <c:tx><c:strRef><c:f>'${sheetName}'!$${colLet}$2</c:f></c:strRef></c:tx>
+      <c:spPr><a:ln xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" w="25400"><a:solidFill><a:srgbClr val="${color}"/></a:solidFill></a:ln></c:spPr>
+      <c:marker><c:symbol val="circle"/><c:size val="4"/></c:marker>
+      ${cats}
+      <c:val><c:numRef><c:f>'${sheetName}'!$${colLet}$${dataStartRow}:$${colLet}$${dataEndRow}</c:f></c:numRef></c:val>
+    </c:ser>`;
+  }
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"
+              xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+              xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <c:chart>
+    <c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${xmlEsc(title+' ('+periodLabel+')')}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>
+    <c:autoTitleDeleted val="0"/>
+    <c:plotArea>
+      <c:layout/>
+      <c:lineChart>
+        <c:grouping val="standard"/>
+        <c:varyColors val="0"/>
+        ${ser(0,'B','Cum. Planned','C8922A')}
+        ${ser(1,'C','Cum. Actual','34C98A')}
+        <c:smooth val="1"/>
+        <c:axId val="1"/><c:axId val="2"/>
+      </c:lineChart>
+      <c:catAx><c:axId val="1"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/><c:crossAx val="2"/></c:catAx>
+      <c:valAx><c:axId val="2"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="l"/><c:numFmt formatCode="#,##0.00"/><c:crossAx val="1"/></c:valAx>
+    </c:plotArea>
+    <c:legend><c:legendPos val="b"/></c:legend>
+    <c:plotVisOnly val="1"/>
+  </c:chart>
+</c:chartSpace>`;
+}
+
+// ── Drawing XML — positions chart on sheet (in EMUs) ──────────────────────
+function buildDrawing(chartRId, fromRow, fromCol, toRow, toCol){
+  // fromRow/Col/toRow/toCol are 0-indexed
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
+           xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+           xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+           xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart">
+  <xdr:twoCellAnchor moveWithCells="0" sizeWithCells="0">
+    <xdr:from><xdr:col>${fromCol}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${fromRow}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>
+    <xdr:to><xdr:col>${toCol}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${toRow}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>
+    <xdr:graphicFrame macro="">
+      <xdr:nvGraphicFramePr>
+        <xdr:cNvPr id="2" name="Chart 1"/>
+        <xdr:cNvGraphicFramePr/>
+      </xdr:nvGraphicFramePr>
+      <xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm>
+      <a:graphic>
+        <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart">
+          <c:chart r:id="${chartRId}"/>
+        </a:graphicData>
+      </a:graphic>
+    </xdr:graphicFrame>
+    <xdr:clientData/>
+  </xdr:twoCellAnchor>
+</xdr:wsDr>`;
+}
+
+// ── Sheet .rels (drawing + chart) ─────────────────────────────────────────
+function buildSheetRels(drawingRId, drawingPath){
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="${drawingRId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="${drawingPath}"/>
+</Relationships>`;
+}
+
+function buildDrawingRels(chartRId, chartPath){
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="${chartRId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="${chartPath}"/>
+</Relationships>`;
+}
+
+// ── Workbook XML ──────────────────────────────────────────────────────────
+function buildWorkbook(sheets){
+  const sheetEls=sheets.map((s,i)=>`<sheet name="${xmlEsc(s.name)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('');
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+          xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>${sheetEls}</sheets>
+</workbook>`;
+}
+
+function buildWorkbookRels(sheets){
+  const rels=sheets.map((s,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('');
+  const styleRel=`<Relationship Id="rId${sheets.length+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>`;
+  const ssRel=`<Relationship Id="rId${sheets.length+2}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>`;
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  ${rels}${styleRel}${ssRel}
+</Relationships>`;
+}
+
+function buildContentTypes(sheets){
+  const sheetTypes=sheets.map((_,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('');
+  // Only emit drawing/chart content types for sheets that actually have a chart
+  const drawingTypes=sheets.map((s,i)=> s.noChart ? '' : `<Override PartName="/xl/drawings/drawing${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>`).join('');
+  const chartTypes=sheets.map((s,i)=> s.noChart ? '' : `<Override PartName="/xl/charts/chart${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>`).join('');
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+  <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
+  ${sheetTypes}${drawingTypes}${chartTypes}
+</Types>`;
+}
+
+// ── Build rows for a histogram sheet ─────────────────────────────────────
+function buildHistoSheetRows(series, title, periodLabel){
+  const rows=[];
+  // Row 1: Section title
+  rows.push({ht:22,cells:[{v:`${title} — Data Table (${periodLabel})`,s:0}]});
+  // Row 2: Header — annotate Budgeted column when sourced from baseline
+  const budHeader = /\(Baseline\)/.test(title) ? 'Budgeted (Baseline)' : 'Budgeted';
+  rows.push({ht:20,cells:[
+    {v:'Period',s:1},{v:budHeader,s:1},{v:'Actual',s:1},{v:'Remaining',s:1}
+  ]});
+  const dataStart=3;
+  // Data rows
+  series.forEach((b,idx)=>{
+    const alt=idx%2===1;
+    rows.push({ht:16,cells:[
+      {v:b.label,s:alt?2:0},
+      {v:+b.bud.toFixed(2),t:'n',s:alt?5:4},   // gold  — actually we keep uniform number style; color via font in styles is global
+      {v:+b.act.toFixed(2),t:'n',s:alt?5:4},
+      {v:+b.rem.toFixed(2),t:'n',s:alt?5:4},
+    ]});
+  });
+  const dataEnd=2+series.length;
+  // Totals row
+  rows.push({ht:18,cells:[
+    {v:'TOTAL',s:3},
+    {v:`SUM(B${dataStart}:B${dataEnd})`,t:'f',s:3},
+    {v:`SUM(C${dataStart}:C${dataEnd})`,t:'f',s:3},
+    {v:`SUM(D${dataStart}:D${dataEnd})`,t:'f',s:3},
+  ]});
+  return {rows, dataStart, dataEnd};
+}
+
+// ── Build rows for S-Curve sheet ──────────────────────────────────────────
+function buildSCurveSheetRows(scData, periodLabel){
+  const rows=[];
+  rows.push({ht:22,cells:[{v:`S-Curve (Cost) — Cumulative Data Table (${periodLabel})`,s:0}]});
+  rows.push({ht:20,cells:[{v:'Period',s:1},{v:'Cum. Planned',s:1},{v:'Cum. Actual',s:1}]});
+  const dataStart=3;
+  scData.forEach((b,idx)=>{
+    const alt=idx%2===1;
+    rows.push({ht:16,cells:[
+      {v:b.label,s:alt?2:0},
+      {v:+b.cumBud.toFixed(2),t:'n',s:alt?5:4},
+      {v:b.cumAct>0?+b.cumAct.toFixed(2):'',t:b.cumAct>0?'n':'s',s:alt?5:4},
+    ]});
+  });
+  const dataEnd=2+scData.length;
+  rows.push({ht:18,cells:[
+    {v:'FINAL CUMULATIVE',s:3},
+    {v:`MAX(B${dataStart}:B${dataEnd})`,t:'f',s:3},
+    {v:`IFERROR(LOOKUP(2,1/(C${dataStart}:C${dataEnd}<>""),C${dataStart}:C${dataEnd}),"")`,t:'f',s:3},
+  ]});
+  return {rows, dataStart, dataEnd};
+}
+
+// ── Build rows for Delayed Activities sheet (data-only, no chart) ─────────
+// Columns: Activity ID | Activity Name | Baseline Finish | Current Finish | Variance (d) | Remaining Cost
+function buildDelayedSheetRows(){
+  const rows=[];
+  // Row 1: Section title
+  rows.push({ht:22,cells:[{v:'Delayed Activities — Current finish later than Baseline',s:0}]});
+  // Row 2: Header
+  rows.push({ht:20,cells:[
+    {v:'Activity ID',s:1},{v:'Activity Name',s:1},{v:'Baseline Finish',s:1},
+    {v:'Current Finish',s:1},{v:'Variance (Cal. Days)',s:1},{v:'Remaining Cost',s:1}
+  ]});
+  const dataStart=3;
+  // Pull delayed rows, sort by variance DESC for readability
+  const delayed = buildDelayedRows().slice().sort((a,b) => b.variance - a.variance);
+  delayed.forEach((r,idx)=>{
+    const alt = idx%2===1;
+    rows.push({ht:16,cells:[
+      {v:r.code, s:alt?2:0},
+      {v:r.name, s:alt?2:0},
+      {v:fmtDate(r.bFinish), s:alt?2:0},
+      {v:fmtDate(r.uFinish), s:alt?2:0},
+      {v:r.variance, t:'n', s:alt?5:4},
+      {v:+r.remainCost.toFixed(2), t:'n', s:alt?5:4},
+    ]});
+  });
+  const dataEnd = 2 + delayed.length;
+  // Totals row (only meaningful when at least one delayed activity)
+  if (delayed.length > 0) {
+    rows.push({ht:18,cells:[
+      {v:'TOTAL', s:3},{v:'', s:3},{v:'', s:3},{v:'', s:3},
+      {v:`MAX(E${dataStart}:E${dataEnd})`, t:'f', s:3},
+      {v:`SUM(F${dataStart}:F${dataEnd})`, t:'f', s:3},
+    ]});
+  } else {
+    rows.push({ht:18,cells:[{v:'No delayed activities', s:3}]});
+  }
+  return {rows, dataStart, dataEnd};
+}
+
+// ── Helper: build series for a single specific material resource ──────────
+function buildHistoTableRowsForMaterial(rsrcId){
+  const asgns=S.assignments.filter(a=>{
+    const t=S.tasks[a.taskId];
+    if(!t||t.projId!==S.currentProj)return false;
+    return a.rsrcId===rsrcId;
+  });
+  return buildTimeSeries(asgns,S.period);
+}
+
+// ── Helper: buildHistoTableRows (same logic as original) ──────────────────
+function buildHistoTableRows(rsrcTypes){
+  const rsrcTypesArr=Array.isArray(rsrcTypes)?rsrcTypes:[rsrcTypes];
+  const selLabor=document.getElementById('laborSelect').value;
+  const selEquip=document.getElementById('equipSelect').value;
+  const selMaterial=document.getElementById('materialSelect').value;
+  const asgns=S.assignments.filter(a=>{
+    const t=S.tasks[a.taskId];
+    if(!t||t.projId!==S.currentProj)return false;
+    const rsrc=S.resources[a.rsrcId];
+    if(!rsrc||!rsrcTypesArr.includes(rsrc.type))return false;
+    if(rsrcTypesArr.includes('RT_Labor')&&selLabor&&a.rsrcId!==selLabor)return false;
+    if(rsrcTypesArr.includes('RT_Equip')&&selEquip&&a.rsrcId!==selEquip)return false;
+    if((rsrcTypesArr.includes('RT_Material')||rsrcTypesArr.includes('RT_Mat'))&&selMaterial&&a.rsrcId!==selMaterial)return false;
+    return true;
+  });
+  return buildTimeSeries(asgns,S.period);
+}
+
+function buildSCurveData(){
+  const series=buildCostTimeSeries(S.period);
+  if(!series.length)return[];
+  let cumBud=0,cumAct=0;
+  const ddTs=S.dataDate?periodKey(S.dataDate,S.period):null;
+  return series.map(b=>{
+    cumBud+=b.bud;
+    if(ddTs===null||b.ts<=ddTs)cumAct+=b.act;
+    return{label:b.label,cumBud,cumAct};
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  EXPORT MODAL
+// ══════════════════════════════════════════════════════════════════════════
+let selectedMaterials = new Set(); // Set of rsrc_ids
+let exportIncludeDelayed = false;  // include Delayed Activities sheet in export
+
+function toggleDlyExport(){
+  // Guard: only when baseline loaded
+  if (!(B && B.loaded && findBaselineProject())) return;
+  exportIncludeDelayed = !exportIncludeDelayed;
+  const row = document.getElementById('dlyOptRow');
+  const cb  = document.getElementById('dlyExportCb');
+  if (row) row.classList.toggle('checked', exportIncludeDelayed);
+  if (cb)  cb.textContent = exportIncludeDelayed ? '✓' : '';
+}
+
+function openExportModal(){
+  if(!S.currentProj) return;
+
+  // Build material list for current project
+  const matIds = Object.values(S.resources)
+    .filter(r => (r.type==='RT_Material'||r.type==='RT_Mat'))
+    .filter(r => {
+      // Only include materials that have assignments in current project
+      return S.assignments.some(a => a.rsrcId===r.id && S.tasks[a.taskId] && S.tasks[a.taskId].projId===S.currentProj);
+    })
+    .sort((a,b)=>a.name.localeCompare(b.name));
+
+  selectedMaterials = new Set();
+
+  const list = document.getElementById('matList');
+  if(!matIds.length){
+    list.innerHTML = '<div class="mat-empty">No materials found in this project.</div>';
+  } else {
+    list.innerHTML = matIds.map(r=>`
+      <div class="mat-row" id="matrow_${r.id}" onclick="toggleMaterial('${r.id}')">
+        <div class="mat-checkbox" id="matcb_${r.id}"></div>
+        <span class="mat-name" title="${esc2(r.name)}">${esc2(r.name)}</span>
+        ${r.unit?`<span class="mat-unit">${esc2(r.unit)}</span>`:''}
+      </div>`).join('');
+  }
+  updateMatCount();
+  refreshBudgetSourceUI();
+  // Optional Sheets section — visible only when baseline is loaded
+  const optSec = document.getElementById('optionalSheetsSection');
+  const baselineReady = !!(B && B.loaded && findBaselineProject());
+  if (optSec) optSec.style.display = baselineReady ? 'block' : 'none';
+  // Reset Delayed checkbox state on every open
+  exportIncludeDelayed = false;
+  const dlyRow = document.getElementById('dlyOptRow');
+  const dlyCb  = document.getElementById('dlyExportCb');
+  if (dlyRow) dlyRow.classList.remove('checked');
+  if (dlyCb)  dlyCb.textContent = '';
+  // Reset search on open
+  const si = document.getElementById('matSearchInput');
+  if(si) si.value = '';
+  const sc = document.getElementById('matSearchClear');
+  if(sc) sc.style.display = 'none';
+  document.getElementById('exportModal').classList.add('open');
+}
+
+function closeExportModal(){
+  document.getElementById('exportModal').classList.remove('open');
+}
+
+function toggleMaterial(id){
+  selectedMaterials.has(id)?selectedMaterials.delete(id):selectedMaterials.add(id);
+  const row=document.getElementById('matrow_'+id);
+  const cb=document.getElementById('matcb_'+id);
+  if(row) row.classList.toggle('checked', selectedMaterials.has(id));
+  if(cb)  cb.textContent = selectedMaterials.has(id)?'✓':'';
+  updateMatCount();
+}
+
+function toggleAllMaterials(){
+  // Only act on currently visible (non-filtered-out) rows
+  const allRows=[...document.querySelectorAll('#matList .mat-row')].filter(r=>r.style.display!=='none');
+  const allIds=allRows.map(r=>r.id.replace('matrow_',''));
+  if(!allIds.length) return;
+  const allChecked=allIds.every(id=>selectedMaterials.has(id));
+  if(allChecked){ allIds.forEach(id=>selectedMaterials.delete(id)); }
+  else { allIds.forEach(id=>selectedMaterials.add(id)); }
+  allIds.forEach(id=>{
+    const row=document.getElementById('matrow_'+id);
+    const cb=document.getElementById('matcb_'+id);
+    if(row) row.classList.toggle('checked', selectedMaterials.has(id));
+    if(cb)  cb.textContent = selectedMaterials.has(id)?'✓':'';
+  });
+  updateMatCount();
+}
+
+function updateMatCount(){
+  document.getElementById('matSelectedCount').textContent=selectedMaterials.size;
+  // "Select all" state reflects the currently visible rows
+  const visibleRows=[...document.querySelectorAll('#matList .mat-row')].filter(r=>r.style.display!=='none');
+  const visIds=visibleRows.map(r=>r.id.replace('matrow_',''));
+  const allChecked=visIds.length>0&&visIds.every(id=>selectedMaterials.has(id));
+  document.getElementById('matSelectAllIcon').textContent=allChecked?'☑':'☐';
+}
+
+function filterMaterialList(){
+  const input=document.getElementById('matSearchInput');
+  const q=(input?input.value:'').trim().toLowerCase();
+  const clearBtn=document.getElementById('matSearchClear');
+  if(clearBtn) clearBtn.style.display=q?'block':'none';
+  const rows=document.querySelectorAll('#matList .mat-row');
+  let visibleCount=0;
+  rows.forEach(r=>{
+    const nameEl=r.querySelector('.mat-name');
+    const name=nameEl?nameEl.textContent.toLowerCase():'';
+    const match=!q||name.includes(q);
+    r.style.display=match?'':'none';
+    if(match) visibleCount++;
+  });
+  // Show/hide "no matches" message
+  const list=document.getElementById('matList');
+  let noMatch=document.getElementById('matNoMatch');
+  const hasRows=rows.length>0;
+  if(hasRows&&visibleCount===0&&q){
+    if(!noMatch){
+      noMatch=document.createElement('div');
+      noMatch.id='matNoMatch';
+      noMatch.className='mat-empty';
+      noMatch.textContent='No materials match your search.';
+      list.appendChild(noMatch);
+    }
+    noMatch.style.display='';
+  } else if(noMatch){
+    noMatch.style.display='none';
+  }
+  updateMatCount();
+}
+
+function clearMaterialSearch(){
+  const input=document.getElementById('matSearchInput');
+  if(input){ input.value=''; input.focus(); }
+  filterMaterialList();
+}
+
+function esc2(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  BUDGET-SOURCE TOGGLE — current schedule vs baseline
+// ══════════════════════════════════════════════════════════════════════════
+let exportBudgetSource = 'current'; // 'current' | 'baseline'
+
+function setBudgetSource(src){
+  // Guard: baseline option disabled when no baseline loaded
+  const wrap=document.getElementById('budSrcWrap');
+  if(wrap.classList.contains('disabled')) return;
+  exportBudgetSource = src;
+  document.getElementById('budSrcCurrent').classList.toggle('checked', src==='current');
+  document.getElementById('budSrcBaseline').classList.toggle('checked', src==='baseline');
+}
+
+function refreshBudgetSourceUI(){
+  const wrap=document.getElementById('budSrcWrap');
+  const hint=document.getElementById('budSrcHint');
+  const bProjId = (typeof findBaselineProject==='function') ? findBaselineProject() : null;
+  const baselineAvailable = !!(B && B.loaded && bProjId);
+  if(baselineAvailable){
+    wrap.classList.remove('disabled');
+    const bName = (B.projects[bProjId] && B.projects[bProjId].name) || bProjId;
+    hint.innerHTML = `◆ Baseline loaded: <span style="color:var(--cyan)">${esc2(bName)}</span>`;
+  } else {
+    wrap.classList.add('disabled');
+    hint.textContent = '◆ No baseline loaded — current schedule values will be exported';
+    exportBudgetSource = 'current';
+    document.getElementById('budSrcCurrent').classList.add('checked');
+    document.getElementById('budSrcBaseline').classList.remove('checked');
+  }
+}
+
+// ── Baseline variants of the data builders ────────────────────────────────
+// These mirror buildHistoTableRows / buildHistoTableRowsForMaterial /
+// buildSCurveData, but source assignments, expenses, tasks and resources
+// from the Baseline XER (B.*) instead of the Updated XER (S.*). Selections
+// on the labor/equip/material dropdowns are preserved (matched by rsrc_id).
+function buildHistoTableRowsFromBaseline(rsrcTypes){
+  const bProjId = findBaselineProject();
+  if(!bProjId) return [];
+  const rsrcTypesArr = Array.isArray(rsrcTypes) ? rsrcTypes : [rsrcTypes];
+  const selLabor    = document.getElementById('laborSelect').value;
+  const selEquip    = document.getElementById('equipSelect').value;
+  const selMaterial = document.getElementById('materialSelect').value;
+  const bAsgns = B.assignments.filter(a=>{
+    const t = B.tasks[a.taskId];
+    if(!t || t.projId !== bProjId) return false;
+    const rsrc = B.resources[a.rsrcId];
+    if(!rsrc || !rsrcTypesArr.includes(rsrc.type)) return false;
+    if(rsrcTypesArr.includes('RT_Labor') && selLabor && a.rsrcId!==selLabor) return false;
+    if(rsrcTypesArr.includes('RT_Equip') && selEquip && a.rsrcId!==selEquip) return false;
+    if((rsrcTypesArr.includes('RT_Material')||rsrcTypesArr.includes('RT_Mat')) && selMaterial && a.rsrcId!==selMaterial) return false;
+    return true;
+  });
+  // Spread each baseline assignment over its baseline task dates, then merge
+  // with actuals/remaining from the Updated XER so the sheet still shows
+  // Budgeted (Baseline) | Actual (Current) | Remaining (Current).
+  const baseMap = {};
+  for(const a of bAsgns){
+    const spread = spreadBaselineBudgetQty(a, S.period);
+    for(const [ts,v] of Object.entries(spread)){
+      baseMap[ts] = (baseMap[ts]||0) + v;
+    }
+  }
+  // Also build the current-schedule series so we preserve actual/remaining
+  const currentSeries = buildHistoTableRows(rsrcTypes);
+  const byTs = {};
+  for(const s of currentSeries) byTs[s.ts] = { ts:s.ts, label:s.label, bud:0, act:s.act, rem:s.rem };
+  for(const tsStr of Object.keys(baseMap)){
+    const ts = +tsStr;
+    if(!byTs[ts]) byTs[ts] = { ts, label:periodLabel(ts, S.period), bud:0, act:0, rem:0 };
+    byTs[ts].bud = baseMap[ts];
+  }
+  return Object.values(byTs).sort((a,b)=>a.ts-b.ts);
+}
+
+function buildHistoTableRowsForMaterialFromBaseline(rsrcId){
+  const bProjId = findBaselineProject();
+  if(!bProjId) return [];
+  const bAsgns = B.assignments.filter(a=>{
+    const t = B.tasks[a.taskId];
+    if(!t || t.projId !== bProjId) return false;
+    return a.rsrcId === rsrcId;
+  });
+  const baseMap = {};
+  for(const a of bAsgns){
+    const spread = spreadBaselineBudgetQty(a, S.period);
+    for(const [ts,v] of Object.entries(spread)){
+      baseMap[ts] = (baseMap[ts]||0) + v;
+    }
+  }
+  const currentSeries = buildHistoTableRowsForMaterial(rsrcId);
+  const byTs = {};
+  for(const s of currentSeries) byTs[s.ts] = { ts:s.ts, label:s.label, bud:0, act:s.act, rem:s.rem };
+  for(const tsStr of Object.keys(baseMap)){
+    const ts = +tsStr;
+    if(!byTs[ts]) byTs[ts] = { ts, label:periodLabel(ts, S.period), bud:0, act:0, rem:0 };
+    byTs[ts].bud = baseMap[ts];
+  }
+  return Object.values(byTs).sort((a,b)=>a.ts-b.ts);
+}
+
+function buildSCurveDataFromBaseline(){
+  const baseSeries = buildBaselineCostTimeSeries(S.period);
+  if(!baseSeries.length) return [];
+  // Keep the actual curve from the current schedule so the S-curve still
+  // shows planned-baseline vs actual-to-date.
+  const currentSeries = buildCostTimeSeries(S.period);
+  const byTs = {};
+  for(const b of currentSeries) byTs[b.ts] = { ts:b.ts, label:b.label, bud:0, act:b.act };
+  for(const b of baseSeries){
+    if(!byTs[b.ts]) byTs[b.ts] = { ts:b.ts, label:periodLabel(b.ts, S.period), bud:0, act:0 };
+    byTs[b.ts].bud = b.bud;
+  }
+  const merged = Object.values(byTs).sort((a,b)=>a.ts-b.ts);
+  let cumBud=0, cumAct=0;
+  const ddTs = S.dataDate ? periodKey(S.dataDate, S.period) : null;
+  return merged.map(b=>{
+    cumBud += b.bud;
+    if(ddTs===null || b.ts<=ddTs) cumAct += b.act;
+    return { label:b.label, cumBud, cumAct };
+  });
+}
+
+async function confirmExport(){
+  closeExportModal();
+  await exportToExcel();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  MAIN EXPORT
+// ══════════════════════════════════════════════════════════════════════════
+async function exportToExcel(){
+  if(!S.currentProj)return;
+  setSt('Building OpenXML package…','loading');
+
+  const proj=S.projects[S.currentProj];
+  const projName=proj?proj.name:S.currentProj;
+  const periodLabel=S.period.charAt(0).toUpperCase()+S.period.slice(1)+'ly';
+
+  // ── Resolve active budget source ───────────────────────────────────────
+  const useBaseline = (exportBudgetSource==='baseline') && B && B.loaded && !!findBaselineProject();
+  const srcTag = useBaseline ? ' (Baseline)' : '';
+
+  // ── Gather data ────────────────────────────────────────────────────────
+  const laborSeries  = useBaseline ? buildHistoTableRowsFromBaseline('RT_Labor') : buildHistoTableRows('RT_Labor');
+  const equipSeries  = useBaseline ? buildHistoTableRowsFromBaseline('RT_Equip') : buildHistoTableRows('RT_Equip');
+  const scData       = useBaseline ? buildSCurveDataFromBaseline()              : buildSCurveData();
+
+  // ── Build material sheets for each selected material ───────────────────
+  // selectedMaterials is a Set of rsrc_ids from the export modal.
+  // If nothing was selected fall back to the toolbar dropdown (backward compat).
+  let matSheetDefs=[];
+  if(selectedMaterials&&selectedMaterials.size>0){
+    for(const matId of selectedMaterials){
+      const res=S.resources[matId];
+      if(!res)continue;
+      // Build series scoped to just this one material resource
+      const matSeriesOne = useBaseline
+        ? buildHistoTableRowsForMaterialFromBaseline(matId)
+        : buildHistoTableRowsForMaterial(matId);
+      const matName=res.name||matId;
+      const matTabName=(matName+srcTag).replace(/[:\\\/\?\*\[\]]/g,'_').slice(0,31);
+      const matTitle=`Material — ${matName}${srcTag}`;
+      const matSheet=buildHistoSheetRows(matSeriesOne,matTitle,periodLabel);
+      matSheetDefs.push({name:matTabName, data:matSheet, type:'bar', title:matTitle, cols:[18,14,14,14]});
+    }
+  } else {
+    // Fallback: single material from dropdown
+    const selMaterialId=document.getElementById('materialSelect').value;
+    if(selMaterialId){
+      const matSeries = useBaseline
+        ? buildHistoTableRowsForMaterialFromBaseline(selMaterialId)
+        : buildHistoTableRows(['RT_Material','RT_Mat']);
+      const matName=S.resources[selMaterialId]?S.resources[selMaterialId].name:'';
+      const matTabName=matName?(matName+srcTag).replace(/[:\\\/\?\*\[\]]/g,'_').slice(0,31):('Material Histogram'+srcTag).slice(0,31);
+      const matTitle=matName?`Material — ${matName}${srcTag}`:`Material Histogram${srcTag}`;
+      const matSheet=buildHistoSheetRows(matSeries,matTitle,periodLabel);
+      matSheetDefs.push({name:matTabName, data:matSheet, type:'bar', title:matTitle, cols:[18,14,14,14]});
+    }
+  }
+
+  // ── Build sheet row data ───────────────────────────────────────────────
+  const mpSheet  =buildHistoSheetRows(laborSeries,`Manpower Histogram${srcTag}`,periodLabel);
+  const eqSheet  =buildHistoSheetRows(equipSeries,`Equipment Histogram${srcTag}`,periodLabel);
+  const scSheet  =buildSCurveSheetRows(scData,periodLabel);
+
+  // Shared strings (one per sheet, accumulate)
+  const sharedStrings=[];
+
+  const sheetDefs=[
+    {name:`Manpower Histogram${srcTag}`.slice(0,31),   data:mpSheet,  type:'bar',  title:`Manpower Histogram${srcTag}`,  cols:[18,14,14,14]},
+    {name:`Equipment Histogram${srcTag}`.slice(0,31),  data:eqSheet,  type:'bar',  title:`Equipment Histogram${srcTag}`, cols:[18,14,14,14]},
+    ...matSheetDefs,
+    {name:`S-Curve${srcTag}`.slice(0,31),              data:scSheet,  type:'line', title:`S-Curve (Cost)${srcTag}`,       cols:[18,18,18]},
+  ];
+
+  // ── Optional: Delayed Activities sheet (data-only, no chart) ────────────
+  // Included only when user ticked the checkbox AND a baseline is loaded.
+  if (exportIncludeDelayed && B && B.loaded && findBaselineProject()) {
+    const dlySheet = buildDelayedSheetRows();
+    sheetDefs.push({
+      name: 'Delayed Activities',
+      data: dlySheet,
+      noChart: true,
+      title: 'Delayed Activities',
+      cols: [18, 42, 16, 16, 14, 18],
+    });
+  }
+
+  // Build all sheet XMLs (share string table across all)
+  const sheetXmls=sheetDefs.map(sd=>{
+    return buildSheet(sd.data.rows, sd.cols, sharedStrings, !!sd.noChart);
+  });
+
+  // ── Assemble the ZIP ───────────────────────────────────────────────────
+  const zip=new JSZip();
+
+  // _rels/.rels
+  zip.file('_rels/.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`);
+
+  // [Content_Types].xml
+  zip.file('[Content_Types].xml', buildContentTypes(sheetDefs));
+
+  // xl/workbook.xml + rels
+  zip.file('xl/workbook.xml', buildWorkbook(sheetDefs));
+  zip.file('xl/_rels/workbook.xml.rels', buildWorkbookRels(sheetDefs));
+
+  // xl/styles.xml
+  zip.file('xl/styles.xml', buildStyles());
+
+  // xl/sharedStrings.xml — note: built AFTER all sheets so it's complete
+  // We need to call buildSharedStrings after all sheet XMLs are generated (already done above)
+  zip.file('xl/sharedStrings.xml', buildSharedStrings(sharedStrings));
+
+  // Per-sheet: worksheet, chart, drawing, and their rels
+  sheetDefs.forEach((sd,i)=>{
+    const si=i+1;
+    const sheetPath=`xl/worksheets/sheet${si}.xml`;
+
+    // worksheet (always)
+    zip.file(sheetPath, sheetXmls[i]);
+
+    // Data-only sheet — no chart, no drawing, no sheet rels file required
+    if (sd.noChart) return;
+
+    const chartPath=`xl/charts/chart${si}.xml`;
+    const drawingPath=`xl/drawings/drawing${si}.xml`;
+
+    // worksheet rels (points to drawing)
+    zip.file(`xl/worksheets/_rels/sheet${si}.xml.rels`,
+      buildSheetRels('rId1', `../drawings/drawing${si}.xml`));
+
+    // chart XML
+    const {dataStart,dataEnd}=sd.data;
+    const chartXml = sd.type==='bar'
+      ? buildBarChartXml(sd.name, sd.title, dataStart, dataEnd, periodLabel)
+      : buildLineChartXml(sd.name, sd.title, dataStart, dataEnd, periodLabel);
+    zip.file(chartPath, chartXml);
+
+    // drawing XML — chart placed below data table (data ends at dataEnd+1 = totals row)
+    const chartFromRow = dataEnd + 2; // 0-indexed: totals row + 1 blank
+    zip.file(drawingPath,
+      buildDrawing('rId1', chartFromRow, 0, chartFromRow+22, 5));
+
+    // drawing rels (points to chart)
+    zip.file(`xl/drawings/_rels/drawing${si}.xml.rels`,
+      buildDrawingRels('rId1', `../charts/chart${si}.xml`));
+  });
+
+  // ── Download ───────────────────────────────────────────────────────────
+  try{
+    const buf=await zip.generateAsync({type:'arraybuffer',compression:'DEFLATE',compressionOptions:{level:6}});
+    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const safeProj=projName.replace(/[\\\/\?\*\[\]:\*\?"<>|]/g,'_').slice(0,28);
+    const now=new Date();
+    const dateStr=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    a.href=url; a.download=`ResourceLoading_${safeProj}_${dateStr}.xlsx`; a.click();
+    URL.revokeObjectURL(url);
+    setSt(`Exported successfully · ${sheetDefs.length} sheets with dynamic charts`,'ok');
+  }catch(err){
+    setSt('Export failed: '+err.message,'err');
+    console.error(err);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  EXPENSES VIEW
+// ══════════════════════════════════════════════════════════════════════════
+const expState = { sortCol:'budgeted', sortDir:-1, src:'all' };
+
+function setExpSrc(src, el) {
+  expState.src = src;
+  ['expSrcAll','expSrcExpnd','expSrcRsrc'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.classList.remove('active');
+  });
+  if (el) el.classList.add('active');
+  renderExpenses();
+}
+
+function expSort(col) {
+  if (expState.sortCol === col) expState.sortDir *= -1;
+  else { expState.sortCol = col; expState.sortDir = -1; }
+  renderExpenses();
+}
+
+function buildExpenseRows() {
+  const rows = []; // { taskId, code, name, wbs, status, budgeted, actual, remaining, source }
+
+  // Helper: resolve WBS name for a task
+  function wbsName(task) {
+    const w = S.wbsNodes[task.wbsId];
+    return w ? w.name : (task.wbsId || '—');
+  }
+
+  const STATUS_LABELS = { ns:'Not Started', ip:'In Progress', done:'Completed' };
+
+  // 1. PROJCOST rows (pure expense items)
+  if (expState.src === 'all' || expState.src === 'expnd') {
+    const seen = {}; // taskId -> row index in rows[] for merging
+    for (const e of S.expenses) {
+      const task = S.tasks[e.taskId];
+      if (!task) continue;
+      const projId = e.projId || task.projId;
+      if (projId !== S.currentProj) continue;
+      if (seen[e.taskId] !== undefined) {
+        // Merge into existing row for this task
+        rows[seen[e.taskId]].budgeted  += e.budgetCost;
+        rows[seen[e.taskId]].actual    += e.actualCost;
+        rows[seen[e.taskId]].remaining += e.remainCost;
+        rows[seen[e.taskId]].expenseNames.push(e.expenseName);
+      } else {
+        seen[e.taskId] = rows.length;
+        rows.push({
+          taskId: e.taskId,
+          code: task.code,
+          name: task.name,
+          wbs: wbsName(task),
+          status: STATUS_LABELS[task.status] || task.status,
+          statusKey: task.status,
+          budgeted: e.budgetCost,
+          actual: e.actualCost,
+          remaining: e.remainCost,
+          source: 'expense',
+          expenseNames: e.expenseName ? [e.expenseName] : [],
+        });
+      }
+    }
+  }
+
+  // 2. TASKRSRC cost rows (resource assignments with cost)
+  if (expState.src === 'all' || expState.src === 'rsrc') {
+    const rsrcMap = {}; // taskId -> {bud,act,rem}
+    for (const a of S.assignments) {
+      const task = S.tasks[a.taskId];
+      if (!task || task.projId !== S.currentProj) continue;
+      if (!(a.budgetCost > 0 || a.actualCost > 0 || a.remainCost > 0)) continue;
+      if (!rsrcMap[a.taskId]) rsrcMap[a.taskId] = { bud:0, act:0, rem:0 };
+      rsrcMap[a.taskId].bud += a.budgetCost;
+      rsrcMap[a.taskId].act += a.actualCost;
+      rsrcMap[a.taskId].rem += a.remainCost;
+    }
+    for (const [tid, costs] of Object.entries(rsrcMap)) {
+      // If 'all', check if this task already has an expense row and merge
+      const existing = expState.src === 'all' ? rows.findIndex(r => r.taskId === tid && r.source === 'expense') : -1;
+      if (existing >= 0) {
+        rows[existing].budgeted  += costs.bud;
+        rows[existing].actual    += costs.act;
+        rows[existing].remaining += costs.rem;
+        rows[existing].source = 'both';
+      } else {
+        const task = S.tasks[tid];
+        rows.push({
+          taskId: tid,
+          code: task.code,
+          name: task.name,
+          wbs: wbsName(task),
+          status: STATUS_LABELS[task.status] || task.status,
+          statusKey: task.status,
+          budgeted: costs.bud,
+          actual: costs.act,
+          remaining: costs.rem,
+          source: 'resource',
+          expenseNames: [],
+        });
+      }
+    }
+  }
+
+  return rows;
+}
+
+function renderExpenses() {
+  const q = (document.getElementById('expSearch') ? document.getElementById('expSearch').value : '').toLowerCase().trim();
+
+  let rows = buildExpenseRows();
+
+  // Filter by search
+  if (q) {
+    rows = rows.filter(r =>
+      r.name.toLowerCase().includes(q) ||
+      r.code.toLowerCase().includes(q) ||
+      r.wbs.toLowerCase().includes(q)
+    );
+  }
+
+  // Sort
+  rows.sort((a, b) => {
+    let va, vb;
+    switch (expState.sortCol) {
+      case 'code':      va = a.code;      vb = b.code;      break;
+      case 'name':      va = a.name;      vb = b.name;      break;
+      case 'wbs':       va = a.wbs;       vb = b.wbs;       break;
+      case 'status':    va = a.status;    vb = b.status;    break;
+      case 'actual':    va = a.actual;    vb = b.actual;    break;
+      case 'remaining': va = a.remaining; vb = b.remaining; break;
+      case 'variance':  va = a.budgeted - a.actual - a.remaining; vb = b.budgeted - b.actual - b.remaining; break;
+      default:          va = a.budgeted;  vb = b.budgeted;
+    }
+    if (typeof va === 'string') return va.localeCompare(vb) * expState.sortDir;
+    return (va - vb) * expState.sortDir;
+  });
+
+  // Update sort icons
+  ['code','name','wbs','status','budgeted','actual','remaining','variance'].forEach(col => {
+    const el = document.getElementById('expSortIcon_' + col);
+    if (!el) return;
+    el.textContent = expState.sortCol === col ? (expState.sortDir === 1 ? '▲' : '▼') : '';
+    el.style.color = 'var(--gold)';
+  });
+
+  // Summary cards
+  const totBud = rows.reduce((s, r) => s + r.budgeted, 0);
+  const totAct = rows.reduce((s, r) => s + r.actual, 0);
+  const totRem = rows.reduce((s, r) => s + r.remaining, 0);
+  const totVar = totBud - totAct - totRem;
+  const spendPct = totBud > 0 ? (totAct / totBud * 100) : 0;
+  function fmtC(n) { return n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
+  document.getElementById('expSummaryCards').innerHTML = `
+    ${card('📋 Activities', rows.length, 'var(--white)')}
+    ${card('💰 Total Budgeted', '$' + fmtC(totBud), 'var(--gold)')}
+    ${card('✅ Total Actual', '$' + fmtC(totAct), 'var(--green)')}
+    ${card('🔵 Total Remaining', '$' + fmtC(totRem), 'var(--cyan)')}
+    ${card('⚡ Variance', (totVar >= 0 ? '+' : '') + '$' + fmtC(totVar), totVar >= 0 ? 'var(--green)' : 'var(--red)')}
+    ${card('📈 Spend %', spendPct.toFixed(1) + '%', spendPct > 90 ? 'var(--red)' : spendPct > 60 ? 'var(--amber)' : 'var(--cyan)')}
+  `;
+
+  // Table rows
+  const STATUS_COLORS = { 'Not Started':'var(--muted)', 'In Progress':'var(--cyan)', 'Completed':'var(--green)' };
+  const SOURCE_BADGES = { expense:'expense', resource:'resource', both:'both' };
+  const SOURCE_COLORS = { expense:'var(--amber)', resource:'var(--cyan)', both:'var(--green)' };
+
+  document.getElementById('expTableBody').innerHTML = rows.length ? rows.map(r => {
+    const variance = r.budgeted - r.actual - r.remaining;
+    const spendPctRow = r.budgeted > 0 ? Math.min(100, r.actual / r.budgeted * 100) : 0;
+    const varColor = variance >= 0 ? 'var(--green)' : 'var(--red)';
+    return `<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--cyan)">${esc(r.code)}</td>
+      <td title="${esc(r.name)}" style="max-width:260px;">${esc(r.name)}
+        <span style="font-size:9px;margin-left:6px;color:${SOURCE_COLORS[r.source]||'var(--muted)'};letter-spacing:.05em;">[${r.source}]</span>
+      </td>
+      <td style="font-size:10px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;" title="${esc(r.wbs)}">${esc(r.wbs)}</td>
+      <td><span style="font-size:10px;color:${STATUS_COLORS[r.status]||'var(--muted)'};letter-spacing:.04em;">${esc(r.status)}</span></td>
+      <td class="num" style="color:var(--gold)">${fmtC(r.budgeted)}</td>
+      <td class="num" style="color:var(--green)">${fmtC(r.actual)}</td>
+      <td class="num" style="color:var(--cyan)">${fmtC(r.remaining)}</td>
+      <td class="num" style="color:${varColor}">${(variance >= 0 ? '+' : '') + fmtC(variance)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="flex:1;height:6px;background:var(--border2);border-radius:3px;overflow:hidden;min-width:60px;">
+            <div style="height:100%;width:${spendPctRow.toFixed(1)}%;background:linear-gradient(90deg,var(--green),var(--cyan));border-radius:3px;"></div>
+          </div>
+          <span style="font-size:10px;color:var(--muted);min-width:34px;text-align:right;">${spendPctRow.toFixed(0)}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="9" style="text-align:center;padding:48px;color:var(--muted);">No expense data found for this project.<br><span style="font-size:10px;opacity:.6;">Load a file with PROJCOST or TASKRSRC cost data.</span></td></tr>`;
+}
+
+function card(label, value, color) {
+  return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 16px;min-width:130px;">
+    <div style="font-size:9px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:4px;">${label}</div>
+    <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:${color};">${value}</div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  HISTOGRAM COLLAPSE / EXPAND
+// ══════════════════════════════════════════════════════════════════════════
+function collapseHisto(panel){
+  const id='histoBody'+panel.charAt(0).toUpperCase()+panel.slice(1);
+  const el=document.getElementById(id);
+  if(el)el.classList.add('collapsed');
+}
+function expandHisto(panel){
+  const id='histoBody'+panel.charAt(0).toUpperCase()+panel.slice(1);
+  const el=document.getElementById(id);
+  if(el)el.classList.remove('collapsed');
+}
+</script>
+<!-- ── Exit confirmation modal ── -->
+<div id="exitModal">
+  <div class="exit-box">
+    <h3>Leave this tool?</h3>
+    <p>Your current XER session data will be cleared and you will need to upload the file again when you return.</p>
+    <div class="exit-btns">
+      <button class="btn btn-ghost" onclick="closeExitModal()" style="min-width:90px;">Cancel</button>
+      <button class="btn btn-primary" style="min-width:90px;" onclick="confirmExit()">Leave</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
