@@ -229,6 +229,11 @@ canvas{display:block;}
   <button class="btn bg" style="padding:3px 8px;font-size:13px;line-height:1;" onclick="changeFontSize(-1)" title="Decrease table font size">A−</button>
   <span id="fsLabel" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tm);min-width:28px;text-align:center;">12px</span>
   <button class="btn bg" style="padding:3px 8px;font-size:13px;line-height:1;" onclick="changeFontSize(1)" title="Increase table font size">A+</button>
+  <div class="tb-sep"></div>
+  <span class="tb-label">Row</span>
+  <button class="btn bg" style="padding:3px 9px;font-size:14px;line-height:1;" onclick="changeRowHeight(-2)" title="Decrease row height">−</button>
+  <span id="rhLabel" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tm);min-width:32px;text-align:center;">30px</span>
+  <button class="btn bg" style="padding:3px 9px;font-size:14px;line-height:1;" onclick="changeRowHeight(2)" title="Increase row height">+</button>
 </div>
 <div id="freeBanner"><span>&#128274;</span><span id="freeBannerMsg"></span><a onclick="showUpgradeModal()">Upgrade to Pro &#8594;</a></div>
 <div class="main">
@@ -883,6 +888,68 @@ function exportCSV() {
   a.download = pn.replace(/\s+/g,'_')+'_schedule.csv'; a.click();
 }
 
+// ── EXPORT EXCEL ─────────────────────────────────────────────
+function exportExcel() {
+  if (typeof XLSX === 'undefined') { alert('Excel library not loaded. Please check your connection.'); return; }
+  var pn = document.getElementById('projName').value || 'Schedule';
+  var data = [['Row','Type','Level','Name','Start','Finish','Duration(d)']];
+  rows.forEach(function(r, i) {
+    var dur = '';
+    if (r.start && r.finish && r.type !== 'wbs') {
+      var p1 = r.start.split('-').map(Number), p2 = r.finish.split('-').map(Number);
+      dur = Math.round((new Date(p2[0],p2[1]-1,p2[2]) - new Date(p1[0],p1[1]-1,p1[2])) / 86400000);
+    }
+    data.push([i+1, r.type, r.level, r.name, r.start || '', r.finish || '', dur]);
+  });
+  var ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{wch:5},{wch:12},{wch:6},{wch:40},{wch:12},{wch:12},{wch:12}];
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
+  XLSX.writeFile(wb, pn.replace(/\s+/g,'_') + '_schedule.xlsx');
+}
+
+// ── EXPORT PDF ────────────────────────────────────────────────
+function exportPDF() {
+  if (typeof window.jspdf === 'undefined') { alert('PDF library not loaded. Please check your connection.'); return; }
+  var pn = document.getElementById('projName').value || 'Schedule';
+  var dd = document.getElementById('dataDate').value || '';
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(14);
+  doc.text(pn, 40, 36);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  if (dd) doc.text('Data Date: ' + fmtDate(dd), 40, 52);
+  var head = [['#','Type','Lvl','Name','Start','Finish','Dur(d)']];
+  var body = [];
+  rows.forEach(function(r, i) {
+    var dur = '';
+    if (r.start && r.finish && r.type !== 'wbs') {
+      var p1 = r.start.split('-').map(Number), p2 = r.finish.split('-').map(Number);
+      dur = Math.round((new Date(p2[0],p2[1]-1,p2[2]) - new Date(p1[0],p1[1]-1,p1[2])) / 86400000);
+    }
+    body.push([i+1, r.type, r.level, r.name, fmtDate(r.start), fmtDate(r.finish), dur]);
+  });
+  doc.autoTable({
+    startY: dd ? 64 : 48,
+    head: head,
+    body: body,
+    styles: { fontSize: 8, cellPadding: 3 },
+    headStyles: { fillColor: [14, 20, 33], textColor: [201, 168, 76], fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [17, 19, 24] },
+    bodyStyles: { fillColor: [17, 19, 24], textColor: [240, 237, 232] },
+    columnStyles: { 0:{cellWidth:22}, 1:{cellWidth:55}, 2:{cellWidth:22}, 3:{cellWidth:180}, 4:{cellWidth:60}, 5:{cellWidth:60}, 6:{cellWidth:40} },
+    didParseCell: function(data) {
+      if (data.section === 'body' && rows[data.row.index] && rows[data.row.index].type === 'wbs') {
+        data.cell.styles.textColor = [201, 168, 76];
+        data.cell.styles.fontStyle = 'bold';
+      }
+    }
+  });
+  doc.save(pn.replace(/\s+/g,'_') + '_schedule.pdf');
+}
+
 // ── AUTH ──────────────────────────────────────────────────────
 function goSignIn() { window.location.href = '/?signin=1'; }
 async function appSignOut() { if(window.PMAuth){try{await PMAuth.signOut();}catch(e){}} window.location.href='/'; }
@@ -992,6 +1059,16 @@ function changeFontSize(delta) {
   redrawGantt(); // redraws canvas with new font size
 }
 
+// ── ROW HEIGHT ────────────────────────────────────────────────
+function changeRowHeight(delta) {
+  RH = Math.min(60, Math.max(20, RH + delta));
+  BH = Math.round(RH * 0.4);
+  MSZ = Math.round(RH * 0.3);
+  document.documentElement.style.setProperty('--row-h', RH + 'px');
+  document.getElementById('rhLabel').textContent = RH + 'px';
+  redrawGantt();
+}
+
 // ── RESIZER ───────────────────────────────────────────────────
 (function(){
   var resizer = document.getElementById('resizer');
@@ -1041,6 +1118,9 @@ function changeFontSize(delta) {
   }
 })();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/pmsentric-auth.js"></script>
 </body>
