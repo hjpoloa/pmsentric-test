@@ -590,8 +590,8 @@ function renderTableWbsDates() {
     if (!row || row.type !== 'wbs') return;
     var tds = tr.querySelectorAll('td');
     // start = td[3], finish = td[4]
-    var sSpan = tds[3] && tds[3].querySelector('.cell-date-txt');
-    var fSpan = tds[4] && tds[4].querySelector('.cell-date-txt');
+    var sSpan = tds[4] && tds[4].querySelector('.cell-date-txt');
+    var fSpan = tds[5] && tds[5].querySelector('.cell-date-txt');
     if (sSpan) sSpan.textContent = fmtDate(row.start) || '';
     if (fSpan) fSpan.textContent = fmtDate(row.finish) || '';
   });
