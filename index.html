@@ -890,6 +890,20 @@ html.light .pms-modal { background:rgba(40,40,45,.55); }
         </div>
       </a>
 
+      <!-- Reporting Suite Hub -->
+      <div class="tool-card accent-gold" data-cat="reporting"
+           onclick="switchPage('reporting')" style="cursor:pointer;">
+        <span class="card-status s-live">● Live</span>
+        <div class="card-icon icon-gold">📊</div>
+        <div class="card-name">Reporting Suite</div>
+        <p class="card-desc">Milestone tracking, WBS summaries, S-curves, and 3-week lookaheads — browser-native reporting tools for your P6 schedule.</p>
+        <div class="card-tags">
+          <span class="tag">Milestones</span>
+          <span class="tag">S-Curve</span>
+          <span class="tag">3WLA</span>
+        </div>
+      </div>
+
       <!-- 5: PrimeVariance -->
       <a href="#" class="tool-card accent-steel coming"
          data-cat="schedule comparison">
@@ -953,6 +967,76 @@ html.light .pms-modal { background:rgba(40,40,45,.55); }
         <div class="card-tags">
           <span class="tag">Baseline</span>
           <span class="tag">EVM</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ REPORTING PAGE ══════════ -->
+<div class="page-view" id="page-reporting">
+  <div class="tools-page">
+
+    <div class="tools-header" style="text-align:left; margin-bottom:0;">
+      <button onclick="switchPage('tools')" style="background:none; border:none; color:var(--text-mid); font-size:13px; cursor:pointer; padding:0; display:inline-flex; align-items:center; gap:6px; margin-bottom:20px; font-family:'DM Sans',sans-serif; letter-spacing:.01em; transition:color .18s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-mid)'">
+        ← Back to Tools
+      </button>
+      <div class="tools-greeting">Reporting <span>Suite.</span></div>
+      <p style="color:var(--text-mid); font-size:14px; margin-top:8px; font-weight:300; max-width:520px; margin-left:auto; margin-right:auto;">Browser-native reporting tools built for P6 schedules. Drop your XER and generate reports instantly.</p>
+    </div>
+
+    <div class="cards-grid" style="margin-top:32px;">
+
+      <!-- Milestones Report -->
+      <a href="./PMsentric_Milestones_Report_R07.html" class="tool-card accent-gold" target="_blank" rel="noopener">
+        <span class="card-status s-live">● Live</span>
+        <div class="card-icon icon-gold">🏁</div>
+        <div class="card-name">Milestones Report</div>
+        <p class="card-desc">Extract and visualize all project milestones from your XER. Track completion status and upcoming key dates at a glance.</p>
+        <div class="card-tags">
+          <span class="tag">Milestones</span>
+          <span class="tag">Key Dates</span>
+          <span class="tag">Status</span>
+        </div>
+      </a>
+
+      <!-- WBS Report -->
+      <a href="./PMsentric_WBS_Report.html" class="tool-card accent-steel" target="_blank" rel="noopener">
+        <span class="card-status s-live">● Live</span>
+        <div class="card-icon icon-steel">🗂️</div>
+        <div class="card-name">WBS Report</div>
+        <p class="card-desc">Generate a structured work breakdown summary from your XER. Hierarchical WBS view with progress and date columns.</p>
+        <div class="card-tags">
+          <span class="tag">WBS</span>
+          <span class="tag">Summary</span>
+          <span class="tag">Progress</span>
+        </div>
+      </a>
+
+      <!-- S-Curve Report -->
+      <a href="./PMSentric_SCurve_Report__3_.html" class="tool-card accent-steel" target="_blank" rel="noopener">
+        <span class="card-status s-live">● Live</span>
+        <div class="card-icon icon-steel">📈</div>
+        <div class="card-name">S-Curve Report</div>
+        <p class="card-desc">Plot planned vs. actual progress curves from your XER schedule. Visual performance trending across the project timeline.</p>
+        <div class="card-tags">
+          <span class="tag">S-Curve</span>
+          <span class="tag">Progress</span>
+          <span class="tag">Performance</span>
+        </div>
+      </a>
+
+      <!-- 3-Week Lookahead -->
+      <a href="./PMSentric-3WLA.html" class="tool-card accent-green" target="_blank" rel="noopener">
+        <span class="card-status s-live">● Live</span>
+        <div class="card-icon icon-green">📅</div>
+        <div class="card-name">3-Week Lookahead</div>
+        <p class="card-desc">Generate a rolling three-week lookahead from your XER. Near-term activity view for site teams and weekly progress meetings.</p>
+        <div class="card-tags">
+          <span class="tag">3WLA</span>
+          <span class="tag">Lookahead</span>
+          <span class="tag">Weekly</span>
         </div>
       </a>
 
