@@ -590,9 +590,11 @@ header {
   position:relative; height:2px; background:var(--border2); margin:0;
 }
 .ms-timeline-datadate {
-  position:absolute; width:2px;
-  background:var(--accent); box-shadow:0 0 8px rgba(0,212,255,.5);
-  z-index:2;
+  position:absolute; width:0;
+  border-left:2px dashed var(--accent);
+  opacity:.45;
+  pointer-events:none;
+  z-index:0;
 }
 .ms-timeline-datadate-label {
   position:absolute; transform:translateX(-50%);
@@ -2899,6 +2901,8 @@ function attachScurveFilterHandlers(el, allWbs, maxDepth, descOf) {
 // ═══════════════════════════════════════════════════════
 // View mode for the milestone report: 'table' (default) or 'timeline'
 let msViewMode = 'table';
+// Time scale for the timeline view: 'weekly' | 'monthly' (default) | 'quarterly'
+let msTimelineScale = 'monthly';
 // Cached data for the active milestone render so the view toggle can switch
 // between Table and Timeline without re-applying filters/sorts.
 let _msRenderCache = null;
@@ -2999,6 +3003,12 @@ function _renderMilestoneView(el) {
         <button type="button" class="${msViewMode==='table'?'active':''}" onclick="setMsViewMode('table')" title="Tabular register view">▦ Table</button>
         <button type="button" class="${msViewMode==='timeline'?'active':''}" onclick="setMsViewMode('timeline')" title="Chronological timeline view">▭ Timeline</button>
       </div>
+      ${msViewMode==='timeline' ? `
+      <div class="ms-view-toggle" role="tablist" title="Timeline time scale">
+        <button type="button" class="${msTimelineScale==='weekly'?'active':''}" onclick="setMsTimelineScale('weekly')" title="Weekly scale">Weekly</button>
+        <button type="button" class="${msTimelineScale==='monthly'?'active':''}" onclick="setMsTimelineScale('monthly')" title="Monthly scale">Monthly</button>
+        <button type="button" class="${msTimelineScale==='quarterly'?'active':''}" onclick="setMsTimelineScale('quarterly')" title="Quarterly scale">Quarterly</button>
+      </div>` : ''}
       <button class="ms-print-btn" onclick="printReportView()" title="Print this milestone register">🖨 Print View</button>
     </div>`;
 
@@ -3055,6 +3065,18 @@ function setMsViewMode(mode) {
   if (el) _renderMilestoneView(el);
 }
 
+function setMsTimelineScale(scale) {
+  if (scale !== 'weekly' && scale !== 'monthly' && scale !== 'quarterly') return;
+  if (msTimelineScale === scale) return;
+  msTimelineScale = scale;
+  if (msViewMode !== 'timeline') return;
+  let el = null;
+  const kpi = document.querySelector('#reportView .kpi-row');
+  if (kpi) el = kpi.parentElement;
+  if (!el) el = document.getElementById('reportView');
+  if (el) _renderMilestoneView(el);
+}
+
 // Build the SVG-free, CSS-positioned milestone timeline.
 // Collision-aware: cards are stacked in tiers (above & below) so labels
 // never overlap. Leader stems connect each card back to its dot.
@@ -3086,23 +3108,54 @@ function _buildMilestoneTimelineHtml(milestones, dataDate, statusOf) {
 
   const pct = (d) => ((d - minD) / total) * 100;
 
-  // Build month ticks across the span
+  // Build ticks across the span based on the selected time scale.
   const ticks = [];
-  const cursor = new Date(minD.getFullYear(), minD.getMonth(), 1);
-  while (cursor <= maxD) {
-    if (cursor >= minD) {
-      ticks.push(new Date(cursor));
+  if (msTimelineScale === 'weekly') {
+    // Anchor to Monday on/before minD
+    const cursor = new Date(minD.getFullYear(), minD.getMonth(), minD.getDate());
+    const dow = cursor.getDay(); // 0=Sun..6=Sat
+    const offset = (dow === 0) ? -6 : (1 - dow);
+    cursor.setDate(cursor.getDate() + offset);
+    while (cursor <= maxD) {
+      if (cursor >= minD) ticks.push(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 7);
     }
-    cursor.setMonth(cursor.getMonth() + 1);
+  } else if (msTimelineScale === 'quarterly') {
+    const qMonth = Math.floor(minD.getMonth() / 3) * 3;
+    const cursor = new Date(minD.getFullYear(), qMonth, 1);
+    while (cursor <= maxD) {
+      if (cursor >= minD) ticks.push(new Date(cursor));
+      cursor.setMonth(cursor.getMonth() + 3);
+    }
+  } else {
+    // monthly (default)
+    const cursor = new Date(minD.getFullYear(), minD.getMonth(), 1);
+    while (cursor <= maxD) {
+      if (cursor >= minD) ticks.push(new Date(cursor));
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
   }
   // If too many ticks, sample every Nth
   const maxTicks = 14;
   const step = Math.max(1, Math.ceil(ticks.length / maxTicks));
   const shownTicks = ticks.filter((_, i) => i % step === 0);
 
+  const fmtTick = (d) => {
+    if (msTimelineScale === 'weekly') {
+      // ISO-like week label: "DD MMM"
+      return d.toLocaleDateString(undefined, { day:'2-digit', month:'short' });
+    }
+    if (msTimelineScale === 'quarterly') {
+      const q = Math.floor(d.getMonth() / 3) + 1;
+      const yy = String(d.getFullYear()).slice(-2);
+      return `Q${q} '${yy}`;
+    }
+    return d.toLocaleDateString(undefined, { month:'short', year:'2-digit' });
+  };
+
   const tickHtml = shownTicks.map(d => {
     const left = pct(d);
-    const lbl = d.toLocaleDateString(undefined, { month:'short', year:'2-digit' });
+    const lbl = fmtTick(d);
     return `<div class="ms-timeline-tick" style="left:${left.toFixed(2)}%"></div>
             <div class="ms-timeline-tick-label" style="left:${left.toFixed(2)}%">${escH(lbl)}</div>`;
   }).join('');
@@ -3657,7 +3710,7 @@ function printReportView() {
       + '.ms-table-wrap,.ms-timeline-wrap{background:#111827;border:1px solid #1e2d42;border-radius:8px;padding:18px;overflow:visible !important;}'
       + '.ms-timeline{position:relative;padding:20px;}'
       + '.ms-timeline-axis{position:relative;height:2px;background:#1e2d42;margin:0;}'
-      + '.ms-timeline-datadate{position:absolute;width:2px;background:#00d4ff;z-index:2;}'
+      + '.ms-timeline-datadate{position:absolute;width:0;border-left:2px dashed #00d4ff;opacity:.45;pointer-events:none;z-index:0;}'
       + '.ms-timeline-datadate-label{position:absolute;transform:translateX(-50%);font-size:10px;font-weight:700;color:#00d4ff;text-transform:uppercase;letter-spacing:.6px;background:#0a0f1a;padding:2px 6px;border-radius:3px;border:1px solid rgba(0,212,255,.4);white-space:nowrap;z-index:3;}'
       + '.ms-timeline-tick{position:absolute;top:-6px;width:1px;height:14px;background:#3d5a75;}'
       + '.ms-timeline-tick-label{position:absolute;top:14px;transform:translateX(-50%);font-size:10px;color:#5a7a96;font-family:monospace;white-space:nowrap;}'
