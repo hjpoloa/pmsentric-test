@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WBS % Complete Report — PMsentric</title>
+<title>S-Curve Report — PMsentric</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
@@ -54,12 +54,11 @@ header {
 .hd-title { font-size:15px; font-weight:700; letter-spacing:-.2px; }
 .hd-sub { font-size:11px; color:var(--muted); margin-top:1px; }
 .hd-tag {
-  margin-left:0; font-size:10px; font-weight:600; letter-spacing:1.2px;
+  font-size:10px; font-weight:600; letter-spacing:1.2px;
   text-transform:uppercase; color:var(--muted);
   border:1px solid var(--border2); padding:4px 10px; border-radius:20px;
 }
 
-/* Header action buttons (Combined-style XER loader) */
 .hd-actions {
   margin-left:auto; display:flex; align-items:center; gap:8px; flex-shrink:0;
 }
@@ -109,22 +108,6 @@ header {
   margin:0; padding:60px 30px; border-radius:14px;
   background:rgba(0,212,255,.02);
 }
-
-/* In-report WBS Level filter */
-.report-level-filter {
-  display:inline-flex; align-items:center; gap:8px;
-  font-size:11px; font-weight:600; color:var(--muted);
-  text-transform:uppercase; letter-spacing:.4px;
-  margin-right:6px;
-}
-.report-level-filter select {
-  background:var(--s2); color:var(--text);
-  border:1px solid var(--border2); border-radius:6px;
-  padding:5px 8px; font-size:12px; font-weight:600;
-  cursor:pointer; font-family:inherit;
-  text-transform:none; letter-spacing:0;
-}
-.report-level-filter select:hover { border-color:var(--accent); }
 
 .progress-bar {
   display:flex; align-items:stretch; gap:0;
@@ -638,7 +621,6 @@ header {
   /* ---------- REPORT VIEW PRINT (WBS · S-Curve · Milestones · Lookahead) ---------- */
   body.printing-report header,
   body.printing-report .progress-bar,
-  body.printing-report .status-bar,
   body.printing-report .step-view,
   body.printing-report .report-toolbar,
   body.printing-report .btn,
@@ -721,10 +703,10 @@ header {
 <div class="app">
 
 <header>
-  <div class="logo-mark">W</div>
+  <div class="logo-mark">S</div>
   <div>
-    <div class="hd-title">WBS % Complete Report</div>
-    <div class="hd-sub">Planned vs Actual % per WBS with variance analysis</div>
+    <div class="hd-title">S-Curve Report</div>
+    <div class="hd-sub">Cumulative planned, actual & forecast cost curves over time</div>
   </div>
   <div class="hd-actions">
     <button class="hd-btn hd-btn-ghost" onclick="history.back()" title="Back to Reporting Suite" style="gap:5px;">← Reporting</button>
@@ -765,22 +747,25 @@ header {
     <div class="opt-note" style="margin-top:18px"><strong>Tip:</strong> The Update XER is required. The Baseline XER is optional but recommended — without it, Planned % and Variance are unavailable. Use the <strong>📎 Load Baseline XER</strong> button in the header to add a baseline at any time.</div>
   </div>
 
-  <!-- REPORT CONFIG — shown after Update XER loads -->
+  <!-- STEP 3 -->
   <div class="step-view" id="step3">
     <div class="step-heading">
-      <h2>WBS % Complete Report</h2>
-      <p>Pick the WBS Level (or individual WBSs), then click Generate Report.</p>
+      <div class="step-label">Step 3 of 4</div>
+      <h2>S-Curve Report</h2>
+      <p>Configure the options below, then click Generate Report.</p>
     </div>
-    <div class="wbs-picker" id="wbsPicker">
+    <div class="report-grid" style="grid-template-columns:1fr;">
+      <div class="report-card selected" id="rpt-scurve" style="cursor:default;">
+        <div class="report-icon">📈</div>
+        <div class="report-name">S-Curve</div>
+        <div class="report-hint">Cumulative planned, actual & forecast cost curves over time</div>
+      </div>
+    </div>
+
+    <div class="wbs-picker" id="wbsPicker" style="display:none">
       <div class="wbs-picker-head">
         <div class="wbs-picker-title">Select WBSs to include in report</div>
         <div class="wbs-picker-actions">
-          <label style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-right:8px;">
-            WBS Level:
-            <select id="wbsLevelSel" onchange="onWbsLevelChange()" style="background:var(--s2);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
-              <option value="1" selected>Level 1</option>
-            </select>
-          </label>
           <button class="btn-mini" onclick="wbsPickerExpandAll()" title="Expand all WBS branches">⊞ Expand All</button>
           <button class="btn-mini" onclick="wbsPickerCollapseAll()" title="Collapse all WBS branches">⊟ Collapse All</button>
           <button class="btn btn-ghost" onclick="wbsPickAll(true)">Select All</button>
@@ -802,25 +787,60 @@ header {
       </div>
     </div>
 
+    <!-- Milestone picker (WBS + individual milestones) -->
+    <div class="wbs-picker" id="msPicker" style="display:none">
+      <div class="wbs-picker-head">
+        <div class="wbs-picker-title">Filter Milestones</div>
+        <div class="wbs-picker-actions">
+          <button class="btn btn-ghost" onclick="msPickAll(true)">Select All</button>
+          <button class="btn btn-ghost" onclick="msPickAll(false)">Clear</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">📁 WBS Filter</div>
+          <div class="wbs-search-wrap">
+            <span class="wbs-search-icon">🔍</span>
+            <input type="text" class="wbs-search" id="msWbsSearch"
+                   placeholder="Search WBS..."
+                   oninput="filterMsWbsList(this.value)" autocomplete="off">
+          </div>
+          <div class="wbs-list" id="msWbsList" style="max-height:280px"></div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">🚩 Individual Milestones</div>
+          <div class="wbs-search-wrap">
+            <span class="wbs-search-icon">🔍</span>
+            <input type="text" class="wbs-search" id="msNameSearch"
+                   placeholder="Search milestone..."
+                   oninput="filterMsList(this.value)" autocomplete="off">
+          </div>
+          <div class="wbs-list" id="msList" style="max-height:280px"></div>
+        </div>
+      </div>
+      <div class="wbs-picker-footer">
+        <span id="msPickCount">0 selected</span>
+        <span>Both filters combine: shows milestones in selected WBS AND selected milestones.</span>
+      </div>
+    </div>
+
     <div class="nav-row">
+      <button class="btn btn-ghost" onclick="goStep(2)">← Back</button>
       <button class="btn btn-gold" id="generateBtn" onclick="generateReport()" disabled>Generate Report ▶</button>
     </div>
   </div>
 
-  <!-- REPORT VIEW -->
+  <!-- STEP 4 — Report view -->
   <div id="reportView">
     <div class="report-toolbar">
       <span class="report-toolbar-title" id="rptTitle">—</span>
       <div class="rt-sep"></div>
       <span class="rt-meta" id="rptMeta">—</span>
       <div class="rt-spacer"></div>
-      <label class="report-level-filter" title="Change which WBS Level is shown in the report">
-        WBS Level:
-        <select id="rptLevelSel" onchange="onReportLevelChange()">
-          <option value="1" selected>Level 1</option>
-        </select>
+      <label class="reader-lookahead-toggle" id="readerLookaheadToggle" style="display:none;" title="Filter to activities starting, finishing or in-progress within 3 weeks of the data date">
+        <input type="checkbox" id="readerLookaheadFilter" onchange="onReaderLookaheadToggle(this)">
+        <span>🗓️ 3 Weeks Look Ahead</span>
       </label>
-      <button class="btn btn-ghost btn-sm" id="rptCustomBtn" onclick="openWbsConfig()" title="Pick individual WBSs">⚙ Custom WBS</button>
       <button class="btn btn-ghost btn-sm" id="printBtn" onclick="printReportView()">🖨 Print View</button>
     </div>
     <div class="report-content" id="reportContent"></div>
@@ -949,37 +969,6 @@ function parseUpdateXER(text, store) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  WBS ROLLED-UP TOTAL COST  (data-source level)
-//  Returns Map<wbsId, totalCost> where each WBS sums the
-//  budgetCost of every task under it (including descendants).
-//  Used to exclude zero-cost WBS from all WBS pickers/lists.
-// ═══════════════════════════════════════════════════════
-function _wbsRolledCostMap() {
-  const map = new Map();
-  // Direct task cost per WBS
-  for (const t of Object.values(U.taskData)) {
-    if (!t.wbsId) continue;
-    map.set(t.wbsId, (map.get(t.wbsId) || 0) + (t.budgetCost || 0));
-  }
-  // Roll up to ancestors
-  const roll = new Map();
-  for (const w of Object.values(U.wbsNodes)) roll.set(w.id, 0);
-  for (const w of Object.values(U.wbsNodes)) {
-    const direct = map.get(w.id) || 0;
-    if (direct === 0) continue;
-    let cur = w.id;
-    while (cur && U.wbsNodes[cur]) {
-      roll.set(cur, (roll.get(cur) || 0) + direct);
-      cur = U.wbsNodes[cur].parentId;
-    }
-  }
-  return roll;
-}
-function _wbsHasCost(wid, costMap) {
-  return (costMap.get(wid) || 0) > 0;
-}
-
-// ═══════════════════════════════════════════════════════
 //  BASELINE XER PARSER
 // ═══════════════════════════════════════════════════════
 function parseBaselineXER(content) {
@@ -1048,35 +1037,29 @@ function schedPctWbsFromActs(acts, dataDate) {
 // ═══════════════════════════════════════════════════════
 //  FILE LOADING
 // ═══════════════════════════════════════════════════════
-function setSt(msg, cls) {
-  const bar = document.getElementById('statusBar');
-  if (bar) {
-    bar.classList.remove('ok','err');
-    if (cls === 'ok') bar.classList.add('ok');
-    else if (cls === 'err') bar.classList.add('err');
-  }
-  const t = document.getElementById('statusText');
-  if (t) t.textContent = msg;
-}
-
 function setupDrop(dropEl, inputEl, onLoad) {
   if (dropEl) {
-    dropEl.addEventListener('click', e => {
-      // Allow inner button to click without re-triggering
-      if (e.target.tagName === 'BUTTON') return;
-      inputEl.click();
-    });
     dropEl.addEventListener('dragover', e => { e.preventDefault(); dropEl.classList.add('drag'); });
     dropEl.addEventListener('dragleave', () => dropEl.classList.remove('drag'));
     dropEl.addEventListener('drop', e => {
       e.preventDefault(); dropEl.classList.remove('drag');
       const f = e.dataTransfer.files[0]; if (f) readFile(f, onLoad);
     });
+    if (inputEl) {
+      dropEl.style.cursor = 'pointer';
+      dropEl.addEventListener('click', e => {
+        // Avoid double-trigger when an inner button forwards the click
+        if (e.target && e.target.closest && e.target.closest('button')) return;
+        inputEl.click();
+      });
+    }
   }
-  inputEl.addEventListener('change', e => {
-    const f = e.target.files[0]; if (f) readFile(f, onLoad);
-    e.target.value = '';
-  });
+  if (inputEl) {
+    inputEl.addEventListener('change', e => {
+      const f = e.target.files[0]; if (f) readFile(f, onLoad);
+      e.target.value = '';
+    });
+  }
 }
 function readFile(file, cb) {
   const r = new FileReader();
@@ -1084,69 +1067,60 @@ function readFile(file, cb) {
   r.readAsText(file, 'latin-1');
 }
 
-function onUpdateXerLoaded(text, name) {
-  try {
+setupDrop(
+  document.getElementById('dropUpdate'),
+  document.getElementById('updateFileInput'),
+  (text, name) => {
     parseUpdateXER(text, U);
     U.loaded = true; U.fileName = name; U.rawText = text;
     selectedWbsIds = new Set();
     selectedMilestoneIds = new Set();
     selectedMsWbsIds = new Set();
-    // Update header chrome
-    document.getElementById('updatePill').style.display = 'inline-flex';
-    document.getElementById('updatePillName').textContent = name;
+    // Header: hide Load, show Clear
+    document.getElementById('loadUpdateBtn').style.display = 'none';
     document.getElementById('clearUpdateBtn').style.display = 'inline-flex';
-    document.getElementById('loadUpdateBtn').textContent = '🔄 Replace Update XER';
-    const projCount = Object.keys(U.projects).length;
-    const wbsCount = Object.keys(U.wbsNodes).length;
-    const taskCount = Object.keys(U.taskData).length;
-    setSt(`Loaded: ${name} · ${projCount} project · ${wbsCount} WBS · ${taskCount} activities`, 'ok');
-    // Auto-build report config view, default Level 1, then auto-generate
-    selectedReport = 'wbs';
-    rebuildLevelOptions();
-    setLevelFilter(1, true);  // select Level 1 WBSs
-    buildWbsPicker();
-    showStep('step3');
-    updateGenerateBtn();
-    // Auto-generate the default Level 1 report
-    if (selectedWbsIds.size > 0) {
-      try { generateReport(); } catch(e) { console.error(e); }
-    }
-  } catch (err) {
-    setSt('Error parsing Update XER: ' + err.message, 'err');
+    // Status: pill + ok dot
+    const upPill = document.getElementById('updatePill');
+    upPill.style.display = 'inline-flex';
+    document.getElementById('updatePillName').textContent = name;
+    document.getElementById('statusBar').classList.add('ok');
+    document.getElementById('statusText').textContent = B.loaded
+      ? 'Update + Baseline loaded — generating S-Curve…'
+      : 'Update loaded — generating S-Curve…';
+    // Auto-generate S-Curve at default WBS Level 1
+    selectedReport = 'scurve';
+    scurveState.levelCap = 1;
+    scurveState.selectedWbsIds = null;
+    scurveState.page = 1;
+    generateReport();
   }
-}
+);
 
-function onBaselineXerLoaded(text, name) {
-  try {
+setupDrop(
+  document.getElementById('dropBaseline'),
+  document.getElementById('baselineFileInput'),
+  (text, name) => {
     B.byCode = parseBaselineXER(text);
     B.loaded = true;
     B.fileName = name;
     B.rawText = text;
-    document.getElementById('baselinePill').style.display = 'inline-flex';
-    document.getElementById('baselinePillName').textContent = name;
+    // Header: hide Load Baseline, show Clear Baseline
+    document.getElementById('loadBaselineBtn').style.display = 'none';
     document.getElementById('clearBaselineBtn').style.display = 'inline-flex';
-    document.getElementById('loadBaselineBtn').textContent = '🔄 Replace Baseline';
-    const matchCount = Object.keys(B.byCode).length;
-    setSt(`Baseline loaded: ${name} · ${matchCount} activities matched by code`, 'ok');
-    // If we're already viewing the report, refresh it
-    if (document.getElementById('reportView').classList.contains('active')) {
-      try { generateReport(); } catch(e) {}
+    // Status pill
+    const blPill = document.getElementById('baselinePill');
+    blPill.style.display = 'inline-flex';
+    document.getElementById('baselinePillName').textContent = name;
+    if (U.loaded) {
+      document.getElementById('statusText').textContent = 'Update + Baseline loaded — refreshing S-Curve…';
+      // If report is already on screen, regenerate to include baseline curves
+      if (document.getElementById('reportView').classList.contains('active')) {
+        generateReport();
+      }
+    } else {
+      document.getElementById('statusText').textContent = 'Baseline loaded — load an Update XER to generate the S-Curve';
     }
-  } catch (err) {
-    setSt('Error parsing Baseline XER: ' + err.message, 'err');
   }
-}
-
-setupDrop(
-  document.getElementById('dropUpdate'),
-  document.getElementById('updateFileInput'),
-  onUpdateXerLoaded
-);
-
-setupDrop(
-  null,  // baseline has no drop zone — header button only
-  document.getElementById('baselineFileInput'),
-  onBaselineXerLoaded
 );
 
 function clearUpdate() {
@@ -1159,144 +1133,64 @@ function clearUpdate() {
   scurveState.levelCap = 0;
   scurveState.page = 1;
   scurveState.dropdownOpen = false;
-  document.getElementById('updatePill').style.display = 'none';
+  // Header: show Load, hide Clear
+  document.getElementById('loadUpdateBtn').style.display = 'inline-flex';
   document.getElementById('clearUpdateBtn').style.display = 'none';
-  document.getElementById('loadUpdateBtn').textContent = '📂 Load Update XER';
-  // Also clear baseline since it relates to Update
-  clearBaseline();
-  setSt('Ready — Load an Update XER file to begin', '');
-  showStep('landing');
+  // Status: hide pill, return to default
+  document.getElementById('updatePill').style.display = 'none';
+  document.getElementById('statusBar').classList.remove('ok');
+  document.getElementById('statusText').textContent = B.loaded
+    ? 'Baseline loaded — load an Update XER to generate the S-Curve'
+    : 'Ready — Load an Update XER file to begin';
+  // Clean up any rendered chart and return to landing
+  if (scurveChart) { try { scurveChart.destroy(); } catch(e){} scurveChart = null; }
+  if (wbsCharts && wbsCharts.length) { wbsCharts.forEach(c => { try{c.destroy();}catch(e){} }); wbsCharts = []; }
+  document.getElementById('reportContent').innerHTML = '';
+  goLanding();
 }
 function clearBaseline() {
   B.loaded = false; B.fileName = ''; B.byCode = {}; B.rawText = '';
-  document.getElementById('baselinePill').style.display = 'none';
+  document.getElementById('loadBaselineBtn').style.display = 'inline-flex';
   document.getElementById('clearBaselineBtn').style.display = 'none';
-  document.getElementById('loadBaselineBtn').textContent = '📎 Load Baseline XER';
-  // If we're viewing the report, refresh to reflect baseline removal
-  if (U.loaded && document.getElementById('reportView').classList.contains('active')) {
-    try { generateReport(); } catch(e) {}
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  WBS LEVEL FILTER (Default = Level 1)
-// ═══════════════════════════════════════════════════════
-let currentLevel = 1;  // 0 = custom (user-picked), N = auto-select all WBS at depth ≤ N
-
-function _depthOfWbs(wid) {
-  let d = 1, cur = U.wbsNodes[wid];
-  while (cur && cur.parentId && U.wbsNodes[cur.parentId]) {
-    d++; cur = U.wbsNodes[cur.parentId];
-    if (d > 50) break;
-  }
-  return d;
-}
-
-function _maxWbsLevel() {
-  const projId = Object.keys(U.projects)[0];
-  if (!projId) return 1;
-  let max = 1;
-  for (const w of Object.values(U.wbsNodes)) {
-    if (w.projId !== projId) continue;
-    const d = _depthOfWbs(w.id);
-    if (d > max) max = d;
-  }
-  return max;
-}
-
-function rebuildLevelOptions() {
-  const max = _maxWbsLevel();
-  const optsHtml = [];
-  for (let i = 1; i <= max; i++) {
-    optsHtml.push(`<option value="${i}">Level ${i}</option>`);
-  }
-  optsHtml.push(`<option value="0">Custom</option>`);
-  const sels = [document.getElementById('wbsLevelSel'), document.getElementById('rptLevelSel')];
-  for (const sel of sels) {
-    if (!sel) continue;
-    const prev = sel.value;
-    sel.innerHTML = optsHtml.join('');
-    sel.value = (prev && [...sel.options].some(o => o.value === prev)) ? prev : '1';
-  }
-}
-
-function setLevelFilter(level, syncSelectors) {
-  currentLevel = level;
-  const projId = Object.keys(U.projects)[0];
-  if (!projId) return;
-  if (level > 0) {
-    // Auto-select all WBSs at depth ≤ level (excluding WBS with Total Cost = 0)
-    const costMap = _wbsRolledCostMap();
-    selectedWbsIds = new Set();
-    for (const w of Object.values(U.wbsNodes)) {
-      if (w.projId !== projId) continue;
-      if (!_wbsHasCost(w.id, costMap)) continue;
-      if (_depthOfWbs(w.id) <= level) selectedWbsIds.add(w.id);
+  document.getElementById('baselinePill').style.display = 'none';
+  if (U.loaded) {
+    document.getElementById('statusText').textContent = 'Update loaded — refreshing S-Curve…';
+    if (document.getElementById('reportView').classList.contains('active')) {
+      generateReport();
     }
-  }
-  if (syncSelectors) {
-    const a = document.getElementById('wbsLevelSel');
-    const b = document.getElementById('rptLevelSel');
-    if (a) a.value = String(level);
-    if (b) b.value = String(level);
-  }
-}
-
-function onWbsLevelChange() {
-  const sel = document.getElementById('wbsLevelSel');
-  const lvl = parseInt(sel.value, 10);
-  if (lvl > 0) {
-    setLevelFilter(lvl, true);
-    buildWbsPicker();
-    updateGenerateBtn();
   } else {
-    // Custom: keep current selection, just sync selector
-    currentLevel = 0;
-    const b = document.getElementById('rptLevelSel');
-    if (b) b.value = '0';
+    document.getElementById('statusText').textContent = 'Ready — Load an Update XER file to begin';
   }
-}
-
-function onReportLevelChange() {
-  const sel = document.getElementById('rptLevelSel');
-  const lvl = parseInt(sel.value, 10);
-  if (lvl > 0) {
-    setLevelFilter(lvl, true);
-    generateReport();
-  } else {
-    // Custom: open WBS config view
-    openWbsConfig();
-  }
-}
-
-function openWbsConfig() {
-  selectedReport = 'wbs';
-  buildWbsPicker();
-  showStep('step3');
-  updateGenerateBtn();
 }
 
 // ═══════════════════════════════════════════════════════
-//  VIEW NAVIGATION (replaces old wizard goStep)
+//  VIEW NAVIGATION
 // ═══════════════════════════════════════════════════════
-function showStep(id) {
+function goLanding() {
   document.querySelectorAll('.step-view').forEach(v => v.classList.remove('active'));
   document.getElementById('reportView').classList.remove('active');
   document.getElementById('mainScroll').style.overflow = '';
-  if (id === 'reportView') {
+  const landing = document.getElementById('landing');
+  if (landing) landing.classList.add('active');
+  const laToggle = document.getElementById('readerLookaheadToggle');
+  if (laToggle) laToggle.style.display = 'none';
+}
+
+// Legacy shim — older code paths still call goStep(3) / goStep(4)
+function goStep(n) {
+  document.querySelectorAll('.step-view').forEach(v => v.classList.remove('active'));
+  document.getElementById('reportView').classList.remove('active');
+  document.getElementById('mainScroll').style.overflow = '';
+  const laToggle = document.getElementById('readerLookaheadToggle');
+  if (laToggle && n !== 4) laToggle.style.display = 'none';
+  if (n === 4) {
     document.getElementById('reportView').classList.add('active');
     document.getElementById('mainScroll').style.overflow = 'hidden';
   } else {
-    const el = document.getElementById(id);
-    if (el) el.classList.add('active');
+    // Any non-report step routes to landing now
+    const landing = document.getElementById('landing');
+    if (landing) landing.classList.add('active');
   }
-}
-
-// Legacy goStep shim — older code still calls goStep(3) / goStep(4)
-function goStep(n) {
-  if (n === 4) showStep('reportView');
-  else if (n === 3) showStep('step3');
-  else if (n === 1 || n === 2) showStep('landing');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1304,13 +1198,23 @@ function goStep(n) {
 // ═══════════════════════════════════════════════════════
 function selectReport(type) {
   selectedReport = type;
+  document.querySelectorAll('.report-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('rpt-' + type).classList.add('selected');
   const picker = document.getElementById('wbsPicker');
+  const msPicker = document.getElementById('msPicker');
   if (type === 'wbs') {
-    if (picker) picker.style.display = 'block';
+    picker.style.display = 'block';
+    msPicker.style.display = 'none';
     buildWbsPicker();
     updateGenerateBtn();
+  } else if (type === 'milestones') {
+    picker.style.display = 'none';
+    msPicker.style.display = 'block';
+    buildMilestonePicker();
+    updateGenerateBtn();
   } else {
-    if (picker) picker.style.display = 'none';
+    picker.style.display = 'none';
+    msPicker.style.display = 'none';
     document.getElementById('generateBtn').disabled = false;
   }
 }
@@ -1346,6 +1250,36 @@ function updateGenerateBtn() {
   if (msCount) msCount.textContent = `${selectedMsWbsIds.size} WBS · ${selectedMilestoneIds.size} milestones selected`;
 }
 
+// Direct-task budget per WBS (no descendant rollup) — sum of budgetCost of tasks
+// assigned directly to that WBS only.
+function _wbsDirectCostMap() {
+  const map = new Map();
+  for (const t of Object.values(U.taskData)) {
+    if (!t.wbsId) continue;
+    map.set(t.wbsId, (map.get(t.wbsId) || 0) + (t.budgetCost || 0));
+  }
+  return map;
+}
+
+// A WBS is shown only if it has direct-task budget > 0, OR any of its descendants
+// has direct-task budget > 0 (parent shown only because a leaf below has budget).
+function _wbsValidIds(directMap) {
+  const valid = new Set();
+  // First mark every WBS whose own direct tasks have budget > 0 (the leaves with budget).
+  for (const [wid, v] of directMap.entries()) {
+    if (v > 0) valid.add(wid);
+  }
+  // Then mark all ancestors of those WBS so the tree path is preserved.
+  for (const wid of [...valid]) {
+    let cur = U.wbsNodes[wid] && U.wbsNodes[wid].parentId;
+    while (cur && U.wbsNodes[cur]) {
+      valid.add(cur);
+      cur = U.wbsNodes[cur].parentId;
+    }
+  }
+  return valid;
+}
+
 function buildWbsPicker() {
   const list = document.getElementById('wbsList');
   const projId = Object.keys(U.projects)[0];
@@ -1353,11 +1287,12 @@ function buildWbsPicker() {
     list.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:12px">No project loaded.</div>';
     selectedWbsIds = new Set(); updateGenerateBtn(); return;
   }
-  const costMap = _wbsRolledCostMap();
+  const directMap = _wbsDirectCostMap();
+  const validSet = _wbsValidIds(directMap);
   const roots = Object.values(U.wbsNodes).filter(w => w.projId === projId && !U.wbsNodes[w.parentId]);
   const items = [];
   function walk(w, depth) {
-    if (!_wbsHasCost(w.id, costMap)) return; // exclude WBS with Total Cost = 0
+    if (!validSet.has(w.id)) return; // exclude WBS with no leaf budget anywhere below
     items.push({ w, depth });
     const kids = Object.values(U.wbsNodes).filter(c => c.parentId === w.id);
     kids.sort((a,b) => (a.shortName||'').localeCompare(b.shortName||''));
@@ -2051,9 +1986,9 @@ function renderSCurve(el) {
   }
   allWbs.forEach(getDesc);
 
-  // Initialize selectedWbsIds on first render (NONE selected by default — user must choose)
+  // Initialize selectedWbsIds on first render (ALL selected by default after XER load)
   if (scurveState.selectedWbsIds === null) {
-    scurveState.selectedWbsIds = new Set();
+    scurveState.selectedWbsIds = new Set(allWbs.map(w => w.id));
   } else {
     // Prune any stale ids; allow empty selection (placeholder will show)
     const valid = new Set(allWbs.map(w => w.id));
