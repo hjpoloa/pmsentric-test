@@ -709,6 +709,9 @@ header {
     <div class="hd-sub">Cumulative planned, actual & forecast cost curves over time</div>
   </div>
   <div class="hd-actions">
+    <button class="hd-btn hd-btn-ghost" onclick="history.back()" title="Back to Reporting Suite" style="gap:5px;">← Reporting</button>
+    <button class="hd-btn hd-btn-ghost" onclick="window.location.href='./index.html'" title="Go to Home" style="gap:5px;">🏠 Home</button>
+    <div style="width:1px; height:24px; background:var(--border2); margin:0 2px;"></div>
     <button class="hd-btn hd-btn-ghost" id="loadBaselineBtn" onclick="document.getElementById('baselineFileInput').click()">📎 Load Baseline XER</button>
     <button class="hd-btn hd-btn-ghost" id="clearBaselineBtn" onclick="clearBaseline()" style="display:none;border-color:#f87171;color:#f87171;">✕ Clear Baseline</button>
     <button class="hd-btn hd-btn-primary" id="loadUpdateBtn" onclick="document.getElementById('updateFileInput').click()">📂 Load Update XER</button>
