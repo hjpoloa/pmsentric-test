@@ -12,10 +12,16 @@
   --accent:#00d4ff;--wbs-color:#60a5fa;
   --ns:#94a3b8;--ip:#34d399;--done:#64748b;
   --text:#e2eaf4;--tm:#5a7a96;--td:#3d5a75;
+  --gold:#e8b84b;--gold2:#c8922a;--s3:#192035;--muted:#5a7a96;
   --rh:30px;
   --th:56px;
   --divider:5px;
 }
+.hd-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s ease;font-family:inherit;white-space:nowrap;line-height:1;}
+.hd-btn-primary{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#000;border:1px solid var(--gold);box-shadow:0 0 12px rgba(232,184,75,.25);}
+.hd-btn-primary:hover{box-shadow:0 0 18px rgba(232,184,75,.45);transform:translateY(-1px);}
+.hd-btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border2);}
+.hd-btn-ghost:hover{background:var(--s3);border-color:var(--accent);color:var(--accent);}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
@@ -286,8 +292,9 @@ tr.crit td:first-child{box-shadow:inset 3px 0 0 #f87171;}
     <div class="ha"><a href="https://pmsentric.com/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">✦ PMSentric</a></div>
   </div>
   <div class="hact">
-    <a href="#" class="btn bg" onclick="history.back();return false;" title="Back to Reporting Suite">← Reporting</a>
-    <a href="#" class="btn bg" onclick="askExit('/');return false;">← Home</a>
+    <button class="hd-btn hd-btn-ghost" onclick="history.back()" title="Back to Reporting Suite" style="gap:5px;">← Reporting</button>
+    <button class="hd-btn hd-btn-ghost" onclick="window.location.href='./index.html'" title="Go to Home" style="gap:5px;">🏠 Home</button>
+    <div style="width:1px; height:24px; background:var(--border2); margin:0 2px;"></div>
     <a href="/iwpmsresource-analyzer" class="btn-tool-switch" onclick="switchTool('/iwpmsresource-analyzer');return false;">⚙️ Resource Analyzer</a>
     <a href="/iwpmscriticalpath" class="btn-tool-switch" onclick="switchTool('/iwpmscriticalpath');return false;">🔗 Critical Path</a>
     <div id="appUserPill" style="display:none;"></div>
