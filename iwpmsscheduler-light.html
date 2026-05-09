@@ -15,6 +15,8 @@
   --row-h:30px;
   --panel-w:570px;
   --tbl-fs:12px;
+  --clr-wbs-txt:#C9A84C;
+  --clr-act-txt:#e2eaf4;
 }
 /* ── LIGHT THEME ── */
 body.light{
@@ -253,6 +255,18 @@ canvas{display:block;}
   <div class="tb-sep"></div>
   <label class="color-pill"><div class="color-swatch" id="swDd" style="background:#e05252"></div><span>Data Date</span><input type="color" class="color-inp" id="cpDd" value="#e05252" oninput="applyColor('dd',this.value)"></label>
   <div class="tb-sep"></div>
+  <label class="color-pill" title="WBS row name text color"><div class="color-swatch" id="swWbsTxt" style="background:#C9A84C"></div><span>WBS Text</span><input type="color" class="color-inp" id="cpWbsTxt" value="#C9A84C" oninput="applyTxtColor('wbs',this.value)"></label>
+  <label class="color-pill" title="Activity row name text color"><div class="color-swatch" id="swActTxt" style="background:#e2eaf4"></div><span>Act Text</span><input type="color" class="color-inp" id="cpActTxt" value="#e2eaf4" oninput="applyTxtColor('act',this.value)"></label>
+  <div class="tb-sep"></div>
+  <span class="tb-label">Shading</span>
+  <select class="tb-select" id="shadingMode" onchange="applyShading()">
+    <option value="0">None</option>
+    <option value="0.4">Subtle</option>
+    <option value="1" selected>Normal</option>
+    <option value="1.8">Strong</option>
+    <option value="3">Heavy</option>
+  </select>
+  <div class="tb-sep"></div>
   <span class="tb-label">Zoom</span>
   <button class="btn bg" style="padding:3px 9px;font-size:14px;line-height:1;" onclick="changeZoom(-1)" title="Zoom out">−</button>
   <span id="zoomLabel" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tm);min-width:32px;text-align:center;">1×</span>
@@ -369,6 +383,8 @@ const FREE_CAP = 5;
 let _isPro = false, _currentUser = null;
 let rows = [], nextId = 1, selectedId = null, ctxTargetId = null, _sl = false;
 let clrBar = '#2E5F8A', clrMs = '#C9A84C', clrDd = '#e05252';
+let clrWbsTxt = '#C9A84C', clrActTxt = '#e2eaf4';
+var _shading = 1;
 
 // ── THEME ─────────────────────────────────────────────────────
 function getTheme() {
@@ -554,7 +570,7 @@ function renderTable() {
     nameWrap.className = 'cell-name-inner';
     // No MS badge — milestone type shown via diamond on Gantt only
     var ni = document.createElement('input');
-    ni.style.cssText = 'background:transparent;border:1px solid transparent;border-radius:3px;color:'+(row.type==='wbs'?(palC[Math.min(row.level,palC.length-1)]||'#5a7a96'):'var(--text)')+';padding:1px 4px;font-family:\'Sora\',sans-serif;font-size:inherit;width:100%;outline:none;transition:border-color .15s,background .15s;'+(row.type==='wbs'?'font-weight:700;':'');
+    ni.style.cssText = 'background:transparent;border:1px solid transparent;border-radius:3px;color:'+(row.type==='wbs'?'var(--clr-wbs-txt)':'var(--clr-act-txt)')+';padding:1px 4px;font-family:\'Sora\',sans-serif;font-size:inherit;width:100%;outline:none;transition:border-color .15s,background .15s;'+(row.type==='wbs'?'font-weight:700;':'');
     ni.value = row.name; ni.placeholder = 'Enter name\u2026';
     ni.addEventListener('input', function(){ row.name = ni.value; });
     ni.addEventListener('focus', function(){ selectedId = row.id; });
@@ -866,7 +882,7 @@ function drawBody(cols, CW, TW, gs, ge, vr) {
   cols.forEach(function(_,i){ var x=i*CW; ctx.strokeStyle=T.grid; ctx.lineWidth=.5; ctx.beginPath(); ctx.moveTo(x+.5,0); ctx.lineTo(x+.5,H); ctx.stroke(); });
   vr.forEach(function(row,ri){
     var y=ri*RH;
-    if(row.type==='wbs'){var a=row.level===1?.07:row.level===2?.04:.02; ctx.fillStyle='rgba('+T.wbs_rgb+','+a+')'; ctx.fillRect(0,y,TW,RH);}
+    if(row.type==='wbs'){var a=(row.level===1?.07:row.level===2?.04:.02)*_shading; ctx.fillStyle='rgba('+T.wbs_rgb+','+Math.min(a,1).toFixed(3)+')'; ctx.fillRect(0,y,TW,RH);}
     ctx.strokeStyle=T.grid; ctx.lineWidth=.5; ctx.beginPath(); ctx.moveTo(0,y+RH-.5); ctx.lineTo(TW,y+RH-.5); ctx.stroke();
   });
   var ddDate = parseDate(document.getElementById('dataDate').value);
@@ -874,7 +890,11 @@ function drawBody(cols, CW, TW, gs, ge, vr) {
     var ddx = dx(ddDate,gs,ge,TW);
     ctx.strokeStyle=clrDd; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
     ctx.beginPath(); ctx.moveTo(ddx,0); ctx.lineTo(ddx,H); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle=clrDd; ctx.font="bold 8px 'DM Mono',monospace"; ctx.textAlign='left'; ctx.textBaseline='top'; ctx.fillText('DD',ddx+2,2);
+    ctx.font="bold 8px 'DM Mono',monospace"; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    var ddLblW = ctx.measureText('DD').width + 6;
+    ctx.fillStyle = document.body.classList.contains('light') ? 'rgba(238,241,247,.85)' : 'rgba(8,10,15,.82)';
+    ctx.fillRect(ddx+1, H-18, ddLblW, 14);
+    ctx.fillStyle=clrDd; ctx.fillText('DD',ddx+4,H-7);
   }
   vr.forEach(function(row, ri){
     var cy = ri*RH + RH/2;
@@ -930,6 +950,33 @@ function syncScrollR(el) { if(_sl)return; _sl=true; document.getElementById('tbl
 // ── COLOR PICKERS ─────────────────────────────────────────────
 function applyColor(t, v) {
   if(t==='dd') {clrDd=v; document.getElementById('swDd').style.background=v;}
+  redrawGantt();
+}
+
+// ── TEXT COLOR ────────────────────────────────────────────────
+function applyTxtColor(t, v) {
+  if(t==='wbs'){clrWbsTxt=v;document.getElementById('swWbsTxt').style.background=v;document.documentElement.style.setProperty('--clr-wbs-txt',v);}
+  if(t==='act'){clrActTxt=v;document.getElementById('swActTxt').style.background=v;document.documentElement.style.setProperty('--clr-act-txt',v);}
+  renderTable();
+}
+
+// ── CELL SHADING ──────────────────────────────────────────────
+function applyShading() {
+  _shading = parseFloat(document.getElementById('shadingMode').value);
+  var el = document.getElementById('shade-override');
+  if (!el) { el = document.createElement('style'); el.id='shade-override'; document.head.appendChild(el); }
+  if (_shading === 0) {
+    el.textContent = '#tblBodyTable tr.wl1 td,#tblBodyTable tr.wl2 td,#tblBodyTable tr.wl3 td,#tblBodyTable tr.wl4 td,#tblBodyTable tr.wl5 td,#tblBodyTable tr.wl6 td,#tblBodyTable tr.wl7 td,#tblBodyTable tr.wl8 td,#tblBodyTable tr.wl9 td{background:transparent!important;}';
+  } else {
+    var rules=[
+      ['wl1','201,168,76',.07],['wl2','201,168,76',.04],['wl3','122,154,184',.03],
+      ['wl4','90,120,150',.02],['wl5','90,120,150',.02],['wl6','90,120,150',.02],
+      ['wl7','90,120,150',.02],['wl8','90,120,150',.02],['wl9','90,120,150',.02]
+    ];
+    el.textContent = rules.map(function(r){
+      return '#tblBodyTable tr.'+r[0]+' td{background:rgba('+r[1]+','+Math.min(r[2]*_shading,1).toFixed(3)+')!important;}';
+    }).join('');
+  }
   redrawGantt();
 }
 
