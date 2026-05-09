@@ -337,20 +337,29 @@ function dx(d, gs, ge, tw) { if (!d) return null; return Math.round(((d - gs) / 
 function rollupWbsDates() {
   for (var i = rows.length - 1; i >= 0; i--) {
     if (rows[i].type !== 'wbs') continue;
-    var wbs = rows[i], minS = null, maxF = null;
+    var wbs = rows[i], minS = '', maxF = '';
     for (var j = i + 1; j < rows.length; j++) {
       var ch = rows[j];
       if (ch.type === 'wbs' && ch.level <= wbs.level) break;
-      var ds = ch.type==='ms-finish' ? null : (ch.start ? parseDate(ch.start) : null);
-      var df = ch.type==='ms-start'  ? null : (ch.finish ? parseDate(ch.finish) : null);
-      // ms-start contributes its start to both min/max; ms-finish contributes its finish
-      if (ch.type==='ms-start' && ch.start) { var ms=parseDate(ch.start); if(!minS||ms<minS)minS=ms; if(!maxF||ms>maxF)maxF=ms; continue; }
-      if (ch.type==='ms-finish' && ch.finish) { var mf=parseDate(ch.finish); if(!minS||mf<minS)minS=mf; if(!maxF||mf>maxF)maxF=mf; continue; }
+      // ms-start: start date contributes to both earliest start and latest finish
+      if (ch.type === 'ms-start' && ch.start) {
+        if (!minS || ch.start < minS) minS = ch.start;
+        if (!maxF || ch.start > maxF) maxF = ch.start;
+        continue;
+      }
+      // ms-finish: finish date contributes to both earliest start and latest finish
+      if (ch.type === 'ms-finish' && ch.finish) {
+        if (!minS || ch.finish < minS) minS = ch.finish;
+        if (!maxF || ch.finish > maxF) maxF = ch.finish;
+        continue;
+      }
+      var ds = ch.start  || '';
+      var df = ch.finish || '';
       if (ds && (!minS || ds < minS)) minS = ds;
       if (df && (!maxF || df > maxF)) maxF = df;
     }
-    wbs.start  = minS ? minS.toISOString().slice(0,10) : '';
-    wbs.finish = maxF ? maxF.toISOString().slice(0,10) : '';
+    wbs.start  = minS;
+    wbs.finish = maxF;
   }
 }
 
