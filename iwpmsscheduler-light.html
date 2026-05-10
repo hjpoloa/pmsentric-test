@@ -821,22 +821,24 @@ function buildCols(gs, ge, scale) {
   var cols = [], cur = new Date(gs);
   while (cur < ge) {
     var next, label, topLabel, topKey;
+    var shortLabel = '';
     if (scale==='day') {
-      next=addDays(cur,1); label=cur.getDate();
+      next=addDays(cur,1); label=cur.getDate(); shortLabel='';
       topLabel=cur.toLocaleString('default',{month:'short',year:'numeric'}); topKey=cur.getFullYear()+'-'+cur.getMonth();
     } else if (scale==='week') {
       var dow=cur.getDay()||7; var mon=new Date(cur); mon.setDate(cur.getDate()-(dow-1));
       next=addDays(mon,7); if(next>ge)next=new Date(ge);
-      label='W'+isoWk(mon); topLabel=mon.toLocaleString('default',{month:'short',year:'numeric'}); topKey=mon.getFullYear()+'-'+mon.getMonth(); cur=mon;
+      var wn=isoWk(mon); label='W'+wn; shortLabel=String(wn);
+      topLabel=mon.toLocaleString('default',{month:'short',year:'numeric'}); topKey=mon.getFullYear()+'-'+mon.getMonth(); cur=mon;
     } else if (scale==='month') {
       next=new Date(cur.getFullYear(),cur.getMonth()+1,1);
-      label=cur.toLocaleString('default',{month:'short'}); topLabel=cur.getFullYear(); topKey=String(cur.getFullYear());
+      label=cur.toLocaleString('default',{month:'short'}); shortLabel=String(cur.getMonth()+1); topLabel=cur.getFullYear(); topKey=String(cur.getFullYear());
     } else {
       var q=Math.floor(cur.getMonth()/3); next=new Date(cur.getFullYear(),q*3+3,1);
-      label='Q'+(q+1); topLabel=cur.getFullYear(); topKey=String(cur.getFullYear());
+      label='Q'+(q+1); shortLabel=String(q+1); topLabel=cur.getFullYear(); topKey=String(cur.getFullYear());
     }
     if (next > ge) next = new Date(ge);
-    cols.push({start:new Date(cur),end:new Date(next),label:String(label),topLabel:String(topLabel),topKey:String(topKey)});
+    cols.push({start:new Date(cur),end:new Date(next),label:String(label),shortLabel:shortLabel,topLabel:String(topLabel),topKey:String(topKey)});
     cur = new Date(next);
   }
   return cols;
@@ -876,13 +878,20 @@ function drawHead(cols, CW, TW) {
     ctx.fillText(g.label,g.sx+6,HH1/2); ctx.restore();
   });
   ctx.fillStyle=T.head_bot; ctx.fillRect(0,HH1,TW,HH2);
+  ctx.font="500 "+Math.round(_fs*0.75)+"px 'DM Mono',monospace";
+  ctx.textBaseline='middle'; ctx.textAlign='center';
+  var pad=6; // minimum horizontal clearance (3px each side)
   cols.forEach(function(c,i){
     var x=i*CW;
     ctx.strokeStyle=T.grid; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(x+.5,HH1); ctx.lineTo(x+.5,HH); ctx.stroke();
-    ctx.fillStyle=T.tm; ctx.font="500 "+Math.round(_fs*0.75)+"px 'DM Mono',monospace";
-    ctx.textBaseline='middle'; ctx.textAlign='center';
-    ctx.fillText(c.label, x+CW/2, HH1+HH2/2);
+    var avail=CW-pad, lbl='';
+    if(ctx.measureText(c.label).width<=avail){
+      lbl=c.label;
+    } else if(c.shortLabel && ctx.measureText(c.shortLabel).width<=avail){
+      lbl=c.shortLabel;
+    }
+    if(lbl){ ctx.fillStyle=T.tm; ctx.fillText(lbl,x+CW/2,HH1+HH2/2); }
   });
 }
 
