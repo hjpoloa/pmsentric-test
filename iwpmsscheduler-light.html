@@ -138,7 +138,7 @@ body.light input[type="date"].tb-input{color-scheme:light;}
 #tblBodyTable tr.wl8 td:first-child,#tblBodyTable tr.wl9 td:first-child{border-left:3px solid rgba(90,120,150,.2);}
 #tblBodyTable tr.sel td{background:rgba(46,95,138,.15)!important;}
 #tblBodyTable tr.ghost td{opacity:.3;pointer-events:none;}
-#tblBodyTable tr:hover td{background:rgba(255,255,255,.025)!important;}
+#tblBodyTable tr:hover td{background:rgba(255,255,255,.025);}
 #tblBodyTable tr.wl1:hover td,#tblBodyTable tr.wl2:hover td,#tblBodyTable tr.wl3:hover td{filter:brightness(1.15);}
 
 /* Arrow buttons in ctrl cell */
@@ -571,13 +571,15 @@ function renderTable() {
     bgInp.value = row.bgColor || '#111827';
     bgInp.title = 'Row background color — right-click to clear';
     bgInp.style.opacity = row.bgColor ? '1' : '0.2';
-    bgInp.addEventListener('input', (function(r, bi){ return function(){
-      r.bgColor = bi.value; bi.style.opacity = '1'; applyRowBg(r.id, bi.value);
-    }; })(row, bgInp));
-    bgInp.addEventListener('contextmenu', (function(r, bi){ return function(e){
+    bgInp.addEventListener('input', (function(r, bi, tref){ return function(){
+      r.bgColor = bi.value; bi.style.opacity = '1';
+      Array.from(tref.children).forEach(function(td){ td.style.backgroundColor = bi.value; });
+    }; })(row, bgInp, tr));
+    bgInp.addEventListener('contextmenu', (function(r, bi, tref){ return function(e){
       e.preventDefault(); e.stopPropagation();
-      r.bgColor = ''; bi.style.opacity = '0.2'; applyRowBg(r.id, '');
-    }; })(row, bgInp));
+      r.bgColor = ''; bi.style.opacity = '0.2';
+      Array.from(tref.children).forEach(function(td){ td.style.backgroundColor = ''; });
+    }; })(row, bgInp, tr));
     bgInp.addEventListener('click', function(e){ e.stopPropagation(); });
     tdBg.appendChild(bgInp);
     tr.appendChild(tdBg);
