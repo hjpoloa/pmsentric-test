@@ -13,7 +13,7 @@
   --steel:#2E5F8A;--steel-light:#7A9AB8;
   --text:#e2eaf4;--tm:#5a7a96;--td:#3d5a75;
   --row-h:30px;
-  --panel-w:570px;
+  --panel-w:720px;
   --tbl-fs:12px;
   --clr-wbs-txt:#C9A84C;
   --clr-act-txt:#e2eaf4;
@@ -114,7 +114,7 @@ body.light input[type="date"].tb-input{color-scheme:light;}
 .main{display:flex;flex:1;overflow:hidden;}
 
 /* ── Table: head + body use matched <table> with colgroup ── */
-.left-panel{display:flex;flex-direction:column;width:var(--panel-w,570px);min-width:200px;flex-shrink:0;border-right:none;overflow:hidden;position:relative;font-size:var(--tbl-fs);}
+.left-panel{display:flex;flex-direction:column;width:var(--panel-w,720px);min-width:200px;flex-shrink:0;border-right:none;overflow:hidden;position:relative;font-size:var(--tbl-fs);}
 #tblHeadWrap{overflow:hidden;flex-shrink:0;background:var(--surface2);border-bottom:1px solid var(--border);}
 #tblHeadWrap table{width:max-content;border-collapse:collapse;table-layout:fixed;}
 #tblHeadWrap thead th{
@@ -1592,8 +1592,16 @@ function buildColgroup(target) {
   target.insertAdjacentHTML('afterbegin', cg);
 }
 
+var _panelInitialized = false;
 function buildTableHeader() {
   applyTableWidth();
+  // On first load only: snap panel width to exact column total so resizer sits flush at right edge
+  if (!_panelInitialized) {
+    _panelInitialized = true;
+    var totalW = getTotalColWidth();
+    var lp = document.getElementById('leftPanel');
+    if (lp) { lp.style.width = totalW + 'px'; document.documentElement.style.setProperty('--panel-w', totalW + 'px'); }
+  }
   buildColgroup(document.getElementById('tblHeadTable'));
   buildColgroup(document.getElementById('tblBodyTable'));
   document.getElementById('tblHeaderRow').innerHTML = COLS.map(function(c, i){
