@@ -258,6 +258,12 @@ canvas{display:block;}
   <label style="display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:.82em;color:var(--tm);cursor:pointer;white-space:nowrap;">
     <input type="checkbox" id="showDd" checked onchange="redrawGantt()" style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer;"> Show DD
   </label>
+  <label style="display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:.82em;color:var(--tm);cursor:pointer;white-space:nowrap;">
+    <input type="checkbox" id="showDdLbl" checked onchange="redrawGantt()" style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer;"> DD Label
+  </label>
+  <label style="display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:.82em;color:var(--tm);cursor:pointer;white-space:nowrap;">
+    <input type="checkbox" id="showFinDate" onchange="redrawGantt()" style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer;"> Fin Date
+  </label>
   <button class="color-pill" onclick="showColorPicker(event,'dd')" title="Data Date line colour"><div class="color-swatch" id="swDd" style="background:#e05252"></div><span>DD Colour</span></button>
   <div class="tb-sep"></div>
   <span class="tb-label">Scale</span>
@@ -1019,11 +1025,14 @@ function drawBody(cols, CW, TW, gs, ge, vr) {
     var ddBottom = vr.length > 0 ? vr.length * RH : RH * 3;
     ctx.strokeStyle=clrDd; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
     ctx.beginPath(); ctx.moveTo(ddx,0); ctx.lineTo(ddx,ddBottom); ctx.stroke(); ctx.setLineDash([]);
-    ctx.font="bold 8px 'DM Mono',monospace"; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
-    var ddLblW = ctx.measureText('DD').width + 6;
-    ctx.fillStyle = document.body.classList.contains('light') ? 'rgba(238,241,247,.88)' : 'rgba(8,10,15,.85)';
-    ctx.fillRect(ddx+1, ddBottom-14, ddLblW, 12);
-    ctx.fillStyle=clrDd; ctx.fillText('DD',ddx+4,ddBottom-4);
+    var showDdLblChk = document.getElementById('showDdLbl');
+    if (showDdLblChk && showDdLblChk.checked) {
+      ctx.font="bold 8px 'DM Mono',monospace"; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+      var ddLblW = ctx.measureText('DD').width + 6;
+      ctx.fillStyle = document.body.classList.contains('light') ? 'rgba(238,241,247,.88)' : 'rgba(8,10,15,.85)';
+      ctx.fillRect(ddx+1, ddBottom-14, ddLblW, 12);
+      ctx.fillStyle=clrDd; ctx.fillText('DD',ddx+4,ddBottom-4);
+    }
   }
   vr.forEach(function(row, ri){
     var cy = ri*RH + RH/2;
@@ -1065,6 +1074,30 @@ function drawBody(cols, CW, TW, gs, ge, vr) {
       ctx.fillStyle='rgba(255,255,255,.09)'; rr(ctx,x1,by,bw,BH/2.5,3); ctx.fill();
     }
   });
+
+  // ── Finish date labels (rendered after bars so they sit on top) ─
+  var showFin = document.getElementById('showFinDate');
+  if (showFin && showFin.checked) {
+    ctx.font = "9px 'DM Mono',monospace"; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    var isLight = document.body.classList.contains('light');
+    vr.forEach(function(row, ri) {
+      var cy = ri * RH + RH / 2;
+      var fd = parseDate(row.finish), sd = parseDate(row.start);
+      var isMsRow = row.type === 'ms-start' || row.type === 'ms-finish';
+      var anchorDate = isMsRow ? (row.type === 'ms-start' ? sd : fd) : fd;
+      if (!anchorDate) return;
+      var fx = dx(anchorDate, gs, ge, TW);
+      if (fx === null) return;
+      var lbl = fmtDate(isMsRow ? (row.type === 'ms-start' ? row.start : row.finish) : row.finish);
+      if (!lbl) return;
+      var lw = ctx.measureText(lbl).width;
+      var lx = fx + 6;
+      if (lx + lw > TW - 2) lx = fx - lw - 6;
+      if (lx < 0) return;
+      ctx.fillStyle = isLight ? 'rgba(26,37,53,.82)' : 'rgba(226,234,244,.82)';
+      ctx.fillText(lbl, lx, cy);
+    });
+  }
 }
 
 // ── SCROLL SYNC ───────────────────────────────────────────────
