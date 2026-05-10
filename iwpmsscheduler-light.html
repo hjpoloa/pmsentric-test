@@ -571,14 +571,16 @@ function renderTable() {
     bgInp.value = row.bgColor || '#111827';
     bgInp.title = 'Row background color — right-click to clear';
     bgInp.style.opacity = row.bgColor ? '1' : '0.2';
-    bgInp.addEventListener('input', (function(r, bi, tref){ return function(){
+    var _bgApply = (function(r, bi, tref){ return function(){
       r.bgColor = bi.value; bi.style.opacity = '1';
-      Array.from(tref.children).forEach(function(td){ td.style.backgroundColor = bi.value; });
-    }; })(row, bgInp, tr));
+      Array.from(tref.children).forEach(function(td){ td.style.setProperty('background-color', bi.value, 'important'); });
+    }; })(row, bgInp, tr);
+    bgInp.addEventListener('input', _bgApply);
+    bgInp.addEventListener('change', _bgApply);
     bgInp.addEventListener('contextmenu', (function(r, bi, tref){ return function(e){
       e.preventDefault(); e.stopPropagation();
       r.bgColor = ''; bi.style.opacity = '0.2';
-      Array.from(tref.children).forEach(function(td){ td.style.backgroundColor = ''; });
+      Array.from(tref.children).forEach(function(td){ td.style.removeProperty('background-color'); });
     }; })(row, bgInp, tr));
     bgInp.addEventListener('click', function(e){ e.stopPropagation(); });
     tdBg.appendChild(bgInp);
@@ -710,7 +712,7 @@ function renderTable() {
     }
     // Apply custom row background to all TDs
     if (row.bgColor) {
-      Array.from(tr.children).forEach(function(td){ td.style.backgroundColor = row.bgColor; });
+      Array.from(tr.children).forEach(function(td){ td.style.setProperty('background-color', row.bgColor, 'important'); });
     }
     tbody.appendChild(tr);
   });
