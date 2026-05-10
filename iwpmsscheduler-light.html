@@ -92,6 +92,21 @@ body.light input[type="date"].tb-input{color-scheme:light;}
 .color-pill:hover{border-color:var(--steel-light);}
 .color-swatch{width:14px;height:14px;border-radius:3px;border:1px solid rgba(255,255,255,.1);flex-shrink:0;}
 .color-inp{opacity:0;position:absolute;width:1px;height:1px;}
+/* 32-colour palette picker */
+#rowColorPicker{position:fixed;z-index:9999;display:none;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px;box-shadow:0 8px 28px rgba(0,0,0,.7);}
+#rowColorPicker .cp-grid{display:grid;grid-template-columns:repeat(8,22px);gap:3px;}
+#rowColorPicker .cp-sw{width:22px;height:22px;border-radius:3px;cursor:pointer;border:2px solid transparent;transition:border-color .1s,transform .1s;box-sizing:border-box;display:block;}
+#rowColorPicker .cp-sw:hover{border-color:#fff;transform:scale(1.18);}
+#rowColorPicker .cp-sw.active{border-color:var(--accent);}
+#rowColorPicker .cp-footer{display:flex;gap:6px;margin-top:7px;}
+#rowColorPicker .cp-clear{flex:1;padding:3px 0;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--tm);font-family:'DM Mono',monospace;font-size:.78em;cursor:pointer;}
+#rowColorPicker .cp-clear:hover{border-color:var(--accent);color:var(--accent);}
+/* Row swatch button (replaces input[type=color]) */
+.row-sw{width:20px;height:20px;border-radius:3px;border:1px solid rgba(255,255,255,.22);cursor:pointer;padding:0;flex-shrink:0;background:#333;}
+.row-sw.dim{opacity:.22;}
+/* Mini select for per-row font size & row height */
+.mini-sel{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:4px;font-family:'DM Mono',monospace;font-size:.78em;padding:1px 1px;cursor:pointer;width:46px;text-align:center;appearance:none;-webkit-appearance:none;}
+.mini-sel:focus{outline:none;border-color:var(--accent);}
 
 #freeBanner{display:none;align-items:center;gap:8px;padding:6px 20px;background:rgba(201,168,76,.07);border-bottom:1px solid rgba(201,168,76,.2);color:var(--accent);flex-shrink:0;}
 #freeBanner a{color:var(--accent);text-decoration:underline;cursor:pointer;margin-left:4px;}
@@ -163,9 +178,6 @@ body.light input[type="date"].tb-input{color-scheme:light;}
 .date-inp{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
 
 /* Color swatch cell */
-.row-clr{width:18px;height:18px;border-radius:3px;border:1px solid rgba(255,255,255,.2);cursor:pointer;padding:0;display:block;flex-shrink:0;}
-.row-clr::-webkit-color-swatch-wrapper{padding:0;border-radius:2px;}
-.row-clr::-webkit-color-swatch{border:none;border-radius:2px;}
 /* Locked date cell (milestone) */
 .date-locked{color:var(--td);font-family:'DM Mono',monospace;font-size:.85em;letter-spacing:.5px;}
 .add-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 12px;margin:8px 12px;border-radius:6px;border:1px dashed var(--border2);color:var(--tm);cursor:pointer;transition:all .18s;font-size:.9em;}
@@ -257,10 +269,7 @@ canvas{display:block;}
   <span class="tb-label">End</span>
   <input type="date" class="tb-input tb-sm" id="ganttEnd" oninput="redrawGantt()">
   <div class="tb-sep"></div>
-  <label class="color-pill"><div class="color-swatch" id="swDd" style="background:#e05252"></div><span>Data Date</span><input type="color" class="color-inp" id="cpDd" value="#e05252" oninput="applyColor('dd',this.value)"></label>
-  <div class="tb-sep"></div>
-  <label class="color-pill" title="WBS row name text color"><div class="color-swatch" id="swWbsTxt" style="background:#C9A84C"></div><span>WBS Text</span><input type="color" class="color-inp" id="cpWbsTxt" value="#C9A84C" oninput="applyTxtColor('wbs',this.value)"></label>
-  <label class="color-pill" title="Activity row name text color"><div class="color-swatch" id="swActTxt" style="background:#e2eaf4"></div><span>Act Text</span><input type="color" class="color-inp" id="cpActTxt" value="#e2eaf4" oninput="applyTxtColor('act',this.value)"></label>
+  <button class="color-pill" onclick="showColorPicker(event,'dd')" title="Data Date line colour"><div class="color-swatch" id="swDd" style="background:#e05252"></div><span>Data Date</span></button>
   <div class="tb-sep"></div>
   <span class="tb-label">Zoom</span>
   <button class="btn bg" style="padding:3px 9px;font-size:14px;line-height:1;" onclick="changeZoom(-1)" title="Zoom out">−</button>
@@ -393,7 +402,6 @@ const FREE_CAP = 5;
 let _isPro = false, _currentUser = null;
 let rows = [], nextId = 1, selectedId = null, ctxTargetId = null, _sl = false;
 let clrBar = '#2E5F8A', clrMs = '#C9A84C', clrDd = '#e05252';
-let clrWbsTxt = '#C9A84C', clrActTxt = '#e2eaf4';
 
 // ── THEME ─────────────────────────────────────────────────────
 function getTheme() {
@@ -524,6 +532,9 @@ function renderTable() {
     if (blocked) cls += (cls ? ' ' : '') + 'ghost';
     if (cls) tr.className = cls;
     tr.dataset.id = row.id;
+    // Per-row size overrides
+    if (row.fontSize) tr.style.fontSize = row.fontSize + 'px';
+    if (row.rowHeight) tr.style.setProperty('--row-h', row.rowHeight + 'px');
 
     // ── Controls cell ──
     var tdCtrl = document.createElement('td');
@@ -545,46 +556,109 @@ function renderTable() {
     tdCtrl.appendChild(ca);
     tr.appendChild(tdCtrl);
 
-    // ── Color cell ──
+    // ── Bar Color cell (swatch → custom picker) ──
     var tdClr = document.createElement('td');
-    tdClr.className = 'center';
-    tdClr.style.padding = '0 4px';
+    tdClr.className = 'center'; tdClr.style.padding = '0 4px';
     if (!row.color) row.color = (row.type==='wbs'||row.type==='ms-start'||row.type==='ms-finish') ? '#C9A84C' : '#2E5F8A';
-    var clrInp = document.createElement('input');
-    clrInp.type = 'color';
-    clrInp.className = 'row-clr';
-    clrInp.value = row.color;
-    clrInp.title = 'Row color';
-    clrInp.addEventListener('input', (function(r, ci){ return function(){ r.color = ci.value; redrawGantt(); }; })(row, clrInp));
-    clrInp.addEventListener('click', function(e){ e.stopPropagation(); });
-    tdClr.appendChild(clrInp);
+    var clrSw = document.createElement('button');
+    clrSw.className = 'row-sw'; clrSw.title = 'Gantt bar colour';
+    clrSw.style.background = row.color;
+    clrSw.addEventListener('click', (function(r, sw){ return function(e){
+      e.stopPropagation();
+      showColorPicker(e, null, r.color, function(c){ r.color = c; sw.style.background = c; redrawGantt(); });
+    }; })(row, clrSw));
+    tdClr.appendChild(clrSw);
     tr.appendChild(tdClr);
 
-    // ── BG color cell ──
+    // ── BG Color cell (swatch → custom picker) ──
     var tdBg = document.createElement('td');
-    tdBg.className = 'center';
-    tdBg.style.padding = '0 4px';
+    tdBg.className = 'center'; tdBg.style.padding = '0 4px';
     if (!row.bgColor) row.bgColor = '';
-    var bgInp = document.createElement('input');
-    bgInp.type = 'color';
-    bgInp.className = 'row-clr';
-    bgInp.value = row.bgColor || '#111827';
-    bgInp.title = 'Row background color — right-click to clear';
-    bgInp.style.opacity = row.bgColor ? '1' : '0.2';
-    var _bgApply = (function(r, bi, tref){ return function(){
-      r.bgColor = bi.value; bi.style.opacity = '1';
-      Array.from(tref.children).forEach(function(td){ td.style.setProperty('background-color', bi.value, 'important'); });
-    }; })(row, bgInp, tr);
-    bgInp.addEventListener('input', _bgApply);
-    bgInp.addEventListener('change', _bgApply);
-    bgInp.addEventListener('contextmenu', (function(r, bi, tref){ return function(e){
+    var bgSw = document.createElement('button');
+    bgSw.className = 'row-sw' + (row.bgColor ? '' : ' dim');
+    bgSw.title = 'Row background colour — right-click to clear';
+    bgSw.style.background = row.bgColor || '#111827';
+    var _bgApply = (function(r, sw, tref){ return function(c){
+      r.bgColor = c; sw.style.background = c; sw.classList.remove('dim');
+      Array.from(tref.children).forEach(function(td){ td.style.setProperty('background-color', c, 'important'); });
+    }; })(row, bgSw, tr);
+    bgSw.addEventListener('click', (function(r, sw){ return function(e){
+      e.stopPropagation();
+      showColorPicker(e, null, r.bgColor || '#111827', _bgApply);
+    }; })(row, bgSw));
+    bgSw.addEventListener('contextmenu', (function(r, sw, tref){ return function(e){
       e.preventDefault(); e.stopPropagation();
-      r.bgColor = ''; bi.style.opacity = '0.2';
+      r.bgColor = ''; sw.classList.add('dim'); sw.style.background = '#111827';
       Array.from(tref.children).forEach(function(td){ td.style.removeProperty('background-color'); });
-    }; })(row, bgInp, tr));
-    bgInp.addEventListener('click', function(e){ e.stopPropagation(); });
-    tdBg.appendChild(bgInp);
+    }; })(row, bgSw, tr));
+    tdBg.appendChild(bgSw);
     tr.appendChild(tdBg);
+
+    // ── Text Color cell (swatch → custom picker) ──
+    var tdTxt = document.createElement('td');
+    tdTxt.className = 'center'; tdTxt.style.padding = '0 4px';
+    if (!row.txtColor) row.txtColor = '';
+    var defTxtClr = (row.type==='wbs') ? '#C9A84C' : '#e2eaf4';
+    var txtSw = document.createElement('button');
+    txtSw.className = 'row-sw' + (row.txtColor ? '' : ' dim');
+    txtSw.title = 'Row text colour — right-click to reset';
+    txtSw.style.background = row.txtColor || defTxtClr;
+    var _txtApply; // forward ref for name input
+    txtSw.addEventListener('click', (function(r, sw){ return function(e){
+      e.stopPropagation();
+      showColorPicker(e, null, r.txtColor || defTxtClr, function(c){
+        r.txtColor = c; sw.style.background = c; sw.classList.remove('dim');
+        if (_txtApply) _txtApply(c);
+      });
+    }; })(row, txtSw));
+    txtSw.addEventListener('contextmenu', (function(r, sw){ return function(e){
+      e.preventDefault(); e.stopPropagation();
+      r.txtColor = ''; sw.classList.add('dim'); sw.style.background = defTxtClr;
+      if (_txtApply) _txtApply('');
+    }; })(row, txtSw));
+    tdTxt.appendChild(txtSw);
+    tr.appendChild(tdTxt);
+
+    // ── Font Size cell (mini select) ──
+    var tdFs = document.createElement('td');
+    tdFs.className = 'center'; tdFs.style.padding = '0 3px';
+    if (!row.fontSize) row.fontSize = '';
+    var fsSel = document.createElement('select');
+    fsSel.className = 'mini-sel'; fsSel.title = 'Row font size';
+    [['','def'],['9','9'],['10','10'],['11','11'],['12','12'],['13','13'],['14','14'],['16','16'],['18','18']].forEach(function(opt){
+      var o = document.createElement('option');
+      o.value = opt[0]; o.textContent = opt[1];
+      if (opt[0] === String(row.fontSize)) o.selected = true;
+      fsSel.appendChild(o);
+    });
+    fsSel.addEventListener('change', (function(r){ return function(){
+      r.fontSize = fsSel.value;
+      tr.style.fontSize = r.fontSize ? r.fontSize + 'px' : '';
+    }; })(row));
+    fsSel.addEventListener('click', function(e){ e.stopPropagation(); });
+    tdFs.appendChild(fsSel);
+    tr.appendChild(tdFs);
+
+    // ── Row Height cell (mini select) ──
+    var tdRh = document.createElement('td');
+    tdRh.className = 'center'; tdRh.style.padding = '0 3px';
+    if (!row.rowHeight) row.rowHeight = '';
+    var rhSel = document.createElement('select');
+    rhSel.className = 'mini-sel'; rhSel.title = 'Row height';
+    [['','def'],['22','22'],['26','26'],['30','30'],['34','34'],['38','38'],['44','44'],['52','52']].forEach(function(opt){
+      var o = document.createElement('option');
+      o.value = opt[0]; o.textContent = opt[1];
+      if (opt[0] === String(row.rowHeight)) o.selected = true;
+      rhSel.appendChild(o);
+    });
+    rhSel.addEventListener('change', (function(r){ return function(){
+      r.rowHeight = rhSel.value;
+      if (r.rowHeight) tr.style.setProperty('--row-h', r.rowHeight + 'px');
+      else tr.style.removeProperty('--row-h');
+    }; })(row));
+    rhSel.addEventListener('click', function(e){ e.stopPropagation(); });
+    tdRh.appendChild(rhSel);
+    tr.appendChild(tdRh);
 
     // ── WBS Level cell ──
     var tdLvl = document.createElement('td');
@@ -605,7 +679,10 @@ function renderTable() {
     nameWrap.className = 'cell-name-inner';
     // No MS badge — milestone type shown via diamond on Gantt only
     var ni = document.createElement('input');
-    ni.style.cssText = 'background:transparent;border:1px solid transparent;border-radius:3px;color:'+(row.type==='wbs'?'var(--clr-wbs-txt)':'var(--clr-act-txt)')+';padding:1px 4px;font-family:\'Sora\',sans-serif;font-size:inherit;width:100%;outline:none;transition:border-color .15s,background .15s;'+(row.type==='wbs'?'font-weight:700;':'');
+    var activeTxtClr = row.txtColor || (row.type==='wbs' ? '#C9A84C' : '#e2eaf4');
+    ni.style.cssText = 'background:transparent;border:1px solid transparent;border-radius:3px;color:'+activeTxtClr+';padding:1px 4px;font-family:\'Sora\',sans-serif;font-size:inherit;width:100%;outline:none;transition:border-color .15s,background .15s;'+(row.type==='wbs'?'font-weight:700;':'');
+    // Allow txt swatch to update name color live
+    _txtApply = function(c){ ni.style.color = c || (row.type==='wbs' ? '#C9A84C' : '#e2eaf4'); };
     ni.value = row.name; ni.placeholder = 'Enter name\u2026';
     ni.addEventListener('input', function(){ row.name = ni.value; });
     ni.addEventListener('focus', function(){ selectedId = row.id; });
@@ -710,7 +787,7 @@ function renderTable() {
       tr.addEventListener('click', function(e){ e.stopPropagation(); selectedId = row.id; renderTableSel(); });
       tr.addEventListener('contextmenu', function(e){ e.preventDefault(); e.stopPropagation(); showCtx(e, row.id); });
     }
-    // Apply custom row background to all TDs
+    // Re-apply stored background on full render
     if (row.bgColor) {
       Array.from(tr.children).forEach(function(td){ td.style.setProperty('background-color', row.bgColor, 'important'); });
     }
@@ -748,9 +825,9 @@ function renderTableWbsDates() {
     var row = rows.find(function(r){ return r.id === id; });
     if (!row || row.type !== 'wbs') return;
     var tds = tr.querySelectorAll('td');
-    // start = td[5], finish = td[6] (BG col added at index 2)
-    var sSpan = tds[5] && tds[5].querySelector('.cell-date-txt');
-    var fSpan = tds[6] && tds[6].querySelector('.cell-date-txt');
+    // start = td[8], finish = td[9] (txt/fs/rh cols added at index 3-5)
+    var sSpan = tds[8] && tds[8].querySelector('.cell-date-txt');
+    var fSpan = tds[9] && tds[9].querySelector('.cell-date-txt');
     if (sSpan) sSpan.textContent = fmtDate(row.start) || '';
     if (fSpan) fSpan.textContent = fmtDate(row.finish) || '';
   });
@@ -784,7 +861,7 @@ function addRow(type) {
   var level = suggestLevel(insertIdx);
   var name = type==='wbs'?'New WBS Level':type==='ms-start'?'Start Milestone':type==='ms-finish'?'Finish Milestone':'New Activity';
   var defClr = type==='wbs' ? '#C9A84C' : type==='ms-start'||type==='ms-finish' ? '#C9A84C' : '#2E5F8A';
-  var newRow = { id: nextId++, type: type, level: level, name: name, start: '', finish: '', color: defClr, bgColor: '' };
+  var newRow = { id: nextId++, type: type, level: level, name: name, start: '', finish: '', color: defClr, bgColor: '', txtColor: '', fontSize: '', rowHeight: '' };
   rows.splice(insertIdx, 0, newRow);
   selectedId = newRow.id;
   render();
@@ -1003,17 +1080,58 @@ function syncScroll(el)  {
 }
 function syncScrollR(el) { if(_sl)return; _sl=true; document.getElementById('tblBody').scrollTop=el.scrollTop; document.getElementById('gHeadWrap').scrollLeft=el.scrollLeft; _sl=false; }
 
+// ── 32-COLOUR PALETTE PICKER ──────────────────────────────────
+var _cpDiv = null, _cpCallback = null;
+var CP_PALETTE = [
+  // Whites / Grays / Darks
+  '#FFFFFF','#E2EAF4','#A0AEBF','#5A7A96','#3D5A75','#1E2D45','#111827','#080A0F',
+  // Golds / Oranges / Reds / Pinks / Purples
+  '#FFD700','#C9A84C','#E08030','#E05252','#C0392B','#8B0000','#FF6B9D','#9B59B6',
+  // Light Blues / Blues / Navy / Teals / Greens
+  '#7AB8D4','#2E5F8A','#1565C0','#0D47A1','#26A69A','#00796B','#2E7D32','#388E3C',
+  // Light Greens / Yellows / Amber / Warm Reds / Browns / Slates
+  '#66BB6A','#8BC34A','#CDDC39','#FFEB3B','#FF9800','#FF5722','#795548','#607D8B'
+];
+function initColorPicker() {
+  _cpDiv = document.createElement('div');
+  _cpDiv.id = 'rowColorPicker';
+  var grid = document.createElement('div');
+  grid.className = 'cp-grid';
+  CP_PALETTE.forEach(function(c) {
+    var sw = document.createElement('div');
+    sw.className = 'cp-sw'; sw.style.background = c; sw.title = c;
+    sw.addEventListener('mousedown', function(e){ e.preventDefault(); e.stopPropagation(); hideColorPicker(); if(_cpCallback) _cpCallback(c); });
+    grid.appendChild(sw);
+  });
+  _cpDiv.appendChild(grid);
+  var footer = document.createElement('div'); footer.className = 'cp-footer';
+  var clrBtn = document.createElement('button'); clrBtn.className = 'cp-clear'; clrBtn.textContent = '✕ clear';
+  clrBtn.addEventListener('mousedown', function(e){ e.preventDefault(); e.stopPropagation(); hideColorPicker(); if(_cpCallback) _cpCallback(null); });
+  footer.appendChild(clrBtn);
+  _cpDiv.appendChild(footer);
+  document.body.appendChild(_cpDiv);
+  document.addEventListener('click', function(){ hideColorPicker(); }, true);
+}
+function showColorPicker(e, toolbarKey, currentClr, callback) {
+  e.stopPropagation();
+  if (!_cpDiv) initColorPicker();
+  _cpCallback = toolbarKey ? function(c){ applyColor(toolbarKey, c); } : callback;
+  // Highlight current colour
+  _cpDiv.querySelectorAll('.cp-sw').forEach(function(sw){
+    sw.classList.toggle('active', sw.title === (currentClr||'').toUpperCase() || sw.title === (currentClr||''));
+  });
+  var rect = e.currentTarget ? e.currentTarget.getBoundingClientRect() : e.target.getBoundingClientRect();
+  _cpDiv.style.display = 'block';
+  var pw = 8*22 + 7*3 + 16; // 8 cols * 22 + gaps + padding
+  var left = Math.min(rect.left, window.innerWidth - pw - 8);
+  _cpDiv.style.left = left + 'px';
+  _cpDiv.style.top  = (rect.bottom + 4) + 'px';
+}
+function hideColorPicker() { if(_cpDiv) _cpDiv.style.display='none'; _cpCallback=null; }
+
 // ── COLOR PICKERS ─────────────────────────────────────────────
 function applyColor(t, v) {
-  if(t==='dd') {clrDd=v; document.getElementById('swDd').style.background=v;}
-  redrawGantt();
-}
-
-// ── TEXT COLOR ────────────────────────────────────────────────
-function applyTxtColor(t, v) {
-  if(t==='wbs'){clrWbsTxt=v;document.getElementById('swWbsTxt').style.background=v;document.documentElement.style.setProperty('--clr-wbs-txt',v);}
-  if(t==='act'){clrActTxt=v;document.getElementById('swActTxt').style.background=v;document.documentElement.style.setProperty('--clr-act-txt',v);}
-  renderTable();
+  if(t==='dd') { if(v) { clrDd=v; document.getElementById('swDd').style.background=v; } redrawGantt(); }
 }
 
 // ── CELL SHADING ──────────────────────────────────────────────
@@ -1453,14 +1571,17 @@ function renderAppUserPill(user, licenseActive) {
 
 // ── COLUMNS (CP-analyzer style) ───────────────────────────────
 var COLS = [
-  { key:'ctrl',  label:'Controls', width:76,  align:'center' },
-  { key:'clr',   label:'Color',    width:36,  align:'center' },
-  { key:'bg',    label:'BG',       width:36,  align:'center' },
-  { key:'lvl',   label:'WBS Lvl',  width:60,  align:'center' },
-  { key:'name',  label:'Name',     width:160, align:'left'   },
-  { key:'start', label:'Start',    width:96,  align:'center' },
-  { key:'fin',   label:'Finish',   width:96,  align:'center' },
-  { key:'dur',   label:'Dur',      width:44,  align:'center' },
+  { key:'ctrl', label:'Controls', width:76,  align:'center' },
+  { key:'clr',  label:'Bar Clr',  width:28,  align:'center' },
+  { key:'bg',   label:'BG Clr',   width:28,  align:'center' },
+  { key:'txt',  label:'Txt Clr',  width:28,  align:'center' },
+  { key:'fs',   label:'Font',     width:52,  align:'center' },
+  { key:'rh',   label:'Height',   width:52,  align:'center' },
+  { key:'lvl',  label:'WBS Lvl',  width:60,  align:'center' },
+  { key:'name', label:'Name',     width:160, align:'left'   },
+  { key:'start',label:'Start',    width:96,  align:'center' },
+  { key:'fin',  label:'Finish',   width:96,  align:'center' },
+  { key:'dur',  label:'Dur',      width:44,  align:'center' },
 ];
 var colWidths = {};
 COLS.forEach(function(c){ colWidths[c.key] = c.width; });
