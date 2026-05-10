@@ -437,6 +437,7 @@ function parseDate(s) {
   return new Date(p[0], p[1] - 1, p[2]);
 }
 function addDays(d, n) { var r = new Date(d); r.setDate(r.getDate() + n); return r; }
+function toInputDate(d) { var m=d.getMonth()+1,dy=d.getDate(); return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(dy<10?'0':'')+dy; }
 function isoWk(d) {
   var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   var dy = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - dy);
@@ -958,13 +959,33 @@ function redrawGantt() {
   var gs = parseDate(document.getElementById('ganttStart').value);
   var ge = parseDate(document.getElementById('ganttEnd').value);
   if (!gs||!ge||ge<=gs) return;
+
+  // ── Auto-expand: push gantt end 2 weeks past the latest activity finish ──
+  var maxFinish = null;
+  var minStart  = null;
+  rows.forEach(function(row) {
+    var fd = (row.type === 'ms-start') ? parseDate(row.start) : parseDate(row.finish);
+    if (fd && (!maxFinish || fd > maxFinish)) maxFinish = fd;
+    var sd = (row.type === 'ms-finish') ? parseDate(row.finish) : parseDate(row.start);
+    if (sd && (!minStart || sd < minStart)) minStart = sd;
+  });
+  if (maxFinish && maxFinish > ge) {
+    ge = addDays(maxFinish, 14);
+    document.getElementById('ganttEnd').value = toInputDate(ge);
+  }
+  if (minStart && minStart < gs) {
+    gs = addDays(minStart, -14);
+    document.getElementById('ganttStart').value = toInputDate(gs);
+  }
+
   var scale = document.getElementById('scaleMode').value;
   var cols  = buildCols(gs, ge, scale);
   var BASE  = scale==='day'?24 : scale==='week'?52 : scale==='month'?80 : 130;
   var CW;
   if (_fitMode && cols.length) {
-    var scrl = document.getElementById('gScroll');
-    var avail = Math.max(100, (scrl ? scrl.clientWidth : 600) - 2);
+    var scrl  = document.getElementById('gScroll');
+    var rect  = scrl.getBoundingClientRect();
+    var avail = Math.max(100, rect.width > 0 ? rect.width : (scrl.offsetWidth || 600));
     CW = Math.max(2, Math.floor(avail / cols.length));
   } else {
     CW = Math.round(BASE * _zoom);
