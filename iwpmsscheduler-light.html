@@ -13,7 +13,7 @@
   --steel:#2E5F8A;--steel-light:#7A9AB8;
   --text:#e2eaf4;--tm:#5a7a96;--td:#3d5a75;
   --row-h:30px;
-  --panel-w:720px;
+  --panel-w:804px;
   --tbl-fs:12px;
   --clr-wbs-txt:#C9A84C;
   --clr-act-txt:#e2eaf4;
@@ -114,11 +114,11 @@ body.light input[type="date"].tb-input{color-scheme:light;}
 .main{display:flex;flex:1;overflow:hidden;}
 
 /* ── Table: head + body use matched <table> with colgroup ── */
-.left-panel{display:flex;flex-direction:column;width:var(--panel-w,720px);min-width:200px;flex-shrink:0;border-right:none;overflow:hidden;position:relative;font-size:var(--tbl-fs);}
+.left-panel{display:flex;flex-direction:column;width:var(--panel-w,804px);min-width:200px;flex-shrink:0;border-right:none;overflow:hidden;position:relative;font-size:var(--tbl-fs);}
 #tblHeadWrap{overflow:hidden;flex-shrink:0;background:var(--surface2);border-bottom:1px solid var(--border);}
 #tblHeadWrap table{width:max-content;border-collapse:collapse;table-layout:fixed;}
 #tblHeadWrap thead th{
-  padding:0 8px;height:42px;text-align:left;
+  padding:0 5px;height:42px;text-align:left;
   font-size:.82em;font-weight:700;text-transform:uppercase;
   letter-spacing:.06em;color:var(--tm);font-family:'DM Mono',monospace;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -1563,12 +1563,12 @@ function renderAppUserPill(user, licenseActive) {
 // ── COLUMNS (CP-analyzer style) ───────────────────────────────
 var COLS = [
   { key:'ctrl', label:'Controls', width:76,  align:'center' },
-  { key:'clr',  label:'Bar Clr',  width:28,  align:'center' },
-  { key:'bg',   label:'BG Clr',   width:28,  align:'center' },
-  { key:'txt',  label:'Txt Clr',  width:28,  align:'center' },
-  { key:'fs',   label:'Font',     width:52,  align:'center' },
-  { key:'rh',   label:'Height',   width:52,  align:'center' },
-  { key:'lvl',  label:'WBS Lvl',  width:60,  align:'center' },
+  { key:'clr',  label:'Bar Clr',  width:56,  align:'center' },
+  { key:'bg',   label:'BG Clr',   width:52,  align:'center' },
+  { key:'txt',  label:'Txt Clr',  width:56,  align:'center' },
+  { key:'fs',   label:'Font',     width:48,  align:'center' },
+  { key:'rh',   label:'Height',   width:56,  align:'center' },
+  { key:'lvl',  label:'WBS Lvl',  width:64,  align:'center' },
   { key:'name', label:'Name',     width:160, align:'left'   },
   { key:'start',label:'Start',    width:96,  align:'center' },
   { key:'fin',  label:'Finish',   width:96,  align:'center' },
