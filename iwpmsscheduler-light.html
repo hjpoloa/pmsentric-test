@@ -82,8 +82,9 @@ header{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:
 .tb-label{font-size:.85em;color:var(--tm);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
 .tb-input{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:5px;padding:4px 8px;font-family:'DM Mono',monospace;width:110px;transition:border-color .18s;font-size:inherit;}
 .tb-input:focus{outline:none;border-color:var(--accent);}
-.tb-sm{width:82px;}
-.tb-select{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:5px;padding:4px 8px;font-family:'DM Mono',monospace;cursor:pointer;font-size:inherit;}
+.tb-sm{width:108px;}
+input[type="date"].tb-input{padding-right:2px;} /* keep browser calendar icon fully visible */
+.tb-select{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:5px;padding:4px 28px 4px 8px;font-family:'DM Mono',monospace;cursor:pointer;font-size:inherit;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a7a96'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
 .tb-select:focus{outline:none;border-color:var(--accent);}
 .color-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:5px;border:1px solid var(--border2);background:var(--surface2);cursor:pointer;font-size:.85em;color:var(--tm);transition:border-color .18s;position:relative;}
 .color-pill:hover{border-color:var(--steel-light);}
@@ -273,12 +274,12 @@ canvas{display:block;}
   <span id="rhLabel" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tm);min-width:32px;text-align:center;">30px</span>
   <div class="tb-sep"></div>
   <span class="tb-label">PDF</span>
-  <select class="tb-select" id="pdfPageSize" style="width:60px;">
+  <select class="tb-select" id="pdfPageSize" style="width:82px;">
     <option value="a4">A4</option>
     <option value="a3">A3</option>
     <option value="letter">Letter</option>
   </select>
-  <select class="tb-select" id="pdfOrientation" style="width:76px;">
+  <select class="tb-select" id="pdfOrientation" style="width:106px;">
     <option value="landscape">Landscape</option>
     <option value="portrait">Portrait</option>
   </select>
