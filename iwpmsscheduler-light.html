@@ -836,24 +836,30 @@ function buildCols(gs, ge, scale) {
   var cols = [], cur = new Date(gs);
   while (cur < ge) {
     var next, label, topLabel, topKey;
-    var shortLabel = '';
+    var topFallbacks;
     if (scale==='day') {
       next=addDays(cur,1); label=cur.getDate(); shortLabel='';
       topLabel=cur.toLocaleString('default',{month:'short',year:'numeric'}); topKey=cur.getFullYear()+'-'+cur.getMonth();
+      var _tl=String(topLabel),_mo=_tl.split(' ')[0],_yy=String(cur.getFullYear()).slice(-2);
+      topFallbacks=[_tl,_mo+'-'+_yy,_mo[0]+_yy,_mo[0]];
     } else if (scale==='week') {
       var dow=cur.getDay()||7; var mon=new Date(cur); mon.setDate(cur.getDate()-(dow-1));
       next=addDays(mon,7); if(next>ge)next=new Date(ge);
       var wn=isoWk(mon); label='W'+wn; shortLabel=String(wn);
       topLabel=mon.toLocaleString('default',{month:'short',year:'numeric'}); topKey=mon.getFullYear()+'-'+mon.getMonth(); cur=mon;
+      var _tl=String(topLabel),_mo=_tl.split(' ')[0],_yy=String(mon.getFullYear()).slice(-2);
+      topFallbacks=[_tl,_mo+'-'+_yy,_mo[0]+_yy,_mo[0]];
     } else if (scale==='month') {
       next=new Date(cur.getFullYear(),cur.getMonth()+1,1);
       label=cur.toLocaleString('default',{month:'short'}); shortLabel=String(cur.getMonth()+1); topLabel=cur.getFullYear(); topKey=String(cur.getFullYear());
+      topFallbacks=[String(cur.getFullYear()),String(cur.getFullYear()).slice(-2)];
     } else {
       var q=Math.floor(cur.getMonth()/3); next=new Date(cur.getFullYear(),q*3+3,1);
       label='Q'+(q+1); shortLabel=String(q+1); topLabel=cur.getFullYear(); topKey=String(cur.getFullYear());
+      topFallbacks=[String(cur.getFullYear()),String(cur.getFullYear()).slice(-2)];
     }
     if (next > ge) next = new Date(ge);
-    cols.push({start:new Date(cur),end:new Date(next),label:String(label),shortLabel:shortLabel,topLabel:String(topLabel),topKey:String(topKey)});
+    cols.push({start:new Date(cur),end:new Date(next),label:String(label),shortLabel:shortLabel,topLabel:String(topLabel),topFallbacks:topFallbacks,topKey:String(topKey)});
     cur = new Date(next);
   }
   return cols;
@@ -883,14 +889,16 @@ function drawHead(cols, CW, TW) {
   var ctx = cvs.getContext('2d'); ctx.scale(dpr,dpr);
   ctx.fillStyle=T.surface2; ctx.fillRect(0,0,TW,HH);
   var groups=[], ck=null;
-  cols.forEach(function(c,i){ var x=i*CW; if(c.topKey!==ck){if(ck!==null)groups[groups.length-1].ex=x; groups.push({label:c.topLabel,sx:x,ex:TW}); ck=c.topKey;} });
+  cols.forEach(function(c,i){ var x=i*CW; if(c.topKey!==ck){if(ck!==null)groups[groups.length-1].ex=x; groups.push({label:c.topLabel,fallbacks:c.topFallbacks,sx:x,ex:TW}); ck=c.topKey;} });
   ctx.fillStyle=T.head_top; ctx.fillRect(0,0,TW,HH1);
+  ctx.font="600 "+Math.round(_fs*0.85)+"px 'Sora',sans-serif"; ctx.textBaseline='middle'; ctx.textAlign='left';
   groups.forEach(function(g){
     ctx.strokeStyle=T.grid; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(g.sx+.5,0); ctx.lineTo(g.sx+.5,HH1); ctx.stroke();
-    ctx.fillStyle=T.steel_light; ctx.font="600 "+Math.round(_fs*0.85)+"px 'Sora',sans-serif"; ctx.textBaseline='middle';
-    ctx.save(); ctx.beginPath(); ctx.rect(g.sx+3,0,g.ex-g.sx-6,HH1); ctx.clip();
-    ctx.fillText(g.label,g.sx+6,HH1/2); ctx.restore();
+    var avail=g.ex-g.sx-6, lbl='';
+    var fbs=g.fallbacks||[g.label];
+    for(var fi=0;fi<fbs.length;fi++){ if(ctx.measureText(fbs[fi]).width<=avail){lbl=fbs[fi];break;} }
+    if(lbl){ ctx.fillStyle=T.steel_light; ctx.fillText(lbl,g.sx+4,HH1/2); }
   });
   ctx.fillStyle=T.head_bot; ctx.fillRect(0,HH1,TW,HH2);
   ctx.font="500 "+Math.round(_fs*0.75)+"px 'DM Mono',monospace";
@@ -1205,14 +1213,17 @@ function exportPDF(pageSize, orient, mode) {
     var groups=[],ck=null;
     gcols.forEach(function(c,i){
       var x=ganttX+i*CW;
-      if(c.topKey!==ck){if(ck!==null)groups[groups.length-1].ex=x; groups.push({label:c.topLabel,sx:x,ex:ganttX+ganttW}); ck=c.topKey;}
+      if(c.topKey!==ck){if(ck!==null)groups[groups.length-1].ex=x; groups.push({label:c.topLabel,fallbacks:c.topFallbacks,sx:x,ex:ganttX+ganttW}); ck=c.topKey;}
     });
     doc.setFont('helvetica','bold'); doc.setFontSize(5.5);
     doc.setTextColor.apply(doc, C.ganttTopTxt);
     groups.forEach(function(g){
       doc.setDrawColor.apply(doc, C.tblBorder); doc.setLineWidth(0.3);
       doc.line(g.sx, hdrY, g.sx, hdrY+GH1);
-      doc.text(g.label, g.sx+2, hdrY+GH1-2.5);
+      var avail=g.ex-g.sx-4, lbl='';
+      var fbs=g.fallbacks||[g.label];
+      for(var fi=0;fi<fbs.length;fi++){ if(doc.getTextWidth(fbs[fi])<=avail){lbl=fbs[fi];break;} }
+      if(lbl) doc.text(lbl, g.sx+2, hdrY+GH1-2.5);
     });
     doc.setFillColor.apply(doc, C.ganttBot); doc.rect(ganttX, hdrY+GH1, ganttW, GH2, 'F');
     doc.setFont('helvetica','normal'); doc.setFontSize(5);
