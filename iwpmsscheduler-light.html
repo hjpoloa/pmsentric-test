@@ -608,7 +608,8 @@ function renderTable() {
     txtSw.className = 'row-sw' + (row.txtColor ? '' : ' dim');
     txtSw.title = 'Row text colour — right-click to reset';
     txtSw.style.background = row.txtColor || defTxtClr;
-    var _txtApply; // forward ref for name input
+    var _txtApply; // forward ref for name input + all data cells
+    var _rowCells; // forward ref — set after cells are built
     txtSw.addEventListener('click', (function(r, sw){ return function(e){
       e.stopPropagation();
       showColorPicker(e, null, r.txtColor || defTxtClr, function(c){
@@ -686,8 +687,13 @@ function renderTable() {
     var ni = document.createElement('input');
     var activeTxtClr = row.txtColor || (row.type==='wbs' ? '#C9A84C' : '#e2eaf4');
     ni.style.cssText = 'background:transparent;border:1px solid transparent;border-radius:3px;color:'+activeTxtClr+';padding:1px 4px;font-family:\'Sora\',sans-serif;font-size:inherit;width:100%;outline:none;transition:border-color .15s,background .15s;'+(row.type==='wbs'?'font-weight:700;':'');
-    // Allow txt swatch to update name color live
-    _txtApply = function(c){ ni.style.color = c || (row.type==='wbs' ? '#C9A84C' : '#e2eaf4'); };
+    // _txtApply: live-update name + all other data cells when txt colour changes
+    _txtApply = function(c){
+      var clr = c || (row.type==='wbs' ? '#C9A84C' : '#e2eaf4');
+      ni.style.color = clr;
+      // updated after cells are built — references captured by closure below
+      if (_rowCells) _rowCells(clr);
+    };
     ni.value = row.name; ni.placeholder = 'Enter name\u2026';
     ni.addEventListener('input', function(){ row.name = ni.value; });
     ni.addEventListener('focus', function(){ selectedId = row.id; });
@@ -764,23 +770,24 @@ function renderTable() {
     tdDur.appendChild(durSpan);
     tr.appendChild(tdDur);
 
-    // ── Apply txtColor to all data cells (controls, level, dates, duration) ──
-    if (row.txtColor) {
-      var tc = row.txtColor;
-      // Controls arrow buttons — inline beats .arw class rule
-      Array.from(ca.querySelectorAll('.arw')).forEach(function(b){ b.style.color = tc; });
-      // WBS level badge/dots — has its own inline color, must target directly
-      var lvlEl = tdLvl.querySelector('.lvl-b, .lvl-a');
-      if (lvlEl) lvlEl.style.color = tc;
-      // Start date — target span directly (.date-lbl / .cell-date-txt have own color rules)
-      if (slbl) { slbl.style.color = tc; }
-      else { var _s = tdStart.querySelector('.cell-date-txt'); if (_s) _s.style.color = tc; }
-      // Finish date
-      if (flbl) { flbl.style.color = tc; }
-      else { var _f = tdFin.querySelector('.cell-date-txt'); if (_f) _f.style.color = tc; }
-      // Duration span — .cell-dur-txt has its own color rule
-      durSpan.style.color = tc;
-    }
+    // ── _rowCells: applies txtColor to controls, level, dates, duration ──
+    // Captured as closure so _txtApply can call it live when picker changes colour
+    var _rowCells = (function(arwBtns, lvlSpan, startSpan, finSpan, durSp){
+      return function(clr){
+        arwBtns.forEach(function(b){ b.style.color = clr; });
+        if (lvlSpan) lvlSpan.style.color = clr;
+        if (startSpan) startSpan.style.color = clr;
+        if (finSpan)   finSpan.style.color   = clr;
+        durSp.style.color = clr;
+      };
+    })(
+      Array.from(ca.querySelectorAll('.arw')),
+      tdLvl.querySelector('.lvl-b, .lvl-a'),
+      slbl || tdStart.querySelector('.cell-date-txt'),
+      flbl || tdFin.querySelector('.cell-date-txt'),
+      durSpan
+    );
+    if (row.txtColor) _rowCells(row.txtColor);
 
     // Patch date change handlers
     if (siEl) {
