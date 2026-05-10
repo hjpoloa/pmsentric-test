@@ -69,6 +69,9 @@ header{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:
 .bp:hover{box-shadow:0 0 16px rgba(201,168,76,.35);transform:translateY(-1px);}
 .bg{background:transparent;border:1px solid var(--border2);color:var(--tm);}
 .bg:hover{border-color:var(--accent);color:var(--accent);}
+.fbtn{background:var(--surface2);border:1px solid var(--border2);color:var(--tm);height:22px;padding:0 8px;border-radius:4px;cursor:pointer;font-family:'Sora',sans-serif;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
+.fbtn:hover{border-color:var(--accent);color:var(--accent);}
+.fbtn.act{background:var(--accent);border-color:var(--accent);color:#000;}
 .btn-ts{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-weight:600;cursor:pointer;border:1px solid rgba(200,146,42,.3);background:rgba(200,146,42,.07);color:#c8922a;transition:all .18s;white-space:nowrap;text-decoration:none;font-family:'Sora',sans-serif;}
 .btn-ts:hover{border-color:#c8922a;background:rgba(200,146,42,.16);}
 .badge-pro{display:inline-block;margin-left:4px;font-family:'DM Mono',monospace;font-size:.7em;padding:1px 5px;border-radius:3px;background:rgba(200,146,42,.15);color:#c8922a;border:1px solid rgba(200,146,42,.3);letter-spacing:.08em;}
@@ -280,6 +283,7 @@ canvas{display:block;}
   <input type="date" class="tb-input tb-sm" id="ganttEnd" oninput="redrawGantt()">
   <div class="tb-sep"></div>
   <div class="tb-sep"></div>
+  <button class="fbtn" id="fitBtn" onclick="toggleFit()" title="Fit entire schedule to visible Gantt pane">FIT</button>
   <span class="tb-label">Zoom</span>
   <button class="btn bg" style="padding:3px 9px;font-size:14px;line-height:1;" onclick="changeZoom(-1)" title="Zoom out">−</button>
   <span id="zoomLabel" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tm);min-width:32px;text-align:center;">1×</span>
@@ -957,7 +961,14 @@ function redrawGantt() {
   var scale = document.getElementById('scaleMode').value;
   var cols  = buildCols(gs, ge, scale);
   var BASE  = scale==='day'?24 : scale==='week'?52 : scale==='month'?80 : 130;
-  var CW    = Math.round(BASE * _zoom);
+  var CW;
+  if (_fitMode && cols.length) {
+    var scrl = document.getElementById('gScroll');
+    var avail = Math.max(100, (scrl ? scrl.clientWidth : 600) - 2);
+    CW = Math.max(2, Math.floor(avail / cols.length));
+  } else {
+    CW = Math.round(BASE * _zoom);
+  }
   var TW    = cols.length * CW;
   var vr    = visRows();
   drawHead(cols, CW, TW);
@@ -1175,14 +1186,18 @@ function applyRowBg(rowId, color) {
 
 // ── ZOOM ──────────────────────────────────────────────────────
 var _zoom = 1;
+var _fitMode = false;
 var ZOOM_STEPS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
 var _zoomIdx = 3; // starts at 1×
 function changeZoom(delta) {
+  _fitMode = false; updateFitBtn();
   _zoomIdx = Math.max(0, Math.min(ZOOM_STEPS.length - 1, _zoomIdx + delta));
   _zoom = ZOOM_STEPS[_zoomIdx];
   document.getElementById('zoomLabel').textContent = _zoom + '\u00D7';
   redrawGantt();
 }
+function toggleFit() { _fitMode = !_fitMode; updateFitBtn(); redrawGantt(); }
+function updateFitBtn() { var b=document.getElementById('fitBtn'); if(b) b.classList.toggle('act',_fitMode); }
 
 // ── FREE BANNER ───────────────────────────────────────────────
 function updateFreeBanner() {
