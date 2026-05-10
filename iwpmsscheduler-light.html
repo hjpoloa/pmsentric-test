@@ -767,15 +767,19 @@ function renderTable() {
     // ── Apply txtColor to all data cells (controls, level, dates, duration) ──
     if (row.txtColor) {
       var tc = row.txtColor;
-      // Controls arrow buttons
+      // Controls arrow buttons — inline beats .arw class rule
       Array.from(ca.querySelectorAll('.arw')).forEach(function(b){ b.style.color = tc; });
-      // WBS level badge/dots — has inline color so must target span directly
+      // WBS level badge/dots — has its own inline color, must target directly
       var lvlEl = tdLvl.querySelector('.lvl-b, .lvl-a');
       if (lvlEl) lvlEl.style.color = tc;
-      // Start, finish, duration — cascade to child spans
-      tdStart.style.color = tc;
-      tdFin.style.color   = tc;
-      tdDur.style.color   = tc;
+      // Start date — target span directly (.date-lbl / .cell-date-txt have own color rules)
+      if (slbl) { slbl.style.color = tc; }
+      else { var _s = tdStart.querySelector('.cell-date-txt'); if (_s) _s.style.color = tc; }
+      // Finish date
+      if (flbl) { flbl.style.color = tc; }
+      else { var _f = tdFin.querySelector('.cell-date-txt'); if (_f) _f.style.color = tc; }
+      // Duration span — .cell-dur-txt has its own color rule
+      durSpan.style.color = tc;
     }
 
     // Patch date change handlers
