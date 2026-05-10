@@ -258,6 +258,7 @@ canvas{display:block;}
   <label style="display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:.82em;color:var(--tm);cursor:pointer;white-space:nowrap;">
     <input type="checkbox" id="showDd" checked onchange="redrawGantt()" style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer;"> Show DD
   </label>
+  <button class="color-pill" onclick="showColorPicker(event,'dd')" title="Data Date line colour"><div class="color-swatch" id="swDd" style="background:#e05252"></div><span>DD Colour</span></button>
   <div class="tb-sep"></div>
   <span class="tb-label">Scale</span>
   <select class="tb-select" id="scaleMode" onchange="redrawGantt()">
@@ -272,7 +273,6 @@ canvas{display:block;}
   <span class="tb-label">End</span>
   <input type="date" class="tb-input tb-sm" id="ganttEnd" oninput="redrawGantt()">
   <div class="tb-sep"></div>
-  <button class="color-pill" onclick="showColorPicker(event,'dd')" title="Data Date line colour"><div class="color-swatch" id="swDd" style="background:#e05252"></div><span>Data Date</span></button>
   <div class="tb-sep"></div>
   <span class="tb-label">Zoom</span>
   <button class="btn bg" style="padding:3px 9px;font-size:14px;line-height:1;" onclick="changeZoom(-1)" title="Zoom out">−</button>
