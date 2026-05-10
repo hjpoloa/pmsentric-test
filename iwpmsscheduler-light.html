@@ -276,15 +276,6 @@ canvas{display:block;}
   <span id="zoomLabel" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tm);min-width:32px;text-align:center;">1×</span>
   <button class="btn bg" style="padding:3px 9px;font-size:14px;line-height:1;" onclick="changeZoom(1)" title="Zoom in">+</button>
   <div class="tb-sep"></div>
-  <span class="tb-label">Font</span>
-  <button class="btn bg" style="padding:3px 8px;font-size:13px;line-height:1;" onclick="changeFontSize(-1)" title="Decrease table font size">A−</button>
-  <span id="fsLabel" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tm);min-width:28px;text-align:center;">12px</span>
-  <button class="btn bg" style="padding:3px 8px;font-size:13px;line-height:1;" onclick="changeFontSize(1)" title="Increase table font size">A+</button>
-  <div class="tb-sep"></div>
-  <span class="tb-label">Row</span>
-  <button class="btn bg" style="padding:3px 9px;font-size:14px;line-height:1;" onclick="changeRowHeight(-2)" title="Decrease row height">−</button>
-  <span id="rhLabel" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tm);min-width:32px;text-align:center;">30px</span>
-  <div class="tb-sep"></div>
   <span class="tb-label">PDF</span>
   <select class="tb-select" id="pdfPageSize" style="width:82px;">
     <option value="a4">A4</option>
@@ -1100,13 +1091,13 @@ function initColorPicker() {
   CP_PALETTE.forEach(function(c) {
     var sw = document.createElement('div');
     sw.className = 'cp-sw'; sw.style.background = c; sw.title = c;
-    sw.addEventListener('mousedown', function(e){ e.preventDefault(); e.stopPropagation(); hideColorPicker(); if(_cpCallback) _cpCallback(c); });
+    sw.addEventListener('mousedown', function(e){ e.preventDefault(); e.stopPropagation(); var cb=_cpCallback; hideColorPicker(); if(cb) cb(c); });
     grid.appendChild(sw);
   });
   _cpDiv.appendChild(grid);
   var footer = document.createElement('div'); footer.className = 'cp-footer';
   var clrBtn = document.createElement('button'); clrBtn.className = 'cp-clear'; clrBtn.textContent = '✕ clear';
-  clrBtn.addEventListener('mousedown', function(e){ e.preventDefault(); e.stopPropagation(); hideColorPicker(); if(_cpCallback) _cpCallback(null); });
+  clrBtn.addEventListener('mousedown', function(e){ e.preventDefault(); e.stopPropagation(); var cb=_cpCallback; hideColorPicker(); if(cb) cb(null); });
   footer.appendChild(clrBtn);
   _cpDiv.appendChild(footer);
   document.body.appendChild(_cpDiv);
@@ -1658,8 +1649,7 @@ var _fs = 12;
 function changeFontSize(delta) {
   _fs = Math.min(18, Math.max(9, _fs + delta));
   document.documentElement.style.setProperty('--tbl-fs', _fs + 'px');
-  document.getElementById('fsLabel').textContent = _fs + 'px';
-  redrawGantt(); // redraws canvas with new font size
+  redrawGantt();
 }
 
 // ── ROW HEIGHT ────────────────────────────────────────────────
@@ -1668,7 +1658,6 @@ function changeRowHeight(delta) {
   BH = Math.round(RH * 0.4);
   MSZ = Math.round(RH * 0.3);
   document.documentElement.style.setProperty('--row-h', RH + 'px');
-  document.getElementById('rhLabel').textContent = RH + 'px';
   redrawGantt();
 }
 
