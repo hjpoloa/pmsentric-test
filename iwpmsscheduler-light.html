@@ -764,6 +764,20 @@ function renderTable() {
     tdDur.appendChild(durSpan);
     tr.appendChild(tdDur);
 
+    // ── Apply txtColor to all data cells (controls, level, dates, duration) ──
+    if (row.txtColor) {
+      var tc = row.txtColor;
+      // Controls arrow buttons
+      Array.from(ca.querySelectorAll('.arw')).forEach(function(b){ b.style.color = tc; });
+      // WBS level badge/dots — has inline color so must target span directly
+      var lvlEl = tdLvl.querySelector('.lvl-b, .lvl-a');
+      if (lvlEl) lvlEl.style.color = tc;
+      // Start, finish, duration — cascade to child spans
+      tdStart.style.color = tc;
+      tdFin.style.color   = tc;
+      tdDur.style.color   = tc;
+    }
+
     // Patch date change handlers
     if (siEl) {
       siEl._ch = (function(r, sEl, fEl, fLbl, sLbl, durEl){
