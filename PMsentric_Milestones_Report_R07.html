@@ -967,17 +967,24 @@ header {
 .pms-tn-btn .pms-tn-caret{font-size:10px;opacity:.7;transition:transform .18s;}
 .pms-tn-wrap.open .pms-tn-btn .pms-tn-caret{transform:rotate(180deg);}
 .pms-tn-menu{
-  position:fixed;
+  position:fixed !important;
   min-width:240px;
-  background:#111318;
+  background-color:#111318 !important;
+  background-image:none !important;
   border:1px solid #252D3A;
   border-radius:8px;
   box-shadow:0 12px 40px rgba(0,0,0,.5);
   padding:6px;display:none;
-  z-index:2147483647;
+  z-index:2147483647 !important;
+  isolation:isolate;
+  transform:translateZ(0);
+  opacity:1 !important;
+  pointer-events:auto;
 }
-html.light .pms-tn-menu, .light .pms-tn-menu{background:#FFFFFF;border-color:#C8C4BC;box-shadow:0 8px 28px rgba(0,0,0,.15);}
-.pms-tn-menu.open{display:block;}
+html.light .pms-tn-menu, .light .pms-tn-menu{background-color:#FFFFFF !important;border-color:#C8C4BC;box-shadow:0 8px 28px rgba(0,0,0,.15);}
+.pms-tn-menu.open{display:block !important;}
+.pms-tn-divider{height:1px;background:#1E2530;margin:6px 4px;}
+html.light .pms-tn-divider, .light .pms-tn-divider{background:#DDD9D2;}
 .pms-tn-section{
   font:600 10px/1 'DM Mono',monospace;
   letter-spacing:.08em;text-transform:uppercase;
@@ -996,8 +1003,6 @@ html.light .pms-tn-item, .light .pms-tn-item{color:#1A1C22;}
 .pms-tn-item.current{background:rgba(201,168,76,.14);color:#C9A84C;cursor:default;}
 .pms-tn-item .pms-tn-ico{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
 .pms-tn-item .pms-tn-lbl{flex:1;}
-.pms-tn-divider{height:1px;background:#1E2530;margin:6px 4px;}
-html.light .pms-tn-divider, .light .pms-tn-divider{background:#DDD9D2;}
 </style>
 <div class="pms-tn-wrap" id="pmsToolsNav">
   <button type="button" class="pms-tn-btn" onclick="pmsTnToggle(event)">
@@ -1080,6 +1085,7 @@ html.light .pms-tn-divider, .light .pms-tn-divider{background:#DDD9D2;}
 })();
 </script>
 <!-- ══════════ /PMSENTRIC TOOLS NAV ══════════ -->
+
 
     
     <div style="width:1px; height:24px; background:var(--border2); margin:0 2px;"></div>
