@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMsentric — Canvas Builder</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+
+<!-- GridStack CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css"/>
+
+<style>
+/* ── DARK THEME (default) — copied from index.html ── */
+:root {
+  --bg:           #080A0F;
+  --bg-deep:      #0C0E13;
+  --surface:      #111318;
+  --surface2:     #161A22;
+  --border:       #1E2530;
+  --border2:      #252D3A;
+  --muted-bg:     #1A2030;
+  --gold:         #C9A84C;
+  --gold-light:   #E8C87A;
+  --gold-dim:     #6B5420;
+  --gold-glow:    rgba(201,168,76,0.10);
+  --text:         #F0EDE8;
+  --text-mid:     #A8A4A0;
+  --text-dim:     #5A5650;
+  --steel:        #2E5F8A;
+  --steel-light:  #4A8AB5;
+  --green-light:  #3DB875;
+  --red:          #D86A5A;
+  --nav-bg:       rgba(8,10,15,0.95);
+  --shadow-card:  0 8px 32px rgba(0,0,0,.4);
+  --radius:       10px;
+  --radius-sm:    6px;
+}
+html.light {
+  --bg:           #F4F2EE;
+  --bg-deep:      #ECEAE5;
+  --surface:      #FFFFFF;
+  --surface2:     #F8F6F2;
+  --border:       #DDD9D2;
+  --border2:      #C8C4BC;
+  --muted-bg:     #EDE9E3;
+  --gold:         #A8751E;
+  --gold-light:   #C9921E;
+  --gold-dim:     #C9A84C;
+  --gold-glow:    rgba(168,117,30,0.08);
+  --text:         #1A1C22;
+  --text-mid:     #5A5650;
+  --text-dim:     #9A9690;
+  --steel:        #2E5F8A;
+  --steel-light:  #2A5580;
+  --green-light:  #1E7A4A;
+  --red:          #B43F2E;
+  --nav-bg:       rgba(244,242,238,0.96);
+  --shadow-card:  0 2px 8px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.08);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+html { font-size:16px; transition: background .25s, color .25s; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  transition: background .25s, color .25s;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  pointer-events:none; z-index:9999; opacity:.022;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ══════════ HEADER ══════════ */
+header {
+  height:60px;
+  display:flex; align-items:center;
+  padding:0 24px;
+  background:var(--nav-bg);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  gap:16px;
+}
+.brand {
+  display:flex; align-items:center; gap:9px;
+  text-decoration:none; color:var(--text);
+}
+.brand-mark {
+  width:30px; height:30px; border-radius:6px;
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Bebas Neue', sans-serif;
+  color:var(--gold);
+  font-size:18px;
+  position:relative;
+}
+.brand-mark::after {
+  content:''; position:absolute; bottom:-3px; right:-3px;
+  width:13px; height:13px; border-radius:3px;
+  background:var(--gold);
+  border:2px solid var(--bg);
+}
+.brand-text { font-family:'Bebas Neue', sans-serif; font-size:18px; letter-spacing:.06em; }
+.brand-text small { color:var(--text-mid); font-family:'DM Mono', monospace; font-size:11px; letter-spacing:.04em; margin-left:8px; text-transform:uppercase; }
+
+.toolbar {
+  display:flex; align-items:center; gap:10px; margin-left:auto;
+}
+.tpl-name {
+  background:var(--surface);
+  border:1px solid var(--border2);
+  color:var(--text);
+  font-family:'DM Mono', monospace;
+  font-size:12px;
+  padding:7px 12px;
+  border-radius:var(--radius-sm);
+  width:200px;
+  outline:none;
+  transition:border-color .18s, background .25s, color .25s;
+}
+.tpl-name:focus { border-color:var(--gold); }
+.tpl-name::placeholder { color:var(--text-dim); }
+
+.btn {
+  background:transparent;
+  border:1px solid var(--border2);
+  color:var(--text);
+  font-family:'DM Sans', sans-serif;
+  font-size:12px;
+  font-weight:500;
+  padding:7px 14px;
+  border-radius:var(--radius-sm);
+  cursor:pointer;
+  display:inline-flex; align-items:center; gap:6px;
+  transition: all .18s;
+  letter-spacing:.02em;
+}
+.btn:hover { background:var(--surface2); border-color:var(--gold-dim); color:var(--gold-light); }
+.btn-gold {
+  background:var(--gold); border-color:var(--gold); color:#1A1410;
+  font-weight:600;
+}
+.btn-gold:hover { background:var(--gold-light); border-color:var(--gold-light); color:#1A1410; }
+.btn-ghost { background:transparent; }
+.btn-danger:hover { background:rgba(216,106,90,.08); border-color:var(--red); color:var(--red); }
+
+.theme-toggle {
+  width:34px; height:34px; padding:0;
+  border:1px solid var(--border2);
+  background:transparent;
+  border-radius:50%;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text-mid);
+  transition: all .18s;
+}
+.theme-toggle:hover { color:var(--gold); border-color:var(--gold-dim); }
+
+/* ══════════ MAIN LAYOUT ══════════ */
+main {
+  flex:1;
+  display:flex;
+  min-height:0;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width:280px;
+  background:var(--bg-deep);
+  border-right:1px solid var(--border);
+  overflow-y:auto;
+  flex-shrink:0;
+  padding:20px 16px 40px;
+}
+.sidebar h3 {
+  font-family:'Bebas Neue', sans-serif;
+  font-size:13px;
+  letter-spacing:.12em;
+  color:var(--gold);
+  margin-bottom:10px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--border);
+}
+.sidebar-group { margin-bottom:22px; }
+.sidebar-group-title {
+  font-family:'DM Mono', monospace;
+  font-size:10px;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  margin-bottom:8px;
+  padding-left:2px;
+}
+
+.widget-item {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:10px 12px;
+  margin-bottom:6px;
+  cursor:grab;
+  display:flex; align-items:center; gap:10px;
+  transition: all .18s;
+  user-select:none;
+}
+.widget-item:hover {
+  border-color:var(--gold-dim);
+  background:var(--surface2);
+  transform: translateX(2px);
+}
+.widget-item:active { cursor:grabbing; }
+.widget-item-icon {
+  width:28px; height:28px;
+  background:var(--muted-bg);
+  border:1px solid var(--border2);
+  border-radius:5px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px;
+  flex-shrink:0;
+}
+.widget-item-text { flex:1; min-width:0; }
+.widget-item-name {
+  font-size:12px; font-weight:500; color:var(--text);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.widget-item-tool {
+  font-family:'DM Mono', monospace;
+  font-size:9px; color:var(--text-dim);
+  text-transform:uppercase; letter-spacing:.06em;
+  margin-top:1px;
+}
+
+/* ── XER STATUS PANEL ── */
+.xer-panel {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:12px;
+  margin-bottom:22px;
+}
+.xer-panel.loaded { border-color:var(--gold-dim); background:var(--gold-glow); }
+.xer-status {
+  font-family:'DM Mono', monospace;
+  font-size:10px;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  margin-bottom:6px;
+}
+.xer-status.live { color:var(--green-light); }
+.xer-project {
+  font-size:12px; font-weight:500;
+  color:var(--text);
+  margin-bottom:8px;
+  word-break:break-all;
+}
+.xer-meta {
+  font-size:11px; color:var(--text-mid);
+  margin-bottom:10px;
+  line-height:1.5;
+}
+
+/* ── CANVAS ── */
+.canvas-wrap {
+  flex:1;
+  overflow:auto;
+  background:
+    radial-gradient(circle at 1px 1px, var(--border2) 1px, transparent 0),
+    var(--bg);
+  background-size: 24px 24px;
+  position:relative;
+}
+.canvas-empty {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  pointer-events:none;
+  text-align:center;
+  padding:40px;
+}
+.canvas-empty .ce-icon {
+  font-size:60px; opacity:.15; margin-bottom:18px;
+  filter:grayscale(.6);
+}
+.canvas-empty h2 {
+  font-family:'Bebas Neue', sans-serif;
+  font-size:32px;
+  letter-spacing:.05em;
+  color:var(--text-mid);
+  margin-bottom:8px;
+}
+.canvas-empty p {
+  color:var(--text-dim);
+  font-size:13px;
+  max-width:380px;
+}
+.canvas-wrap.has-items .canvas-empty { display:none; }
+
+.grid-stack { background:transparent; min-height:100%; padding:14px; }
+
+/* ── WIDGET CELL ── */
+.widget-cell {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  display:flex; flex-direction:column;
+  overflow:hidden;
+  height:100%;
+  box-shadow: var(--shadow-card);
+  position:relative;
+}
+.widget-cell:hover { border-color:var(--border2); }
+.widget-cell.dragging { opacity:.7; }
+
+.widget-head {
+  display:flex; align-items:center;
+  padding:8px 10px 8px 12px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface2);
+  flex-shrink:0;
+  cursor:move;
+  gap:8px;
+  user-select:none;
+}
+.widget-head-icon {
+  width:18px; height:18px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px;
+  color:var(--gold);
+}
+.widget-head-title {
+  flex:1;
+  font-size:11px; font-weight:600;
+  color:var(--text);
+  letter-spacing:.02em;
+  text-transform:uppercase;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.widget-actions { display:flex; gap:2px; flex-shrink:0; }
+.widget-actions button {
+  width:22px; height:22px;
+  background:transparent;
+  border:none;
+  color:var(--text-dim);
+  cursor:pointer;
+  border-radius:3px;
+  font-size:13px;
+  display:flex; align-items:center; justify-content:center;
+  transition: all .15s;
+}
+.widget-actions button:hover { color:var(--gold); background:var(--muted-bg); }
+.widget-actions .wa-remove:hover { color:var(--red); }
+
+.widget-body {
+  flex:1; min-height:0;
+  padding:12px;
+  overflow:auto;
+  position:relative;
+}
+.widget-body.padded-tight { padding:8px; }
+
+.widget-placeholder {
+  height:100%;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  color:var(--text-dim);
+  text-align:center;
+  gap:8px;
+}
+.widget-placeholder .wp-icon { font-size:32px; opacity:.4; }
+.widget-placeholder .wp-text { font-size:12px; }
+.widget-placeholder .wp-sub {
+  font-family:'DM Mono', monospace;
+  font-size:10px;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+/* KPI widget */
+.kpi-display {
+  height:100%;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  text-align:center; gap:4px;
+}
+.kpi-value {
+  font-family:'Bebas Neue', sans-serif;
+  font-size:54px;
+  line-height:1;
+  color:var(--gold);
+  letter-spacing:.01em;
+}
+.kpi-unit {
+  font-family:'DM Mono', monospace;
+  font-size:11px;
+  color:var(--text-mid);
+  text-transform:uppercase;
+  letter-spacing:.1em;
+}
+.kpi-label {
+  font-size:11px; color:var(--text-mid);
+  margin-top:6px;
+}
+
+/* table widget */
+.w-table { width:100%; font-size:11px; border-collapse:collapse; }
+.w-table th {
+  text-align:left; padding:6px 8px;
+  background:var(--surface2);
+  color:var(--text-mid);
+  font-family:'DM Mono', monospace;
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  font-weight:500;
+  border-bottom:1px solid var(--border);
+  position:sticky; top:0;
+}
+.w-table td {
+  padding:6px 8px;
+  border-bottom:1px solid var(--border);
+  color:var(--text);
+}
+.w-table tr:hover td { background:var(--muted-bg); }
+.w-table .num { text-align:right; font-family:'DM Mono', monospace; }
+.w-table .pill {
+  display:inline-block; padding:1px 7px;
+  border-radius:9px; font-size:9px;
+  font-family:'DM Mono', monospace;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.pill-done { background:rgba(61,184,117,.15); color:var(--green-light); }
+.pill-ip   { background:rgba(74,138,181,.15); color:var(--steel-light); }
+.pill-ns   { background:rgba(168,164,160,.12); color:var(--text-mid); }
+.pill-crit { background:rgba(216,106,90,.15); color:var(--red); }
+
+/* ── DROP OVERLAY (XER) ── */
+.drop-overlay {
+  position:fixed; inset:0;
+  background:rgba(8,10,15,.92);
+  backdrop-filter:blur(6px);
+  display:none;
+  align-items:center; justify-content:center;
+  z-index:9000;
+  pointer-events:none;
+}
+.drop-overlay.active { display:flex; }
+.drop-overlay-inner {
+  border:2px dashed var(--gold);
+  border-radius:var(--radius);
+  padding:60px 80px;
+  text-align:center;
+  background:var(--surface);
+}
+.drop-overlay-inner h2 {
+  font-family:'Bebas Neue', sans-serif;
+  font-size:36px;
+  color:var(--gold);
+  letter-spacing:.06em;
+  margin-bottom:8px;
+}
+.drop-overlay-inner p {
+  font-family:'DM Mono', monospace;
+  font-size:12px;
+  color:var(--text-mid);
+  text-transform:uppercase;
+  letter-spacing:.1em;
+}
+
+/* ── GRIDSTACK OVERRIDES ── */
+.grid-stack-item-content { inset:0 !important; overflow:hidden !important; }
+.grid-stack > .grid-stack-item.gs-placeholder > .placeholder-content {
+  background:var(--gold-glow);
+  border:1px dashed var(--gold);
+  border-radius:var(--radius);
+}
+.gs-helper-clone {
+  background:var(--surface) !important;
+  border:1px solid var(--gold) !important;
+  border-radius:var(--radius-sm) !important;
+  padding:10px 12px !important;
+  font-size:12px; color:var(--text) !important;
+  box-shadow:var(--shadow-card) !important;
+  pointer-events:none;
+}
+.ui-resizable-handle.ui-resizable-se {
+  background:var(--gold-dim);
+  width:8px; height:8px;
+  border-radius:2px;
+  bottom:4px; right:4px;
+  transform:rotate(45deg);
+  transition:background .15s;
+}
+.widget-cell:hover .ui-resizable-handle.ui-resizable-se { background:var(--gold); }
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+  background:var(--surface);
+  border:1px solid var(--gold-dim);
+  color:var(--text);
+  padding:10px 18px;
+  border-radius:var(--radius-sm);
+  font-size:12px;
+  font-family:'DM Mono', monospace;
+  letter-spacing:.04em;
+  z-index:10000;
+  box-shadow:var(--shadow-card);
+  opacity:0;
+  pointer-events:none;
+  transition: opacity .25s, transform .25s;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.err { border-color:var(--red); }
+
+/* ── SCROLLBAR ── */
+.sidebar::-webkit-scrollbar, .canvas-wrap::-webkit-scrollbar, .widget-body::-webkit-scrollbar { width:8px; height:8px; }
+.sidebar::-webkit-scrollbar-track, .canvas-wrap::-webkit-scrollbar-track, .widget-body::-webkit-scrollbar-track { background:transparent; }
+.sidebar::-webkit-scrollbar-thumb, .canvas-wrap::-webkit-scrollbar-thumb, .widget-body::-webkit-scrollbar-thumb {
+  background:var(--border2); border-radius:4px;
+}
+.sidebar::-webkit-scrollbar-thumb:hover, .canvas-wrap::-webkit-scrollbar-thumb:hover, .widget-body::-webkit-scrollbar-thumb:hover {
+  background:var(--gold-dim);
+}
+
+@media (max-width: 880px) {
+  .sidebar { width:220px; }
+  .tpl-name { width:120px; }
+  .brand-text small { display:none; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="./index.html" class="brand">
+    <div class="brand-mark">P</div>
+    <div class="brand-text">PMsentric<small>Canvas Builder</small></div>
+  </a>
+
+  <div class="toolbar">
+    <input type="text" class="tpl-name" id="tplName" placeholder="Template name…" value="Untitled Template">
+    <button class="btn" onclick="document.getElementById('xerInput').click()">📂 Load XER</button>
+    <button class="btn" onclick="document.getElementById('tplInput').click()">⬆ Load Template</button>
+    <button class="btn btn-gold" onclick="saveTemplate()">💾 Save Template</button>
+    <button class="btn btn-danger" onclick="clearCanvas()" title="Clear canvas">✕ Clear</button>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">◐</button>
+  </div>
+
+  <input type="file" id="xerInput" accept=".xer" style="display:none;">
+  <input type="file" id="tplInput" accept=".json,application/json" style="display:none;">
+</header>
+
+<main>
+  <aside class="sidebar">
+
+    <div class="xer-panel" id="xerPanel">
+      <div class="xer-status" id="xerStatus">● No XER Loaded</div>
+      <div class="xer-project" id="xerProject" style="display:none;"></div>
+      <div class="xer-meta" id="xerMeta" style="display:none;"></div>
+      <div style="font-size:11px; color:var(--text-mid); line-height:1.5;" id="xerHint">
+        Load a P6 XER file to populate widget data. Drag widgets to the canvas in the meantime.
+      </div>
+    </div>
+
+    <h3>Widget Library</h3>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">KPIs</div>
+      <div class="widget-item" data-widget="kpi-activities" data-tool="Schedule">
+        <div class="widget-item-icon">∑</div>
+        <div class="widget-item-text">
+          <div class="widget-item-name">Total Activities</div>
+          <div class="widget-item-tool">Schedule Reader</div>
+        </div>
+      </div>
+      <div class="widget-item" data-widget="kpi-progress" data-tool="Schedule">
+        <div class="widget-item-icon">%</div>
+        <div class="widget-item-text">
+          <div class="widget-item-name">Avg % Complete</div>
+          <div class="widget-item-tool">Schedule Reader</div>
+        </div>
+      </div>
+      <div class="widget-item" data-widget="kpi-critical" data-tool="CriticalPath">
+        <div class="widget-item-icon">!</div>
+        <div class="widget-item-text">
+          <div class="widget-item-name">Critical Activities</div>
+          <div class="widget-item-tool">Critical Path</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">Charts</div>
+      <div class="widget-item" data-widget="scurve" data-tool="SCurve">
+        <div class="widget-item-icon">📈</div>
+        <div class="widget-item-text">
+          <div class="widget-item-name">S-Curve</div>
+          <div class="widget-item-tool">S-Curve Report</div>
+        </div>
+      </div>
+      <div class="widget-item" data-widget="status-bar" data-tool="Schedule">
+        <div class="widget-item-icon">📊</div>
+        <div class="widget-item-text">
+          <div class="widget-item-name">Status Bar Chart</div>
+          <div class="widget-item-tool">Schedule Reader</div>
+        </div>
+      </div>
+      <div class="widget-item" data-widget="wbs-pie" data-tool="WBS">
+        <div class="widget-item-icon">◐</div>
+        <div class="widget-item-text">
+          <div class="widget-item-name">WBS Progress Pie</div>
+          <div class="widget-item-tool">WBS Report</div>
+        </div>
+      </div>
+      <div class="widget-item" data-widget="resource-histogram" data-tool="Resources">
+        <div class="widget-item-icon">▥</div>
+        <div class="widget-item-text">
+          <div class="widget-item-name">Resource Histogram</div>
+          <div class="widget-item-tool">Resource Analyzer</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">Tables</div>
+      <div class="widget-item" data-widget="milestones" data-tool="Milestones">
+        <div class="widget-item-icon">🏁</div>
+        <div class="widget-item-text">
+          <div class="widget-item-name">Milestones Table</div>
+          <div class="widget-item-tool">Milestones Report</div>
+        </div>
+      </div>
+      <div class="widget-item" data-widget="wbs-summary" data-tool="WBS">
+        <div class="widget-item-icon">🗂</div>
+        <div class="widget-item-text">
+          <div class="widget-item-name">WBS Summary</div>
+          <div class="widget-item-tool">WBS Report</div>
+        </div>
+      </div>
+      <div class="widget-item" data-widget="lookahead" data-tool="3WLA">
+        <div class="widget-item-icon">📅</div>
+        <div class="widget-item-text">
+          <div class="widget-item-name">3-Week Lookahead</div>
+          <div class="widget-item-tool">3WLA</div>
+        </div>
+      </div>
+      <div class="widget-item" data-widget="critical-list" data-tool="CriticalPath">
+        <div class="widget-item-icon">🔗</div>
+        <div class="widget-item-text">
+          <div class="widget-item-name">Critical Activities</div>
+          <div class="widget-item-tool">Critical Path</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">Annotations</div>
+      <div class="widget-item" data-widget="note" data-tool="Note">
+        <div class="widget-item-icon">📝</div>
+        <div class="widget-item-text">
+          <div class="widget-item-name">Text Note</div>
+          <div class="widget-item-tool">Custom</div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <section class="canvas-wrap" id="canvasWrap">
+    <div class="canvas-empty">
+      <div class="ce-icon">⬚</div>
+      <h2>Empty Canvas</h2>
+      <p>Drag widgets from the left into this canvas. Resize from the bottom-right corner. Save your layout as a reusable template.</p>
+    </div>
+    <div class="grid-stack" id="grid"></div>
+  </section>
+</main>
+
+<div class="drop-overlay" id="dropOverlay">
+  <div class="drop-overlay-inner">
+    <h2>Drop XER File</h2>
+    <p>Release to load schedule data</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════════════════ */
+const S = {
+  projects: {},
+  wbsNodes: {},
+  taskData: {},
+  taskBudget: {},
+  rsrcLoad: [],       // [{taskId, startDate, endDate, units, cost}]
+  fileName: null,
+  dataDate: null,
+  charts: new Map(),  // widgetEl -> Chart instance
+  widgetCounter: 0,
+};
+
+const MONS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/* ═══════════════════════════════════════════════════════════════════════
+   THEME
+═══════════════════════════════════════════════════════════════════════ */
+function initTheme() {
+  const saved = localStorage.getItem('pms_theme') || 'dark';
+  document.documentElement.classList.toggle('light', saved === 'light');
+  document.getElementById('themeToggle').textContent = saved === 'light' ? '◑' : '◐';
+}
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const isLight = document.documentElement.classList.toggle('light');
+  localStorage.setItem('pms_theme', isLight ? 'light' : 'dark');
+  document.getElementById('themeToggle').textContent = isLight ? '◑' : '◐';
+  // Refresh chart colors
+  S.charts.forEach((ch, el) => {
+    const cell = el.closest('.widget-cell');
+    const wt = cell?.dataset.widgetType;
+    if (wt) rerenderWidget(cell);
+  });
+});
+initTheme();
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════════════════════ */
+let toastTimer = null;
+function toast(msg, isErr) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.toggle('err', !!isErr);
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   XER PARSER (adapted from Schedule Reader)
+═══════════════════════════════════════════════════════════════════════ */
+function parseDt(s) {
+  if (!s || !s.trim()) return null;
+  s = s.trim();
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+  m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m) return new Date(+m[3], +m[1]-1, +m[2]);
+  return null;
+}
+function fmtD(d) { if (!d || isNaN(d)) return '—'; return `${d.getDate()}-${MONS[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`; }
+
+function procR(sec, r) {
+  if (sec === 'PROJECT') {
+    const id = r.proj_id || '';
+    S.projects[id] = { id, name: r.proj_short_name || id, dataDate: r.last_recalc_date || '' };
+  }
+  else if (sec === 'PROJWBS') {
+    const id = r.wbs_id || '';
+    S.wbsNodes[id] = { id, name: r.wbs_name || '', shortName: r.wbs_short_name || '', parentId: r.parent_wbs_id || '', projId: r.proj_id || '' };
+  }
+  else if (sec === 'TASKRSRC' || sec === 'PROJCOST') {
+    const tid = r.task_id || '';
+    const c = parseFloat(r.target_cost) || 0;
+    if (tid) S.taskBudget[tid] = (S.taskBudget[tid] || 0) + c;
+    // Also accumulate resource load per task date range
+    if (sec === 'TASKRSRC' && tid) {
+      const units = parseFloat(r.target_qty) || 0;
+      S.rsrcLoad.push({ taskId: tid, units, cost: c });
+    }
+  }
+  else if (sec === 'TASK') {
+    const id = r.task_id || '';
+    const aS = parseDt(r.act_start_date || '');
+    const aE = parseDt(r.act_end_date || '');
+    const eS = parseDt(r.early_start_date || r.target_start_date || '');
+    const eF = parseDt(r.early_end_date || r.target_end_date || '');
+    const rF = parseDt(r.reend_date || r.remain_early_end_date || '');
+    let dS, dF, st;
+    if (!aS) { dS = eS; dF = eF; st = 'ns'; }
+    else if (!aE) { dS = aS; dF = rF || eF; st = 'ip'; }
+    else { dS = aS; dF = aE; st = 'done'; }
+    let pct;
+    if (r.complete_pct_type === 'CP_Drtn') {
+      const t = parseFloat(r.target_drtn_hr_cnt) || 0;
+      const rm = parseFloat(r.remain_drtn_hr_cnt) || 0;
+      pct = t > 0 ? Math.round((t-rm)/t * 1000)/10 : 0;
+    } else {
+      pct = Math.round((parseFloat(r.phys_complete_pct || r.perf_complete_pct || r.complete_pct || '0') || 0) * 10) / 10;
+    }
+    const critical = (r.driving_path_flag || '').trim().toUpperCase() === 'Y'
+                  || (r.total_float_hr_cnt && parseFloat(r.total_float_hr_cnt) <= 0);
+    const totalFloat = parseFloat(r.total_float_hr_cnt) || 0;
+    const isMilestone = (r.task_type || '').includes('Mile');
+    S.taskData[id] = {
+      id, code: r.task_code || '', name: r.task_name || '',
+      wbsId: r.wbs_id || '', projId: r.proj_id || '',
+      start: dS, finish: dF,
+      actualStart: aS, actualEnd: aE,
+      completePct: pct, status: st,
+      critical, totalFloat,
+      isMilestone,
+      taskType: r.task_type || '',
+      budget: 0,
+    };
+  }
+}
+
+function parseXER(content) {
+  S.projects = {}; S.wbsNodes = {}; S.taskData = {}; S.taskBudget = {}; S.rsrcLoad = [];
+  let tbl = null, flds = [];
+  for (const raw of content.split('\n')) {
+    const l = raw.replace(/\r$/, '');
+    if (l.startsWith('%T\t')) { tbl = l.slice(3).trim(); flds = []; }
+    else if (l.startsWith('%F\t')) flds = l.slice(3).split('\t');
+    else if (l.startsWith('%R\t')) {
+      const v = l.slice(3).split('\t'), r = {};
+      flds.forEach((f, i) => { r[f] = i < v.length ? v[i] : ''; });
+      procR(tbl, r);
+    }
+  }
+  for (const [tid, b] of Object.entries(S.taskBudget)) {
+    if (S.taskData[tid]) S.taskData[tid].budget = b;
+  }
+  // Data date
+  const proj = Object.values(S.projects)[0];
+  if (proj && proj.dataDate) {
+    S.dataDate = new Date(proj.dataDate.trim().slice(0,10));
+  }
+}
+
+function loadXERText(text, fname) {
+  try {
+    parseXER(text);
+    S.fileName = fname;
+    updateXERPanel();
+    rerenderAll();
+    toast(`XER loaded — ${Object.keys(S.taskData).length} activities`);
+  } catch (e) {
+    console.error(e);
+    toast('Failed to parse XER', true);
+  }
+}
+
+function updateXERPanel() {
+  const panel = document.getElementById('xerPanel');
+  const status = document.getElementById('xerStatus');
+  const proj = document.getElementById('xerProject');
+  const meta = document.getElementById('xerMeta');
+  const hint = document.getElementById('xerHint');
+
+  if (!S.fileName) {
+    panel.classList.remove('loaded');
+    status.textContent = '● No XER Loaded';
+    status.classList.remove('live');
+    proj.style.display = 'none';
+    meta.style.display = 'none';
+    hint.style.display = '';
+    return;
+  }
+  panel.classList.add('loaded');
+  status.textContent = '● XER Loaded';
+  status.classList.add('live');
+  const p = Object.values(S.projects)[0];
+  proj.textContent = p ? p.name : S.fileName;
+  proj.style.display = '';
+  const taskCount = Object.keys(S.taskData).length;
+  const wbsCount = Object.keys(S.wbsNodes).length;
+  meta.innerHTML = `<div>${taskCount} activities · ${wbsCount} WBS</div>` +
+                   (S.dataDate ? `<div>Data date: ${fmtD(S.dataDate)}</div>` : '');
+  meta.style.display = '';
+  hint.style.display = 'none';
+}
+
+/* File input + drag-drop XER */
+document.getElementById('xerInput').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => loadXERText(ev.target.result, f.name);
+  r.readAsText(f);
+});
+
+let dragCounter = 0;
+const dropOverlay = document.getElementById('dropOverlay');
+window.addEventListener('dragenter', e => {
+  if (!e.dataTransfer || !e.dataTransfer.types.includes('Files')) return;
+  dragCounter++;
+  dropOverlay.classList.add('active');
+});
+window.addEventListener('dragleave', e => {
+  dragCounter--;
+  if (dragCounter <= 0) { dragCounter = 0; dropOverlay.classList.remove('active'); }
+});
+window.addEventListener('dragover', e => { e.preventDefault(); });
+window.addEventListener('drop', e => {
+  e.preventDefault();
+  dragCounter = 0;
+  dropOverlay.classList.remove('active');
+  if (!e.dataTransfer.files || !e.dataTransfer.files.length) return;
+  const f = e.dataTransfer.files[0];
+  if (!f.name.toLowerCase().endsWith('.xer')) {
+    toast('Please drop a .xer file', true);
+    return;
+  }
+  const r = new FileReader();
+  r.onload = ev => loadXERText(ev.target.result, f.name);
+  r.readAsText(f);
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   WIDGET REGISTRY
+═══════════════════════════════════════════════════════════════════════ */
+const WIDGETS = {
+
+  'kpi-activities': {
+    title: 'Total Activities',
+    icon: '∑',
+    defaultSize: { w: 3, h: 3 },
+    render(body) {
+      const tasks = Object.values(S.taskData);
+      if (!tasks.length) return placeholder(body, 'Σ', 'Awaiting XER data');
+      body.innerHTML = `
+        <div class="kpi-display">
+          <div class="kpi-value">${tasks.length}</div>
+          <div class="kpi-unit">Activities</div>
+          <div class="kpi-label">${tasks.filter(t=>t.status==='done').length} complete · ${tasks.filter(t=>t.status==='ip').length} in progress</div>
+        </div>`;
+    }
+  },
+
+  'kpi-progress': {
+    title: 'Average % Complete',
+    icon: '%',
+    defaultSize: { w: 3, h: 3 },
+    render(body) {
+      const tasks = Object.values(S.taskData);
+      if (!tasks.length) return placeholder(body, '%', 'Awaiting XER data');
+      const avg = tasks.reduce((a,t)=>a+(t.completePct||0),0) / tasks.length;
+      body.innerHTML = `
+        <div class="kpi-display">
+          <div class="kpi-value">${avg.toFixed(1)}<span style="font-size:28px;">%</span></div>
+          <div class="kpi-unit">Overall Progress</div>
+          <div class="kpi-label">Weighted by activity count</div>
+        </div>`;
+    }
+  },
+
+  'kpi-critical': {
+    title: 'Critical Activities',
+    icon: '!',
+    defaultSize: { w: 3, h: 3 },
+    render(body) {
+      const tasks = Object.values(S.taskData);
+      if (!tasks.length) return placeholder(body, '!', 'Awaiting XER data');
+      const crit = tasks.filter(t => t.critical && t.status !== 'done').length;
+      const pct = tasks.length ? (crit / tasks.length * 100).toFixed(1) : 0;
+      body.innerHTML = `
+        <div class="kpi-display">
+          <div class="kpi-value" style="color:var(--red);">${crit}</div>
+          <div class="kpi-unit">Critical · Remaining</div>
+          <div class="kpi-label">${pct}% of schedule</div>
+        </div>`;
+    }
+  },
+
+  'scurve': {
+    title: 'S-Curve · Planned vs Actual',
+    icon: '📈',
+    defaultSize: { w: 8, h: 5 },
+    render(body, cell) {
+      const tasks = Object.values(S.taskData);
+      if (!tasks.length) return placeholder(body, '📈', 'Awaiting XER data');
+
+      // Build cumulative buckets (monthly)
+      const allDates = tasks.flatMap(t => [t.start, t.finish, t.actualStart, t.actualEnd]).filter(Boolean);
+      if (!allDates.length) return placeholder(body, '📈', 'No date data in XER');
+      const minD = new Date(Math.min(...allDates));
+      const maxD = new Date(Math.max(...allDates));
+
+      // Monthly buckets
+      const buckets = [];
+      const cur = new Date(minD.getFullYear(), minD.getMonth(), 1);
+      while (cur <= maxD) {
+        buckets.push(new Date(cur));
+        cur.setMonth(cur.getMonth() + 1);
+      }
+
+      const totalBudget = tasks.reduce((a,t) => a + (t.budget||1), 0) || tasks.length;
+      const useBudget = tasks.reduce((a,t) => a + (t.budget||0), 0) > 0;
+
+      const planned = [], actual = [];
+      let pCum = 0, aCum = 0;
+      for (let i = 0; i < buckets.length; i++) {
+        const monthEnd = new Date(buckets[i].getFullYear(), buckets[i].getMonth()+1, 0);
+        let pInc = 0, aInc = 0;
+        for (const t of tasks) {
+          const weight = useBudget ? (t.budget||0) : 1;
+          // Planned: linear distribution from start->finish
+          if (t.start && t.finish && t.finish >= t.start) {
+            const tStart = t.start, tFin = t.finish;
+            const overlapStart = Math.max(tStart, buckets[i]);
+            const overlapEnd = Math.min(tFin, monthEnd);
+            if (overlapEnd >= overlapStart) {
+              const dur = (tFin - tStart) || 1;
+              const ovr = (overlapEnd - overlapStart) || 0;
+              pInc += weight * (ovr / dur);
+            }
+          }
+          // Actual: linear over actual range, capped at data date
+          if (t.actualStart) {
+            const aEnd = t.actualEnd || (S.dataDate && t.actualStart < S.dataDate ? S.dataDate : t.actualStart);
+            const overlapStart = Math.max(t.actualStart, buckets[i]);
+            const overlapEnd = Math.min(aEnd, monthEnd);
+            if (overlapEnd >= overlapStart && aEnd >= t.actualStart) {
+              const dur = (aEnd - t.actualStart) || 1;
+              const ovr = (overlapEnd - overlapStart) || 0;
+              aInc += weight * (ovr / dur) * ((t.completePct||100)/100);
+            }
+          }
+        }
+        pCum += pInc; aCum += aInc;
+        planned.push((pCum/totalBudget)*100);
+        actual.push((aCum/totalBudget)*100);
+      }
+
+      // Cut actual at data date
+      const cutoff = S.dataDate;
+      const actualClipped = actual.map((v, i) => (cutoff && buckets[i] > cutoff) ? null : Math.min(v, 100));
+
+      body.innerHTML = '<canvas></canvas>';
+      const ctx = body.querySelector('canvas');
+      const style = getComputedStyle(document.documentElement);
+      const gold = style.getPropertyValue('--gold').trim();
+      const steel = style.getPropertyValue('--steel-light').trim();
+      const text = style.getPropertyValue('--text-mid').trim();
+      const grid = style.getPropertyValue('--border').trim();
+
+      const ch = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: buckets.map(d => `${MONS[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`),
+          datasets: [
+            { label: 'Planned', data: planned.map(v => Math.min(v,100)), borderColor: gold, backgroundColor: gold+'22', borderWidth:2, tension:.3, pointRadius:0, fill:true },
+            { label: 'Actual',  data: actualClipped, borderColor: steel, backgroundColor: steel+'22', borderWidth:2, tension:.3, pointRadius:0, fill:false }
+          ]
+        },
+        options: {
+          maintainAspectRatio: false, responsive: true,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { labels: { color: text, font: { size:11, family:'DM Sans' }, boxWidth:12 } },
+            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y == null ? '—' : c.parsed.y.toFixed(1)+'%'}` } }
+          },
+          scales: {
+            x: { ticks:{ color:text, font:{size:10}, maxRotation:45, minRotation:0 }, grid:{ color:grid } },
+            y: { ticks:{ color:text, font:{size:10}, callback:v=>v+'%' }, grid:{ color:grid }, min:0, max:100 }
+          }
+        }
+      });
+      S.charts.set(body, ch);
+    }
+  },
+
+  'status-bar': {
+    title: 'Activities by Status',
+    icon: '📊',
+    defaultSize: { w: 5, h: 4 },
+    render(body, cell) {
+      const tasks = Object.values(S.taskData);
+      if (!tasks.length) return placeholder(body, '📊', 'Awaiting XER data');
+      const ns = tasks.filter(t=>t.status==='ns').length;
+      const ip = tasks.filter(t=>t.status==='ip').length;
+      const dn = tasks.filter(t=>t.status==='done').length;
+      body.innerHTML = '<canvas></canvas>';
+      const ctx = body.querySelector('canvas');
+      const style = getComputedStyle(document.documentElement);
+      const text = style.getPropertyValue('--text-mid').trim();
+      const grid = style.getPropertyValue('--border').trim();
+      const ch = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Not Started','In Progress','Complete'],
+          datasets: [{
+            data: [ns, ip, dn],
+            backgroundColor: [style.getPropertyValue('--text-dim').trim(), style.getPropertyValue('--steel-light').trim(), style.getPropertyValue('--green-light').trim()],
+            borderWidth: 0,
+            barThickness: 'flex',
+            maxBarThickness: 80,
+          }]
+        },
+        options: {
+          maintainAspectRatio: false, responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks:{ color:text, font:{size:11, family:'DM Sans'} }, grid:{ display:false } },
+            y: { ticks:{ color:text, font:{size:10} }, grid:{ color:grid }, beginAtZero:true }
+          }
+        }
+      });
+      S.charts.set(body, ch);
+    }
+  },
+
+  'wbs-pie': {
+    title: 'WBS Progress',
+    icon: '◐',
+    defaultSize: { w: 4, h: 4 },
+    render(body) {
+      const tasks = Object.values(S.taskData);
+      if (!tasks.length) return placeholder(body, '◐', 'Awaiting XER data');
+      const avg = tasks.reduce((a,t)=>a+(t.completePct||0),0) / tasks.length;
+      const rem = 100 - avg;
+      body.innerHTML = '<canvas></canvas>';
+      const ctx = body.querySelector('canvas');
+      const style = getComputedStyle(document.documentElement);
+      const text = style.getPropertyValue('--text-mid').trim();
+      const ch = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Complete', 'Remaining'],
+          datasets: [{
+            data: [avg, rem],
+            backgroundColor: [style.getPropertyValue('--gold').trim(), style.getPropertyValue('--border2').trim()],
+            borderWidth: 0,
+          }]
+        },
+        options: {
+          maintainAspectRatio: false, responsive: true,
+          cutout: '68%',
+          plugins: {
+            legend: { position: 'bottom', labels: { color: text, font: { size:11, family:'DM Sans' }, boxWidth:10, padding:8 } },
+            tooltip: { callbacks: { label: c => `${c.label}: ${c.parsed.toFixed(1)}%` } }
+          }
+        }
+      });
+      S.charts.set(body, ch);
+    }
+  },
+
+  'milestones': {
+    title: 'Milestones',
+    icon: '🏁',
+    defaultSize: { w: 6, h: 5 },
+    render(body) {
+      body.classList.add('padded-tight');
+      const ms = Object.values(S.taskData).filter(t => t.isMilestone);
+      if (!ms.length) {
+        if (!Object.keys(S.taskData).length) return placeholder(body, '🏁', 'Awaiting XER data');
+        return placeholder(body, '🏁', 'No milestones in this XER');
+      }
+      ms.sort((a,b) => (a.finish||0) - (b.finish||0));
+      const rows = ms.slice(0, 200).map(m => {
+        const stCls = m.status==='done' ? 'pill-done' : m.status==='ip' ? 'pill-ip' : 'pill-ns';
+        const stTxt = m.status==='done' ? 'Done' : m.status==='ip' ? 'In Prog' : 'Pending';
+        return `<tr>
+          <td>${esc(m.code)}</td>
+          <td>${esc(m.name)}</td>
+          <td>${fmtD(m.finish)}</td>
+          <td><span class="pill ${stCls}">${stTxt}</span></td>
+        </tr>`;
+      }).join('');
+      body.innerHTML = `
+        <table class="w-table">
+          <thead><tr><th>ID</th><th>Milestone</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+  },
+
+  'wbs-summary': {
+    title: 'WBS Summary',
+    icon: '🗂',
+    defaultSize: { w: 7, h: 5 },
+    render(body) {
+      body.classList.add('padded-tight');
+      if (!Object.keys(S.taskData).length) return placeholder(body, '🗂', 'Awaiting XER data');
+
+      // Roll up per top-level WBS
+      const rollup = {};
+      Object.values(S.taskData).forEach(t => {
+        let wid = t.wbsId, depth = 0;
+        // Walk up to top WBS (under project root)
+        while (wid && S.wbsNodes[wid]) {
+          const n = S.wbsNodes[wid];
+          const parent = n.parentId && S.wbsNodes[n.parentId];
+          if (!parent || !parent.parentId || !S.wbsNodes[parent.parentId]) break;
+          wid = n.parentId; depth++;
+          if (depth > 20) break;
+        }
+        const w = S.wbsNodes[wid];
+        if (!w) return;
+        const key = wid;
+        if (!rollup[key]) rollup[key] = { name: w.name, code: w.shortName, count: 0, pctSum: 0 };
+        rollup[key].count++;
+        rollup[key].pctSum += t.completePct || 0;
+      });
+
+      const rows = Object.values(rollup).map(r => {
+        const avg = r.count ? (r.pctSum/r.count).toFixed(1) : '0.0';
+        return `<tr>
+          <td>${esc(r.code)}</td>
+          <td>${esc(r.name)}</td>
+          <td class="num">${r.count}</td>
+          <td class="num">${avg}%</td>
+        </tr>`;
+      }).join('');
+      body.innerHTML = `
+        <table class="w-table">
+          <thead><tr><th>Code</th><th>WBS</th><th>Activities</th><th>% Compl</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+  },
+
+  'lookahead': {
+    title: '3-Week Lookahead',
+    icon: '📅',
+    defaultSize: { w: 7, h: 5 },
+    render(body) {
+      body.classList.add('padded-tight');
+      if (!Object.keys(S.taskData).length) return placeholder(body, '📅', 'Awaiting XER data');
+      const anchor = S.dataDate || new Date();
+      const start = new Date(anchor); start.setHours(0,0,0,0);
+      const end = new Date(start); end.setDate(end.getDate() + 21);
+
+      const inWindow = Object.values(S.taskData).filter(t => {
+        if (t.status === 'done') return false;
+        const s = t.start, f = t.finish;
+        if (!s && !f) return false;
+        return (s && s <= end && (f||s) >= start);
+      });
+      inWindow.sort((a,b) => (a.start||a.finish||0) - (b.start||b.finish||0));
+
+      if (!inWindow.length) return placeholder(body, '📅', 'No upcoming activities');
+
+      const rows = inWindow.slice(0, 300).map(t => {
+        const stCls = t.critical ? 'pill-crit' : t.status==='ip' ? 'pill-ip' : 'pill-ns';
+        const stTxt = t.critical ? 'Critical' : t.status==='ip' ? 'In Prog' : 'Upcoming';
+        return `<tr>
+          <td>${esc(t.code)}</td>
+          <td>${esc(t.name)}</td>
+          <td>${fmtD(t.start)}</td>
+          <td>${fmtD(t.finish)}</td>
+          <td><span class="pill ${stCls}">${stTxt}</span></td>
+        </tr>`;
+      }).join('');
+      body.innerHTML = `
+        <div style="font-size:10px; font-family:'DM Mono',monospace; color:var(--text-dim); margin:0 0 6px; text-transform:uppercase; letter-spacing:.08em;">
+          ${fmtD(start)} → ${fmtD(end)}
+        </div>
+        <table class="w-table">
+          <thead><tr><th>ID</th><th>Activity</th><th>Start</th><th>Finish</th><th>Status</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+  },
+
+  'critical-list': {
+    title: 'Critical Activities',
+    icon: '🔗',
+    defaultSize: { w: 7, h: 5 },
+    render(body) {
+      body.classList.add('padded-tight');
+      if (!Object.keys(S.taskData).length) return placeholder(body, '🔗', 'Awaiting XER data');
+      const crit = Object.values(S.taskData).filter(t => t.critical && t.status !== 'done');
+      if (!crit.length) return placeholder(body, '🔗', 'No critical activities found');
+      crit.sort((a,b) => a.totalFloat - b.totalFloat);
+      const rows = crit.slice(0, 300).map(t => `
+        <tr>
+          <td>${esc(t.code)}</td>
+          <td>${esc(t.name)}</td>
+          <td>${fmtD(t.start)}</td>
+          <td>${fmtD(t.finish)}</td>
+          <td class="num">${(t.totalFloat/8).toFixed(1)}d</td>
+          <td class="num">${(t.completePct||0).toFixed(0)}%</td>
+        </tr>`).join('');
+      body.innerHTML = `
+        <table class="w-table">
+          <thead><tr><th>ID</th><th>Activity</th><th>Start</th><th>Finish</th><th>TF</th><th>% C</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+  },
+
+  'resource-histogram': {
+    title: 'Resource Histogram',
+    icon: '▥',
+    defaultSize: { w: 6, h: 4 },
+    render(body) {
+      // Stub renderer — shows monthly task count distribution
+      const tasks = Object.values(S.taskData);
+      if (!tasks.length) return placeholder(body, '▥', 'Awaiting XER data');
+      const allDates = tasks.flatMap(t => [t.start, t.finish]).filter(Boolean);
+      if (!allDates.length) return placeholder(body, '▥', 'No date data');
+      const minD = new Date(Math.min(...allDates));
+      const maxD = new Date(Math.max(...allDates));
+      const buckets = [];
+      const cur = new Date(minD.getFullYear(), minD.getMonth(), 1);
+      while (cur <= maxD) { buckets.push(new Date(cur)); cur.setMonth(cur.getMonth()+1); }
+      const counts = buckets.map(b => {
+        const mEnd = new Date(b.getFullYear(), b.getMonth()+1, 0);
+        return tasks.filter(t => t.start && t.finish && t.start <= mEnd && t.finish >= b).length;
+      });
+      body.innerHTML = '<canvas></canvas>';
+      const ctx = body.querySelector('canvas');
+      const style = getComputedStyle(document.documentElement);
+      const text = style.getPropertyValue('--text-mid').trim();
+      const grid = style.getPropertyValue('--border').trim();
+      const ch = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: buckets.map(d => `${MONS[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`),
+          datasets: [{ label: 'Active Activities', data: counts, backgroundColor: style.getPropertyValue('--steel-light').trim() }]
+        },
+        options: {
+          maintainAspectRatio: false, responsive: true,
+          plugins: { legend: { labels: { color: text, font:{ size:11, family:'DM Sans' } } } },
+          scales: {
+            x: { ticks:{ color:text, font:{size:10}, maxRotation:45 }, grid:{ display:false } },
+            y: { ticks:{ color:text, font:{size:10} }, grid:{ color:grid }, beginAtZero:true }
+          }
+        }
+      });
+      S.charts.set(body, ch);
+    }
+  },
+
+  'note': {
+    title: 'Text Note',
+    icon: '📝',
+    defaultSize: { w: 4, h: 3 },
+    render(body, cell) {
+      const initial = cell.dataset.noteText || 'Click to edit this note. Use it to caption your dashboard, add context, or leave instructions for your team.';
+      body.innerHTML = `<div contenteditable="true" style="height:100%; outline:none; font-size:13px; line-height:1.55; color:var(--text); padding:4px;">${esc(initial)}</div>`;
+      const ed = body.querySelector('[contenteditable]');
+      ed.addEventListener('input', () => { cell.dataset.noteText = ed.innerText; });
+    }
+  },
+
+};
+
+function esc(s) {
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function placeholder(body, icon, text) {
+  body.innerHTML = `
+    <div class="widget-placeholder">
+      <div class="wp-icon">${icon}</div>
+      <div class="wp-text">${esc(text)}</div>
+      <div class="wp-sub">Load XER to populate</div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GRID SETUP
+═══════════════════════════════════════════════════════════════════════ */
+const grid = GridStack.init({
+  column: 12,
+  cellHeight: 70,
+  margin: 8,
+  float: true,
+  handle: '.widget-head',
+  resizable: { handles: 'se' },
+  acceptWidgets: '.widget-item',
+  removable: false,
+}, '#grid');
+
+GridStack.setupDragIn('.widget-item', { appendTo: 'body', helper: 'clone' });
+
+grid.on('dropped', (ev, prev, item) => {
+  const draggedEl = item.el;
+  const widgetType = draggedEl.dataset.widget;
+  // Replace the dropped element with our widget cell
+  grid.removeWidget(item.el, false);
+  addWidget(widgetType, { x: item.x, y: item.y });
+});
+
+grid.on('change', () => {
+  // Resize chart on any layout change
+  S.charts.forEach((ch) => { try { ch.resize(); } catch(e){} });
+  updateEmptyState();
+  autoSave();
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   WIDGET LIFECYCLE
+═══════════════════════════════════════════════════════════════════════ */
+function addWidget(type, pos = {}, restored = {}) {
+  const def = WIDGETS[type];
+  if (!def) { toast('Unknown widget: '+type, true); return null; }
+  const id = 'w' + (++S.widgetCounter) + '_' + Date.now().toString(36);
+  const size = def.defaultSize || { w: 4, h: 4 };
+
+  const cell = document.createElement('div');
+  cell.className = 'widget-cell';
+  cell.dataset.widgetType = type;
+  cell.dataset.widgetId = id;
+  if (restored.noteText) cell.dataset.noteText = restored.noteText;
+
+  cell.innerHTML = `
+    <div class="widget-head">
+      <div class="widget-head-icon">${def.icon}</div>
+      <div class="widget-head-title">${esc(def.title)}</div>
+      <div class="widget-actions">
+        <button class="wa-refresh" title="Refresh">↻</button>
+        <button class="wa-remove" title="Remove">✕</button>
+      </div>
+    </div>
+    <div class="widget-body"></div>
+  `;
+
+  const widget = grid.addWidget({
+    x: pos.x ?? 0,
+    y: pos.y ?? 0,
+    w: restored.w || size.w,
+    h: restored.h || size.h,
+    minW: 2, minH: 2,
+    content: cell.outerHTML,
+    id: id,
+  });
+
+  // Re-find the actual cell inserted by gridstack
+  const inserted = widget.querySelector('.widget-cell');
+  inserted.dataset.widgetType = type;
+  inserted.dataset.widgetId = id;
+  if (restored.noteText) inserted.dataset.noteText = restored.noteText;
+
+  inserted.querySelector('.wa-remove').addEventListener('click', e => {
+    e.stopPropagation();
+    const ch = S.charts.get(inserted.querySelector('.widget-body'));
+    if (ch) { try { ch.destroy(); } catch(_){} S.charts.delete(inserted.querySelector('.widget-body')); }
+    grid.removeWidget(widget);
+    updateEmptyState();
+    autoSave();
+  });
+  inserted.querySelector('.wa-refresh').addEventListener('click', e => {
+    e.stopPropagation();
+    rerenderWidget(inserted);
+  });
+
+  rerenderWidget(inserted);
+  updateEmptyState();
+  return widget;
+}
+
+function rerenderWidget(cell) {
+  const type = cell.dataset.widgetType;
+  const def = WIDGETS[type];
+  if (!def) return;
+  const body = cell.querySelector('.widget-body');
+  const oldChart = S.charts.get(body);
+  if (oldChart) { try { oldChart.destroy(); } catch(_){} S.charts.delete(body); }
+  body.classList.remove('padded-tight');
+  body.innerHTML = '';
+  try { def.render(body, cell); } catch (e) { console.error(e); placeholder(body, '⚠', 'Render error'); }
+}
+
+function rerenderAll() {
+  document.querySelectorAll('.widget-cell').forEach(rerenderWidget);
+}
+
+function updateEmptyState() {
+  const wrap = document.getElementById('canvasWrap');
+  const has = grid.engine.nodes.length > 0;
+  wrap.classList.toggle('has-items', has);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TEMPLATE SAVE / LOAD
+═══════════════════════════════════════════════════════════════════════ */
+function serializeCanvas() {
+  const items = grid.engine.nodes.map(n => {
+    const cell = n.el.querySelector('.widget-cell');
+    return {
+      x: n.x, y: n.y, w: n.w, h: n.h,
+      widgetType: cell.dataset.widgetType,
+      noteText: cell.dataset.noteText || undefined,
+    };
+  });
+  return {
+    name: document.getElementById('tplName').value.trim() || 'Untitled Template',
+    version: 1,
+    createdAt: new Date().toISOString(),
+    items,
+  };
+}
+
+function saveTemplate() {
+  const tpl = serializeCanvas();
+  if (!tpl.items.length) { toast('Canvas is empty — nothing to save', true); return; }
+  const blob = new Blob([JSON.stringify(tpl, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (tpl.name.replace(/[^a-z0-9_\- ]/gi, '_') || 'template') + '.pms-canvas.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast(`Template saved: ${tpl.name}`);
+}
+
+function loadTemplate(tpl) {
+  if (!tpl || !Array.isArray(tpl.items)) { toast('Invalid template file', true); return; }
+  clearCanvas(true);
+  document.getElementById('tplName').value = tpl.name || 'Untitled Template';
+  tpl.items.forEach(it => {
+    addWidget(it.widgetType, { x: it.x, y: it.y }, { w: it.w, h: it.h, noteText: it.noteText });
+  });
+  toast(`Template loaded: ${tpl.name || 'Untitled'}`);
+}
+
+document.getElementById('tplInput').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try { loadTemplate(JSON.parse(ev.target.result)); }
+    catch (err) { toast('Failed to read template JSON', true); }
+  };
+  r.readAsText(f);
+  e.target.value = '';
+});
+
+function clearCanvas(silent) {
+  S.charts.forEach((ch) => { try { ch.destroy(); } catch(_){} });
+  S.charts.clear();
+  grid.removeAll();
+  updateEmptyState();
+  if (!silent) {
+    toast('Canvas cleared');
+    localStorage.removeItem('pms_canvas_autosave');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   AUTO-SAVE (browser refresh recovery)
+═══════════════════════════════════════════════════════════════════════ */
+let autoSaveTimer = null;
+function autoSave() {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => {
+    try { localStorage.setItem('pms_canvas_autosave', JSON.stringify(serializeCanvas())); } catch(_) {}
+  }, 400);
+}
+
+function tryRestoreAutosave() {
+  try {
+    const raw = localStorage.getItem('pms_canvas_autosave');
+    if (!raw) return;
+    const tpl = JSON.parse(raw);
+    if (tpl.items && tpl.items.length) {
+      loadTemplate(tpl);
+    }
+  } catch(_) {}
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════════════════════════════════ */
+updateXERPanel();
+updateEmptyState();
+tryRestoreAutosave();
+
+// Resize all charts when window resizes
+window.addEventListener('resize', () => {
+  S.charts.forEach(ch => { try { ch.resize(); } catch(_){} });
+});
+</script>
+
+</body>
+</html>
