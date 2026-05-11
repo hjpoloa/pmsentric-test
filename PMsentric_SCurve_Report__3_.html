@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Milestones Report — PMsentric</title>
+<title>S-Curve Report — PMsentric</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
@@ -54,12 +54,11 @@ header {
 .hd-title { font-size:15px; font-weight:700; letter-spacing:-.2px; }
 .hd-sub { font-size:11px; color:var(--muted); margin-top:1px; }
 .hd-tag {
-  margin-left:0; font-size:10px; font-weight:600; letter-spacing:1.2px;
+  font-size:10px; font-weight:600; letter-spacing:1.2px;
   text-transform:uppercase; color:var(--muted);
   border:1px solid var(--border2); padding:4px 10px; border-radius:20px;
 }
 
-/* Header action buttons (Combined-style XER loader) */
 .hd-actions {
   margin-left:auto; display:flex; align-items:center; gap:8px; flex-shrink:0;
 }
@@ -200,18 +199,6 @@ header {
 .btn-gold { background:linear-gradient(135deg,var(--gold2),var(--gold)); color:#000; }
 .btn-gold:hover { box-shadow:0 0 20px rgba(232,184,75,.35); transform:translateY(-1px); }
 .btn-gold:disabled { opacity:.35; cursor:not-allowed; transform:none; box-shadow:none; }
-.btn-select-milestones {
-  background:linear-gradient(135deg,var(--gold2),var(--gold));
-  color:#000;
-  border:1px solid var(--gold);
-  box-shadow:0 0 0 1px rgba(232,184,75,.25), 0 0 12px rgba(232,184,75,.25);
-  font-weight:700;
-}
-.btn-select-milestones:hover {
-  box-shadow:0 0 0 1px var(--gold), 0 0 22px rgba(232,184,75,.55);
-  transform:translateY(-1px);
-  filter:brightness(1.05);
-}
 
 .report-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-bottom:16px; }
 .report-card {
@@ -561,234 +548,6 @@ header {
 }
 .ms-print-btn:hover { border-color:var(--accent); color:var(--accent); }
 
-/* ── Milestone view-mode toggle (Table / Timeline) ───────────────── */
-.ms-view-toggle {
-  display:inline-flex; background:var(--s3); border:1px solid var(--border2);
-  border-radius:6px; padding:2px; gap:2px;
-}
-.ms-view-toggle button {
-  background:transparent; border:0; color:var(--muted);
-  padding:5px 12px; font-size:11px; font-weight:600; border-radius:4px;
-  cursor:pointer; font-family:inherit; transition:all .15s;
-  display:inline-flex; align-items:center; gap:5px;
-}
-.ms-view-toggle button:hover { color:var(--text); }
-.ms-view-toggle button.active {
-  background:linear-gradient(135deg,var(--gold2),var(--gold));
-  color:#000;
-}
-
-/* ── Milestone Timeline view ─────────────────────────────────────── */
-.ms-timeline-wrap {
-  background:var(--s2); border:1px solid var(--border);
-  border-radius:8px; padding:18px; overflow-x:auto;
-}
-.ms-timeline {
-  position:relative; padding:20px 20px 20px;
-}
-.ms-timeline-axis {
-  position:relative; height:2px; background:var(--border2); margin:0;
-}
-.ms-timeline-datadate {
-  position:absolute; width:0;
-  border-left:2px dashed var(--accent);
-  opacity:.45;
-  pointer-events:none;
-  z-index:0;
-}
-.ms-timeline-datadate-label {
-  position:absolute; transform:translateX(-50%);
-  font-size:10px; font-weight:700; color:var(--accent);
-  text-transform:uppercase; letter-spacing:.6px;
-  background:var(--bg); padding:2px 6px; border-radius:3px;
-  border:1px solid rgba(0,212,255,.4); white-space:nowrap;
-  z-index:3;
-}
-.ms-timeline-tick {
-  position:absolute; top:-6px; width:1px; height:14px; background:var(--dim);
-}
-.ms-timeline-tick-label {
-  position:absolute; top:14px; transform:translateX(-50%);
-  font-size:10px; color:var(--muted); font-family:var(--mono);
-  white-space:nowrap;
-}
-.ms-timeline-pin {
-  position:absolute; transform:translateX(-50%);
-  cursor:pointer; transition:transform .15s;
-  z-index:1;
-}
-.ms-timeline-pin:hover { z-index:10; }
-.ms-timeline-pin:hover .pin-card {
-  border-color:currentColor; transform:translateX(-50%) scale(1.05);
-  box-shadow:0 6px 20px rgba(0,0,0,.5);
-}
-.ms-timeline-pin .pin-stem {
-  position:absolute; left:50%; width:2px;
-  background:currentColor; opacity:.65; transform:translateX(-50%);
-}
-.ms-timeline-pin.above .pin-stem { bottom:0; }
-.ms-timeline-pin.below .pin-stem { top:0; }
-.ms-timeline-pin .pin-dot {
-  width:14px; height:14px; border-radius:50%;
-  background:currentColor; border:2px solid var(--bg);
-  box-shadow:0 0 0 2px currentColor, 0 0 10px rgba(0,0,0,.4);
-  position:absolute; left:50%; transform:translateX(-50%);
-  z-index:2;
-}
-.ms-timeline-pin.above .pin-dot { bottom:-7px; }
-.ms-timeline-pin.below .pin-dot { top:-7px; }
-.ms-timeline-pin .pin-card {
-  position:absolute; left:50%; transform:translateX(-50%);
-  background:var(--s1); border:1px solid var(--border2);
-  border-radius:6px; padding:6px 10px; min-width:140px; max-width:220px;
-  font-size:11px; color:var(--text);
-  box-shadow:0 4px 14px rgba(0,0,0,.35);
-  transition:transform .15s, border-color .15s, box-shadow .15s;
-}
-.ms-timeline-pin.above .pin-card { bottom:0; }
-.ms-timeline-pin.below .pin-card { top:0; }
-.ms-timeline-pin .pin-card .pc-name {
-  font-weight:600; white-space:nowrap; overflow:hidden;
-  text-overflow:ellipsis; margin-bottom:3px;
-}
-.ms-timeline-pin .pin-card .pc-meta {
-  font-size:10px; color:var(--muted); font-family:var(--mono);
-  display:flex; justify-content:space-between; gap:8px;
-}
-.ms-timeline-pin .pin-card .pc-baseline {
-  font-size:10px; color:var(--gold); font-family:var(--mono);
-  display:flex; justify-content:space-between; gap:8px;
-  margin-top:3px; padding-top:3px; border-top:1px dashed var(--border2);
-}
-.ms-timeline-pin .pin-card .pc-baseline .pc-bl-label { color:var(--muted); }
-.ms-timeline-pin .pin-card .pc-variance {
-  font-size:10px; font-family:var(--mono); font-weight:600;
-  display:flex; justify-content:space-between; gap:8px;
-  margin-top:2px;
-}
-.ms-timeline-pin .pin-card .pc-variance .pc-var-label { color:var(--muted); font-weight:400; }
-.ms-timeline-pin .pin-card .pc-variance.var-neg  { color:var(--red); }
-.ms-timeline-pin .pin-card .pc-variance.var-pos  { color:var(--green); }
-.ms-timeline-pin .pin-card .pc-variance.var-zero { color:var(--muted); }
-.ms-timeline-pin.complete { color:var(--green); }
-.ms-timeline-pin.inprog   { color:var(--amber); }
-.ms-timeline-pin.late     { color:var(--red); }
-.ms-timeline-pin.notstart { color:var(--muted); }
-
-/* ── Collapsed-pin & cluster styling ─────────────────────────────── */
-/* A pin in collapsed state hides its card entirely and shows just the dot.
-   Hovering still reveals the card as a floating tooltip-style popover. */
-.ms-timeline-pin.collapsed .pin-card { display:none; }
-.ms-timeline-pin.collapsed .pin-stem { display:none; }
-.ms-timeline-pin.collapsed .pin-dot  {
-  width:10px; height:10px;
-  bottom:-5px !important; top:auto !important;
-}
-.ms-timeline-pin.collapsed.below .pin-dot {
-  top:-5px !important; bottom:auto !important;
-}
-.ms-timeline-pin.collapsed:hover .pin-card {
-  display:block; z-index:30;
-  bottom:auto !important; top:auto !important;
-  transform:translateX(-50%) translateY(-100%);
-  margin-top:-12px;
-}
-.ms-timeline-pin.collapsed.below:hover .pin-card {
-  transform:translateX(-50%) translateY(0);
-  margin-top:12px;
-}
-
-/* Cluster pin = stack of overlapping milestones rolled into one marker */
-.ms-timeline-cluster {
-  position:absolute; transform:translateX(-50%);
-  cursor:pointer; z-index:3;
-}
-.ms-timeline-cluster .cl-dot {
-  width:18px; height:18px; border-radius:50%;
-  background:var(--s2); border:2px solid var(--accent);
-  box-shadow:0 0 0 2px var(--bg), 0 0 12px rgba(0,0,0,.5);
-  position:absolute; left:50%; transform:translateX(-50%);
-  display:flex; align-items:center; justify-content:center;
-  font-size:9px; font-weight:700; color:var(--accent);
-  font-family:var(--mono); line-height:1;
-}
-.ms-timeline-cluster.above .cl-dot { bottom:-9px; }
-.ms-timeline-cluster.below .cl-dot { top:-9px; }
-.ms-timeline-cluster:hover .cl-dot {
-  background:var(--accent); color:var(--bg);
-}
-
-/* Cluster popover — vertical list of milestones in the cluster */
-.ms-timeline-cluster .cl-popover {
-  position:absolute; left:50%; transform:translateX(-50%);
-  background:var(--s1); border:1px solid var(--accent);
-  border-radius:8px; padding:8px; min-width:220px; max-width:280px;
-  box-shadow:0 8px 28px rgba(0,0,0,.6);
-  display:none; z-index:40;
-  max-height:none; overflow-y:visible;
-}
-.ms-timeline-cluster.open .cl-popover { display:block; }
-.ms-timeline-cluster.above .cl-popover { bottom:18px; }
-.ms-timeline-cluster.below .cl-popover { top:18px; }
-.ms-timeline-cluster .cl-popover-header {
-  font-size:10px; font-weight:700; color:var(--accent);
-  text-transform:uppercase; letter-spacing:.6px;
-  padding-bottom:6px; margin-bottom:6px;
-  border-bottom:1px solid var(--border2);
-  display:flex; justify-content:space-between; align-items:center;
-}
-.ms-timeline-cluster .cl-popover-close {
-  background:none; border:none; color:var(--muted); cursor:pointer;
-  font-size:14px; padding:0 4px; line-height:1;
-}
-.ms-timeline-cluster .cl-popover-close:hover { color:var(--text); }
-.ms-timeline-cluster .cl-item {
-  padding:6px 8px; border-radius:4px;
-  font-size:11px; color:var(--text);
-  border-left:3px solid currentColor;
-  margin-bottom:4px; background:var(--s2);
-}
-.ms-timeline-cluster .cl-item:last-child { margin-bottom:0; }
-.ms-timeline-cluster .cl-item.complete { color:var(--green); }
-.ms-timeline-cluster .cl-item.inprog   { color:var(--amber); }
-.ms-timeline-cluster .cl-item.late     { color:var(--red); }
-.ms-timeline-cluster .cl-item.notstart { color:var(--muted); }
-.ms-timeline-cluster .cl-item .cli-name {
-  font-weight:600; color:var(--text);
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-.ms-timeline-cluster .cl-item .cli-meta {
-  font-size:10px; color:var(--muted); font-family:var(--mono);
-  display:flex; justify-content:space-between; gap:8px; margin-top:2px;
-}
-.ms-timeline-cluster .cl-item .cli-baseline {
-  font-size:10px; color:var(--gold); font-family:var(--mono);
-  display:flex; justify-content:space-between; gap:8px;
-  margin-top:3px; padding-top:3px; border-top:1px dashed var(--border2);
-}
-.ms-timeline-cluster .cl-item .cli-baseline .cli-bl-label { color:var(--muted); }
-.ms-timeline-cluster .cl-item .cli-variance {
-  font-size:10px; font-family:var(--mono); font-weight:600;
-  display:flex; justify-content:space-between; gap:8px; margin-top:2px;
-}
-.ms-timeline-cluster .cl-item .cli-variance .cli-var-label { color:var(--muted); font-weight:400; }
-.ms-timeline-cluster .cl-item .cli-variance.var-neg  { color:var(--red); }
-.ms-timeline-cluster .cl-item .cli-variance.var-pos  { color:var(--green); }
-.ms-timeline-cluster .cl-item .cli-variance.var-zero { color:var(--muted); }
-
-.ms-timeline-legend {
-  display:flex; gap:18px; flex-wrap:wrap;
-  margin-top:14px; padding-top:12px; border-top:1px solid var(--border);
-  font-size:11px; color:var(--muted);
-}
-.ms-timeline-legend .lg-item { display:inline-flex; align-items:center; gap:6px; }
-.ms-timeline-legend .lg-dot {
-  width:10px; height:10px; border-radius:50%; background:currentColor;
-}
-.ms-timeline-empty {
-  text-align:center; padding:40px 20px; color:var(--muted); font-size:12px;
-}
-
 /* Print rules — single-page-fit for milestone register */
 @media print {
   body.printing-ms .app > *:not(main),
@@ -861,7 +620,7 @@ header {
 
   /* ---------- REPORT VIEW PRINT (WBS · S-Curve · Milestones · Lookahead) ---------- */
   body.printing-report header,
-  body.printing-report .status-bar,
+  body.printing-report .progress-bar,
   body.printing-report .step-view,
   body.printing-report .report-toolbar,
   body.printing-report .btn,
@@ -873,8 +632,9 @@ header {
 
   /* ---------- READER VIEW PRINT ---------- */
   body.printing-reader header,
-  body.printing-reader .status-bar,
-  body.printing-reader #landing,
+  body.printing-reader .progress-bar,
+  body.printing-reader #step1,
+  body.printing-reader #step2,
   body.printing-reader #step3,
   body.printing-reader .report-toolbar,
   body.printing-reader .toolbar,
@@ -943,10 +703,10 @@ header {
 <div class="app">
 
 <header>
-  <div class="logo-mark">M</div>
+  <div class="logo-mark">S</div>
   <div>
-    <div class="hd-title">Milestones Report</div>
-    <div class="hd-sub">Key milestone status with baseline vs current finish variance</div>
+    <div class="hd-title">S-Curve Report</div>
+    <div class="hd-sub">Cumulative planned, actual & forecast cost curves over time</div>
   </div>
   <div class="hd-actions">
     <button class="hd-btn hd-btn-ghost" onclick="history.back()" title="Back to Reporting Suite" style="gap:5px;">← Reporting</button>
@@ -1081,20 +841,21 @@ header {
       <div class="drop-hint">or click to browse · all processing happens in your browser · .xer format only</div>
       <button class="btn btn-primary" style="margin-top:14px" onclick="event.stopPropagation();document.getElementById('updateFileInput').click()">Choose File</button>
     </div>
-    <div class="opt-note" style="margin-top:18px"><strong>Tip:</strong> The Update XER is required. The Baseline XER is optional but recommended — without it, baseline-vs-current variance cannot be calculated. Use the <strong>📎 Load Baseline XER</strong> button in the header to add a baseline at any time.</div>
+    <div class="opt-note" style="margin-top:18px"><strong>Tip:</strong> The Update XER is required. The Baseline XER is optional but recommended — without it, Planned % and Variance are unavailable. Use the <strong>📎 Load Baseline XER</strong> button in the header to add a baseline at any time.</div>
   </div>
 
-  <!-- CONFIGURE — shown after Update XER loads -->
+  <!-- STEP 3 -->
   <div class="step-view" id="step3">
     <div class="step-heading">
-      <h2>Milestones Report</h2>
+      <div class="step-label">Step 3 of 4</div>
+      <h2>S-Curve Report</h2>
       <p>Configure the options below, then click Generate Report.</p>
     </div>
     <div class="report-grid" style="grid-template-columns:1fr;">
-      <div class="report-card selected" id="rpt-milestones" style="cursor:default;">
-        <div class="report-icon">🚩</div>
-        <div class="report-name">Milestones Table</div>
-        <div class="report-hint">Key milestone status with baseline vs current finish variance</div>
+      <div class="report-card selected" id="rpt-scurve" style="cursor:default;">
+        <div class="report-icon">📈</div>
+        <div class="report-name">S-Curve</div>
+        <div class="report-hint">Cumulative planned, actual & forecast cost curves over time</div>
       </div>
     </div>
 
@@ -1105,7 +866,7 @@ header {
           <button class="btn-mini" onclick="wbsPickerExpandAll()" title="Expand all WBS branches">⊞ Expand All</button>
           <button class="btn-mini" onclick="wbsPickerCollapseAll()" title="Collapse all WBS branches">⊟ Collapse All</button>
           <button class="btn btn-ghost" onclick="wbsPickAll(true)">Select All</button>
-          <button class="btn btn-ghost" onclick="wbsPickAll(false)">DeSelect All</button>
+          <button class="btn btn-ghost" onclick="wbsPickAll(false)">Clear</button>
         </div>
       </div>
       <div class="wbs-search-wrap">
@@ -1128,10 +889,8 @@ header {
       <div class="wbs-picker-head">
         <div class="wbs-picker-title">Filter Milestones</div>
         <div class="wbs-picker-actions">
-          <button class="btn-mini" onclick="msWbsExpandAll()" title="Expand all WBS branches">⊞ Expand All</button>
-          <button class="btn-mini" onclick="msWbsCollapseAll()" title="Collapse all WBS branches">⊟ Collapse All</button>
           <button class="btn btn-ghost" onclick="msPickAll(true)">Select All</button>
-          <button class="btn btn-ghost" onclick="msPickAll(false)">DeSelect All</button>
+          <button class="btn btn-ghost" onclick="msPickAll(false)">Clear</button>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
@@ -1163,7 +922,7 @@ header {
     </div>
 
     <div class="nav-row">
-      <button class="btn btn-ghost" onclick="clearUpdate()">← Close File</button>
+      <button class="btn btn-ghost" onclick="goStep(2)">← Back</button>
       <button class="btn btn-gold" id="generateBtn" onclick="generateReport()" disabled>Generate Report ▶</button>
     </div>
   </div>
@@ -1179,7 +938,6 @@ header {
         <input type="checkbox" id="readerLookaheadFilter" onchange="onReaderLookaheadToggle(this)">
         <span>🗓️ 3 Weeks Look Ahead</span>
       </label>
-      <button class="btn btn-sm btn-select-milestones" onclick="goStep(3)">← Select Milestones</button>
       <button class="btn btn-ghost btn-sm" id="printBtn" onclick="printReportView()">🖨 Print View</button>
     </div>
     <div class="report-content" id="reportContent"></div>
@@ -1202,7 +960,6 @@ let scurveChart = null;
 let wbsCharts = [];
 // WBS selector tree collapse state (set of WBS ids whose children are hidden in the picker)
 let wbsPickerCollapsed = new Set();
-let msWbsCollapsed = new Set();
 
 // ═══════════════════════════════════════════════════════
 //  DATE HELPERS
@@ -1377,34 +1134,29 @@ function schedPctWbsFromActs(acts, dataDate) {
 // ═══════════════════════════════════════════════════════
 //  FILE LOADING
 // ═══════════════════════════════════════════════════════
-function setSt(msg, kind) {
-  const bar = document.getElementById('statusBar');
-  if (bar) {
-    bar.classList.remove('ok', 'err');
-    if (kind === 'ok') bar.classList.add('ok');
-    else if (kind === 'err') bar.classList.add('err');
-  }
-  const t = document.getElementById('statusText');
-  if (t) t.textContent = msg;
-}
-
 function setupDrop(dropEl, inputEl, onLoad) {
   if (dropEl) {
-    dropEl.addEventListener('click', e => {
-      if (e.target.tagName === 'BUTTON') return;
-      inputEl.click();
-    });
     dropEl.addEventListener('dragover', e => { e.preventDefault(); dropEl.classList.add('drag'); });
     dropEl.addEventListener('dragleave', () => dropEl.classList.remove('drag'));
     dropEl.addEventListener('drop', e => {
       e.preventDefault(); dropEl.classList.remove('drag');
       const f = e.dataTransfer.files[0]; if (f) readFile(f, onLoad);
     });
+    if (inputEl) {
+      dropEl.style.cursor = 'pointer';
+      dropEl.addEventListener('click', e => {
+        // Avoid double-trigger when an inner button forwards the click
+        if (e.target && e.target.closest && e.target.closest('button')) return;
+        inputEl.click();
+      });
+    }
   }
-  inputEl.addEventListener('change', e => {
-    const f = e.target.files[0]; if (f) readFile(f, onLoad);
-    e.target.value = '';
-  });
+  if (inputEl) {
+    inputEl.addEventListener('change', e => {
+      const f = e.target.files[0]; if (f) readFile(f, onLoad);
+      e.target.value = '';
+    });
+  }
 }
 function readFile(file, cb) {
   const r = new FileReader();
@@ -1416,60 +1168,54 @@ setupDrop(
   document.getElementById('dropUpdate'),
   document.getElementById('updateFileInput'),
   (text, name) => {
-    try {
-      parseUpdateXER(text, U);
-      U.loaded = true; U.fileName = name; U.rawText = text;
-      selectedWbsIds = new Set();
-      selectedMilestoneIds = new Set();
-      selectedMsWbsIds = new Set();
-      // Header chrome
-      document.getElementById('updatePill').style.display = 'inline-flex';
-      document.getElementById('updatePillName').textContent = name;
-      document.getElementById('clearUpdateBtn').style.display = 'inline-flex';
-      document.getElementById('loadUpdateBtn').textContent = '🔄 Replace Update XER';
-      const projCount = Object.keys(U.projects).length;
-      const wbsCount = Object.keys(U.wbsNodes).length;
-      const taskCount = Object.keys(U.taskData).length;
-      setSt(`Loaded: ${name} · ${projCount} project · ${wbsCount} WBS · ${taskCount} activities`, 'ok');
-      // Skip directly to Configure step (Step 3 in original wizard)
-      goStep(3);
-      // Auto-generate the default Milestones report:
-      //  · earliest milestone
-      //  · latest milestone
-      // The filter UI remains accessible via "← Back to Options".
-      try {
-        selectReport('milestones');
-        if (!document.getElementById('generateBtn').disabled) {
-          generateReport();
-        }
-      } catch(e) {}
-    } catch (err) {
-      setSt('Error parsing Update XER: ' + err.message, 'err');
-    }
+    parseUpdateXER(text, U);
+    U.loaded = true; U.fileName = name; U.rawText = text;
+    selectedWbsIds = new Set();
+    selectedMilestoneIds = new Set();
+    selectedMsWbsIds = new Set();
+    // Header: hide Load, show Clear
+    document.getElementById('loadUpdateBtn').style.display = 'none';
+    document.getElementById('clearUpdateBtn').style.display = 'inline-flex';
+    // Status: pill + ok dot
+    const upPill = document.getElementById('updatePill');
+    upPill.style.display = 'inline-flex';
+    document.getElementById('updatePillName').textContent = name;
+    document.getElementById('statusBar').classList.add('ok');
+    document.getElementById('statusText').textContent = B.loaded
+      ? 'Update + Baseline loaded — generating S-Curve…'
+      : 'Update loaded — generating S-Curve…';
+    // Auto-generate S-Curve at default WBS Level 1
+    selectedReport = 'scurve';
+    scurveState.levelCap = 1;
+    scurveState.selectedWbsIds = null;
+    scurveState.page = 1;
+    generateReport();
   }
 );
 
 setupDrop(
-  null,  // baseline has no drop zone — header button only
+  document.getElementById('dropBaseline'),
   document.getElementById('baselineFileInput'),
   (text, name) => {
-    try {
-      B.byCode = parseBaselineXER(text);
-      B.loaded = true;
-      B.fileName = name;
-      B.rawText = text;
-      document.getElementById('baselinePill').style.display = 'inline-flex';
-      document.getElementById('baselinePillName').textContent = name;
-      document.getElementById('clearBaselineBtn').style.display = 'inline-flex';
-      document.getElementById('loadBaselineBtn').textContent = '🔄 Replace Baseline';
-      const matchCount = Object.keys(B.byCode).length;
-      setSt(`Baseline loaded: ${name} · ${matchCount} activities matched by code`, 'ok');
-      // If we're already viewing the report, refresh it
+    B.byCode = parseBaselineXER(text);
+    B.loaded = true;
+    B.fileName = name;
+    B.rawText = text;
+    // Header: hide Load Baseline, show Clear Baseline
+    document.getElementById('loadBaselineBtn').style.display = 'none';
+    document.getElementById('clearBaselineBtn').style.display = 'inline-flex';
+    // Status pill
+    const blPill = document.getElementById('baselinePill');
+    blPill.style.display = 'inline-flex';
+    document.getElementById('baselinePillName').textContent = name;
+    if (U.loaded) {
+      document.getElementById('statusText').textContent = 'Update + Baseline loaded — refreshing S-Curve…';
+      // If report is already on screen, regenerate to include baseline curves
       if (document.getElementById('reportView').classList.contains('active')) {
-        try { generateReport(); } catch(e) {}
+        generateReport();
       }
-    } catch (err) {
-      setSt('Error parsing Baseline XER: ' + err.message, 'err');
+    } else {
+      document.getElementById('statusText').textContent = 'Baseline loaded — load an Update XER to generate the S-Curve';
     }
   }
 );
@@ -1484,47 +1230,64 @@ function clearUpdate() {
   scurveState.levelCap = 0;
   scurveState.page = 1;
   scurveState.dropdownOpen = false;
-  document.getElementById('updatePill').style.display = 'none';
+  // Header: show Load, hide Clear
+  document.getElementById('loadUpdateBtn').style.display = 'inline-flex';
   document.getElementById('clearUpdateBtn').style.display = 'none';
-  document.getElementById('loadUpdateBtn').textContent = '📂 Load Update XER';
-  // Also clear baseline since it relates to Update
-  clearBaseline();
-  setSt('Ready — Load an Update XER file to begin', '');
-  goStep(1);  // back to landing
+  // Status: hide pill, return to default
+  document.getElementById('updatePill').style.display = 'none';
+  document.getElementById('statusBar').classList.remove('ok');
+  document.getElementById('statusText').textContent = B.loaded
+    ? 'Baseline loaded — load an Update XER to generate the S-Curve'
+    : 'Ready — Load an Update XER file to begin';
+  // Clean up any rendered chart and return to landing
+  if (scurveChart) { try { scurveChart.destroy(); } catch(e){} scurveChart = null; }
+  if (wbsCharts && wbsCharts.length) { wbsCharts.forEach(c => { try{c.destroy();}catch(e){} }); wbsCharts = []; }
+  document.getElementById('reportContent').innerHTML = '';
+  goLanding();
 }
 function clearBaseline() {
   B.loaded = false; B.fileName = ''; B.byCode = {}; B.rawText = '';
-  document.getElementById('baselinePill').style.display = 'none';
+  document.getElementById('loadBaselineBtn').style.display = 'inline-flex';
   document.getElementById('clearBaselineBtn').style.display = 'none';
-  document.getElementById('loadBaselineBtn').textContent = '📎 Load Baseline XER';
-  // If we're viewing the report, refresh to reflect baseline removal
-  if (U.loaded && document.getElementById('reportView').classList.contains('active')) {
-    try { generateReport(); } catch(e) {}
+  document.getElementById('baselinePill').style.display = 'none';
+  if (U.loaded) {
+    document.getElementById('statusText').textContent = 'Update loaded — refreshing S-Curve…';
+    if (document.getElementById('reportView').classList.contains('active')) {
+      generateReport();
+    }
+  } else {
+    document.getElementById('statusText').textContent = 'Ready — Load an Update XER file to begin';
   }
 }
 
 // ═══════════════════════════════════════════════════════
-//  WIZARD NAVIGATION (landing → step3 → reportView)
+//  VIEW NAVIGATION
 // ═══════════════════════════════════════════════════════
-let currentStep = 1;
+function goLanding() {
+  document.querySelectorAll('.step-view').forEach(v => v.classList.remove('active'));
+  document.getElementById('reportView').classList.remove('active');
+  document.getElementById('mainScroll').style.overflow = '';
+  const landing = document.getElementById('landing');
+  if (landing) landing.classList.add('active');
+  const laToggle = document.getElementById('readerLookaheadToggle');
+  if (laToggle) laToggle.style.display = 'none';
+}
+
+// Legacy shim — older code paths still call goStep(3) / goStep(4)
 function goStep(n) {
   document.querySelectorAll('.step-view').forEach(v => v.classList.remove('active'));
   document.getElementById('reportView').classList.remove('active');
   document.getElementById('mainScroll').style.overflow = '';
-  // Hide the lookahead toolbar toggle when leaving the report view
   const laToggle = document.getElementById('readerLookaheadToggle');
   if (laToggle && n !== 4) laToggle.style.display = 'none';
   if (n === 4) {
     document.getElementById('reportView').classList.add('active');
     document.getElementById('mainScroll').style.overflow = 'hidden';
-  } else if (n === 3) {
-    document.getElementById('step3').classList.add('active');
   } else {
-    // Steps 1 & 2 collapse to the single landing view
-    document.getElementById('landing').classList.add('active');
+    // Any non-report step routes to landing now
+    const landing = document.getElementById('landing');
+    if (landing) landing.classList.add('active');
   }
-  currentStep = n;
-  if (n === 3) { try { selectReport('milestones'); } catch(e) {} }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1584,6 +1347,36 @@ function updateGenerateBtn() {
   if (msCount) msCount.textContent = `${selectedMsWbsIds.size} WBS · ${selectedMilestoneIds.size} milestones selected`;
 }
 
+// Direct-task budget per WBS (no descendant rollup) — sum of budgetCost of tasks
+// assigned directly to that WBS only.
+function _wbsDirectCostMap() {
+  const map = new Map();
+  for (const t of Object.values(U.taskData)) {
+    if (!t.wbsId) continue;
+    map.set(t.wbsId, (map.get(t.wbsId) || 0) + (t.budgetCost || 0));
+  }
+  return map;
+}
+
+// A WBS is shown only if it has direct-task budget > 0, OR any of its descendants
+// has direct-task budget > 0 (parent shown only because a leaf below has budget).
+function _wbsValidIds(directMap) {
+  const valid = new Set();
+  // First mark every WBS whose own direct tasks have budget > 0 (the leaves with budget).
+  for (const [wid, v] of directMap.entries()) {
+    if (v > 0) valid.add(wid);
+  }
+  // Then mark all ancestors of those WBS so the tree path is preserved.
+  for (const wid of [...valid]) {
+    let cur = U.wbsNodes[wid] && U.wbsNodes[wid].parentId;
+    while (cur && U.wbsNodes[cur]) {
+      valid.add(cur);
+      cur = U.wbsNodes[cur].parentId;
+    }
+  }
+  return valid;
+}
+
 function buildWbsPicker() {
   const list = document.getElementById('wbsList');
   const projId = Object.keys(U.projects)[0];
@@ -1591,9 +1384,12 @@ function buildWbsPicker() {
     list.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:12px">No project loaded.</div>';
     selectedWbsIds = new Set(); updateGenerateBtn(); return;
   }
+  const directMap = _wbsDirectCostMap();
+  const validSet = _wbsValidIds(directMap);
   const roots = Object.values(U.wbsNodes).filter(w => w.projId === projId && !U.wbsNodes[w.parentId]);
   const items = [];
   function walk(w, depth) {
+    if (!validSet.has(w.id)) return; // exclude WBS with no leaf budget anywhere below
     items.push({ w, depth });
     const kids = Object.values(U.wbsNodes).filter(c => c.parentId === w.id);
     kids.sort((a,b) => (a.shortName||'').localeCompare(b.shortName||''));
@@ -1680,53 +1476,6 @@ function wbsPickerCollapseAll() {
     }
   }
   buildWbsPicker();
-}
-
-// ── msPicker (Filter Milestones) collapse helpers ─────────────────────
-function applyMsWbsCollapse() {
-  const list = document.getElementById('msWbsList');
-  if (!list) return;
-  const items = list.querySelectorAll('.wbs-item');
-  items.forEach(item => {
-    const id = item.getAttribute('data-wbs-id');
-    let cur = U.wbsNodes[id] && U.wbsNodes[id].parentId;
-    let hide = false;
-    while (cur && U.wbsNodes[cur]) {
-      if (msWbsCollapsed.has(cur)) { hide = true; break; }
-      cur = U.wbsNodes[cur].parentId;
-    }
-    if (hide) item.classList.add('collapsed-hidden');
-    else item.classList.remove('collapsed-hidden');
-  });
-}
-
-function msWbsToggle(wid) {
-  if (msWbsCollapsed.has(wid)) msWbsCollapsed.delete(wid);
-  else msWbsCollapsed.add(wid);
-  buildMilestonePicker();
-}
-
-function msWbsExpandAll() {
-  msWbsCollapsed.clear();
-  buildMilestonePicker();
-}
-
-function msWbsCollapseAll() {
-  const projId = Object.keys(U.projects)[0];
-  if (!projId) return;
-  msWbsCollapsed = new Set();
-  const list = document.getElementById('msWbsList');
-  if (!list) return;
-  // Collapse every WBS that has a child currently rendered in the msPicker list
-  const renderedIds = new Set();
-  list.querySelectorAll('.wbs-item').forEach(it => renderedIds.add(it.getAttribute('data-wbs-id')));
-  const parents = new Set();
-  list.querySelectorAll('.wbs-item').forEach(it => {
-    const pid = it.getAttribute('data-parent-id');
-    if (pid && renderedIds.has(pid)) parents.add(pid);
-  });
-  for (const pid of parents) msWbsCollapsed.add(pid);
-  buildMilestonePicker();
 }
 
 function filterWbsList(query) {
@@ -1828,55 +1577,12 @@ function buildMilestonePicker() {
     if(!da&&!db)return 0; if(!da)return 1; if(!db)return -1; return da-db;
   });
 
-  // ── Default report selection (applies on fresh XER load) ──────────────
-  // Rule: 1) earliest milestone (Project Start)
-  //       2) latest milestone (Project Finish)
-  //       3) up to 5 milestones in window [Data Date .. Data Date + 3 weeks]
-  if (selectedMilestoneIds.size === 0 && selectedMsWbsIds.size === 0) {
-    const dated = milestones.filter(t => toDate(t.finish));
-    const defaultPicks = new Set();
-
-    // 1) earliest milestone (by finish date)
-    if (dated.length) defaultPicks.add(dated[0].id || dated[0].code);
-    // 2) latest milestone (by finish date)
-    if (dated.length > 1) {
-      const last = dated[dated.length - 1];
-      defaultPicks.add(last.id || last.code);
-    }
-
-    // 3) up to 5 milestones whose finish falls within DD..DD+3W
-    const projForDD = U.projects[projId];
-    const dd = projForDD ? toDate(projForDD.dataDate) : null;
-    if (dd) {
-      const ddEnd = new Date(dd.getTime() + 21 * 24 * 60 * 60 * 1000);
-      const inWindow = dated.filter(t => {
-        const f = toDate(t.finish);
-        return f && f >= dd && f <= ddEnd;
-      }).sort((a,b) => toDate(a.finish) - toDate(b.finish));
-      let added = 0;
-      for (const t of inWindow) {
-        if (added >= 5) break;
-        const id = t.id || t.code;
-        if (!defaultPicks.has(id)) {
-          defaultPicks.add(id);
-          added++;
-        }
-      }
-    }
-
-    // Fallback: if nothing matched (no dated milestones),
-    // select all so the report is not empty.
-    if (defaultPicks.size === 0) {
-      milestones.forEach(t => defaultPicks.add(t.id || t.code));
-    }
-
-    selectedMilestoneIds = defaultPicks;
-    // Pre-check the WBS rows that contain any of the selected milestones.
-    const pickedWbs = new Set();
-    milestones.forEach(t => {
-      if (defaultPicks.has(t.id || t.code)) pickedWbs.add(t.wbsId);
-    });
-    selectedMsWbsIds = pickedWbs;
+  // Default: all selected
+  if (selectedMilestoneIds.size === 0) selectedMilestoneIds = new Set(milestones.map(t=>t.id||t.code));
+  if (selectedMsWbsIds.size === 0) {
+    // pre-select all WBS that contain milestones
+    const wbsWithMs = new Set(milestones.map(t=>t.wbsId));
+    selectedMsWbsIds = new Set(wbsWithMs);
   }
 
   // Build WBS list (only WBS that contain milestones, plus their ancestors for context)
@@ -1899,32 +1605,19 @@ function buildMilestonePicker() {
 
   const validWbsIds = new Set(items.map(i => i.w.id));
   selectedMsWbsIds = new Set([...selectedMsWbsIds].filter(id => validWbsIds.has(id)));
-  // Drop stale collapse entries
-  msWbsCollapsed = new Set([...msWbsCollapsed].filter(id => validWbsIds.has(id)));
-  // Track which WBS have children (for toggle visibility)
-  const msHasChildrenSet = new Set();
-  for (const { w } of items) {
-    if (w.parentId && validWbsIds.has(w.parentId)) msHasChildrenSet.add(w.parentId);
-  }
 
   wbsList.innerHTML = items.map(({w, depth, hasMs}) => {
     const lvl = depth === 0 ? 'l0' : depth === 1 ? 'l1' : '';
     const indent = depth * 14;
     const checked = selectedMsWbsIds.has(w.id) ? 'checked' : '';
     const dim = hasMs ? '' : 'opacity:.55;';
-    const hasKids = msHasChildrenSet.has(w.id);
-    const isCollapsed = msWbsCollapsed.has(w.id);
-    const arrow = hasKids ? (isCollapsed ? '+' : '−') : '';
-    const toggleHtml = `<button type="button" class="wbs-tree-toggle ${hasKids ? '' : 'leaf'}" onclick="event.preventDefault();event.stopPropagation();msWbsToggle('${escH(w.id)}');" title="${hasKids ? (isCollapsed ? 'Expand' : 'Collapse') : ''}">${arrow}</button>`;
     return `
       <label class="wbs-item ${lvl}" data-wbs-id="${escH(w.id)}" data-parent-id="${escH(w.parentId||'')}" data-depth="${depth}" style="padding-left:${10+indent}px;${dim}">
-        ${toggleHtml}
         <input type="checkbox" data-wbs-id="${escH(w.id)}" ${checked} ${hasMs?'':'disabled'} onchange="toggleMsWbs(this)">
         <span class="wbs-code">${escH(w.shortName||'')}</span>
         <span>${escH(w.name||'')}</span>
       </label>`;
   }).join('');
-  applyMsWbsCollapse();
 
   // Build milestone list
   const validMsIds = new Set(milestones.map(t=>t.id||t.code));
@@ -1936,7 +1629,7 @@ function buildMilestonePicker() {
     const wbs = U.wbsNodes[t.wbsId];
     const wbsCode = wbs ? (wbs.shortName||'') : '';
     return `
-      <label class="wbs-item" data-ms-id="${escH(id)}" data-wbs-id="${escH(t.wbsId||'')}" data-ms-name="${escH((t.name||'').toLowerCase())}" data-ms-code="${escH((t.code||'').toLowerCase())}" style="padding-left:10px;">
+      <label class="wbs-item" data-ms-id="${escH(id)}" data-ms-name="${escH((t.name||'').toLowerCase())}" data-ms-code="${escH((t.code||'').toLowerCase())}" style="padding-left:10px;">
         <input type="checkbox" data-ms-id="${escH(id)}" ${checked} onchange="toggleMs(this)">
         <span class="wbs-code">${escH(t.code||'')}</span>
         <span>${escH(t.name||'')}</span>
@@ -1947,89 +1640,24 @@ function buildMilestonePicker() {
   updateGenerateBtn();
 }
 
-// ── Bidirectional WBS ↔ Milestone selection helpers ───────────────────
-// Returns the list of all milestone ids that belong to the given WBS id
-// (as displayed in the current milestone picker list).
-function _msIdsForWbs(wbsId) {
-  const ids = [];
-  document.querySelectorAll('#msList input[type=checkbox][data-ms-id]').forEach(cb => {
-    const lbl = cb.closest('.wbs-item');
-    if (!lbl) return;
-    if (lbl.getAttribute('data-wbs-id') === wbsId) ids.push(cb.getAttribute('data-ms-id'));
-  });
-  return ids;
-}
-
 function toggleMsWbs(cb) {
   const id = cb.getAttribute('data-wbs-id');
   if (cb.checked) selectedMsWbsIds.add(id); else selectedMsWbsIds.delete(id);
-  // Cascade: select / deselect every milestone that lives under this WBS
-  const childMsIds = _msIdsForWbs(id);
-  childMsIds.forEach(mid => {
-    if (cb.checked) selectedMilestoneIds.add(mid); else selectedMilestoneIds.delete(mid);
-    const msCb = document.querySelector(`#msList input[type=checkbox][data-ms-id="${CSS.escape(mid)}"]`);
-    if (msCb) msCb.checked = cb.checked;
-  });
-  updateMsPickCount();
   updateGenerateBtn();
 }
 
 function toggleMs(cb) {
   const id = cb.getAttribute('data-ms-id');
   if (cb.checked) selectedMilestoneIds.add(id); else selectedMilestoneIds.delete(id);
-  // Reverse-sync: update the parent WBS checkbox based on its children's state.
-  // WBS is checked when AT LEAST ONE of its milestones is selected.
-  const lbl = cb.closest('.wbs-item');
-  const wbsId = lbl ? lbl.getAttribute('data-wbs-id') : null;
-  if (wbsId) {
-    const siblingIds = _msIdsForWbs(wbsId);
-    const anyChecked = siblingIds.some(mid => selectedMilestoneIds.has(mid));
-    if (anyChecked) selectedMsWbsIds.add(wbsId); else selectedMsWbsIds.delete(wbsId);
-    const wbsCb = document.querySelector(`#msWbsList input[type=checkbox][data-wbs-id="${CSS.escape(wbsId)}"]`);
-    if (wbsCb && !wbsCb.disabled) wbsCb.checked = anyChecked;
-  }
-  updateMsPickCount();
   updateGenerateBtn();
-}
-
-function updateMsPickCount() {
-  const msCount = document.getElementById('msPickCount');
-  if (msCount) msCount.textContent = `${selectedMsWbsIds.size} WBS · ${selectedMilestoneIds.size} milestones selected`;
 }
 
 function filterMsWbsList(query) {
   const q = (query||'').trim().toLowerCase();
-  const list = document.getElementById('msWbsList');
-  if (!list) return;
-  const items = list.querySelectorAll('.wbs-item');
-  if (!q) {
-    items.forEach(item => item.classList.remove('hidden'));
-    applyMsWbsCollapse();
-    return;
-  }
-  // Active search: ignore collapse, base visibility on match-or-ancestor only
-  items.forEach(item => item.classList.remove('collapsed-hidden'));
-  const byId = new Map();
-  items.forEach(item => byId.set(item.getAttribute('data-wbs-id'), item));
-  const visibleIds = new Set();
-  items.forEach(item => {
+  document.querySelectorAll('#msWbsList .wbs-item').forEach(item => {
     const code = (item.querySelector('.wbs-code')?.textContent || '').toLowerCase();
     const name = (item.querySelector('span:not(.wbs-code)')?.textContent || '').toLowerCase();
-    if (code.includes(q) || name.includes(q)) visibleIds.add(item.getAttribute('data-wbs-id'));
-  });
-  visibleIds.forEach(id => {
-    let cur = byId.get(id);
-    while (cur) {
-      const parentId = cur.getAttribute('data-parent-id');
-      if (!parentId) break;
-      const parent = byId.get(parentId);
-      if (!parent || visibleIds.has(parentId)) break;
-      visibleIds.add(parentId); cur = parent;
-    }
-  });
-  items.forEach(item => {
-    if (visibleIds.has(item.getAttribute('data-wbs-id'))) item.classList.remove('hidden');
-    else item.classList.add('hidden');
+    item.classList.toggle('hidden', q && !code.includes(q) && !name.includes(q));
   });
 }
 
@@ -2455,9 +2083,9 @@ function renderSCurve(el) {
   }
   allWbs.forEach(getDesc);
 
-  // Initialize selectedWbsIds on first render (NONE selected by default — user must choose)
+  // Initialize selectedWbsIds on first render (ALL selected by default after XER load)
   if (scurveState.selectedWbsIds === null) {
-    scurveState.selectedWbsIds = new Set();
+    scurveState.selectedWbsIds = new Set(allWbs.map(w => w.id));
   } else {
     // Prune any stale ids; allow empty selection (placeholder will show)
     const valid = new Set(allWbs.map(w => w.id));
@@ -2996,14 +2624,6 @@ function attachScurveFilterHandlers(el, allWbs, maxDepth, descOf) {
 // ═══════════════════════════════════════════════════════
 //  MILESTONES REPORT
 // ═══════════════════════════════════════════════════════
-// View mode for the milestone report: 'table' (default) or 'timeline'
-let msViewMode = 'table';
-// Time scale for the timeline view: 'weekly' | 'monthly' (default) | 'quarterly'
-let msTimelineScale = 'monthly';
-// Cached data for the active milestone render so the view toggle can switch
-// between Table and Timeline without re-applying filters/sorts.
-let _msRenderCache = null;
-
 function renderMilestones(el) {
   const projId = Object.keys(U.projects)[0];
   if (!projId) { el.innerHTML = '<div class="empty">No project found.</div>'; return; }
@@ -3017,22 +2637,19 @@ function renderMilestones(el) {
     milestones = Object.values(U.taskData).filter(t => t.projId === projId && t.start === t.finish).slice(0, 50);
   }
 
-  // ── Apply picker filters: (WBS-selected) AND (individually selected) ──
-  // When both filters are active, intersect them. When only one is active,
-  // apply that one alone.
+  // ── Apply picker filters: union of (WBS-selected) OR (individually selected) ──
   const hasWbsFilter = selectedMsWbsIds && selectedMsWbsIds.size > 0;
   const hasMsFilter = selectedMilestoneIds && selectedMilestoneIds.size > 0;
   if (hasWbsFilter || hasMsFilter) {
     milestones = milestones.filter(t => {
       const id = t.id || t.code;
-      const wbsHit = hasWbsFilter ? selectedMsWbsIds.has(t.wbsId) : true;
-      const msHit  = hasMsFilter  ? selectedMilestoneIds.has(id)  : true;
-      return wbsHit && msHit;
+      const wbsHit = hasWbsFilter && selectedMsWbsIds.has(t.wbsId);
+      const msHit  = hasMsFilter  && selectedMilestoneIds.has(id);
+      return wbsHit || msHit;
     });
   }
   if (!milestones.length) {
     el.innerHTML = `<div class="rpt-section"><div class="rpt-section-title">Milestones · ${escH(proj.name)}</div><div class="empty">No milestones found.</div></div>`;
-    _msRenderCache = null;
     return;
   }
 
@@ -3041,33 +2658,21 @@ function renderMilestones(el) {
     if (!da && !db) return 0; if (!da) return 1; if (!db) return -1; return da - db;
   });
 
-  // Cache for the view-mode toggle
-  _msRenderCache = { milestones, proj, dataDate, projId };
-
-  // Render whichever view is currently active
-  _renderMilestoneView(el);
-}
-
-// Render the milestone report body using the current msViewMode + cache.
-function _renderMilestoneView(el) {
-  if (!_msRenderCache) return;
-  const { milestones, proj, dataDate } = _msRenderCache;
-
-  function statusOf(t) {
-    if (t.status === 'done') return 'complete';
-    if (t.status === 'ip')   return 'inprog';
-    if (dataDate && toDate(t.finish) && toDate(t.finish) < dataDate) return 'late';
-    return 'notstart';
-  }
   function statusBadge(t) {
-    const s = statusOf(t);
-    const labels = { complete:'Complete', inprog:'In Progress', late:'Late', notstart:'Not Completed' };
-    return `<span class="ms-badge ${s}">${labels[s]}</span>`;
+    if (t.status === 'done') return '<span class="ms-badge complete">Complete</span>';
+    if (t.status === 'ip') return '<span class="ms-badge inprog">In Progress</span>';
+    if (dataDate && toDate(t.finish) && toDate(t.finish) < dataDate) return '<span class="ms-badge late">Late</span>';
+    return '<span class="ms-badge notstart">Not Started</span>';
   }
+
   function varCell(t) {
+    // Variance = Baseline Finish − Actual/Forecast Finish
+    //   Negative → late  → red
+    //   Positive → ahead → green
+    //   Zero     → on-baseline
     const bl = B.byCode[t.code];
     if (!bl || !bl.finish || bl.finish === 'N/A') return '<td class="num">—</td>';
-    const v = diffDays(t.finish, bl.finish);
+    const v = diffDays(t.finish, bl.finish); // = bl.finish − t.finish
     if (v === null) return '<td class="num">—</td>';
     const cls = v < 0 ? 'var-neg' : v > 0 ? 'var-pos' : 'var-zero';
     const sign = v > 0 ? '+' : '';
@@ -3075,559 +2680,50 @@ function _renderMilestoneView(el) {
   }
 
   const kpiDone = milestones.filter(t=>t.status==='done').length;
-  const kpiLate = milestones.filter(t=>{
-    if (t.status === 'done') return false;
-    const bl = B.byCode[t.code];
-    if (!bl || !bl.finish || bl.finish === 'N/A') return false;
-    const v = diffDays(t.finish, bl.finish);
-    return v !== null && v < 0;
-  }).length;
-  const kpiNs   = milestones.filter(t=>t.status!=='done').length;
+  const kpiLate = milestones.filter(t=> t.status !== 'done' && dataDate && toDate(t.finish) && toDate(t.finish) < dataDate).length;
+  const kpiNs = milestones.filter(t=>t.status==='ns').length;
 
   const kpiHtml = `
   <div class="kpi-row">
     <div class="kpi-card blue"><div class="kpi-label">Total Milestones</div><div class="kpi-value">${milestones.length}</div><div class="kpi-sub">In this project</div></div>
     <div class="kpi-card green"><div class="kpi-label">Achieved</div><div class="kpi-value">${kpiDone}</div><div class="kpi-sub">${milestones.length ? Math.round(kpiDone/milestones.length*100) : 0}% complete</div></div>
-    <div class="kpi-card red"><div class="kpi-label">Late / Overdue</div><div class="kpi-value">${kpiLate}</div><div class="kpi-sub">Variance &lt; 0 vs baseline</div></div>
-    <div class="kpi-card gold"><div class="kpi-label">Not Completed</div><div class="kpi-value">${kpiNs}</div><div class="kpi-sub">Pending milestones</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Late / Overdue</div><div class="kpi-value">${kpiLate}</div><div class="kpi-sub">Past data date</div></div>
+    <div class="kpi-card gold"><div class="kpi-label">Not Started</div><div class="kpi-value">${kpiNs}</div><div class="kpi-sub">Future milestones</div></div>
   </div>`;
 
-  // Toolbar: view-mode toggle + print button
-  const toolbarHtml = `
+  const rows = milestones.map(t => {
+    const bl = B.byCode[t.code];
+    const wbs = U.wbsNodes[t.wbsId];
+    return `<tr>
+      <td style="font-family:var(--mono);color:var(--accent);font-size:10px">${escH(t.code)}</td>
+      <td title="${escH(t.name)}" style="max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(t.name)}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(wbs ? (wbs.shortName||wbs.name) : '—')}</td>
+      <td>${statusBadge(t)}</td>
+      <td class="num">${fmtDate(t.finish)}</td>
+      ${B.loaded ? `<td class="num" style="color:var(--muted)">${bl ? fmtDate(bl.finish) : '—'}</td>` : ''}
+      ${B.loaded ? varCell(t) : ''}
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = kpiHtml + `
+  <div class="rpt-section">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
       <div class="rpt-section-title" style="margin:0;flex:1">Milestone Register · ${escH(proj.name)} · Data Date: ${fmtDate(proj.dataDate)}</div>
-      <div class="ms-view-toggle" role="tablist">
-        <button type="button" class="${msViewMode==='table'?'active':''}" onclick="setMsViewMode('table')" title="Tabular register view">▦ Table</button>
-        <button type="button" class="${msViewMode==='timeline'?'active':''}" onclick="setMsViewMode('timeline')" title="Chronological timeline view">▭ Timeline</button>
-      </div>
-      ${msViewMode==='timeline' ? `
-      <div class="ms-view-toggle" role="tablist" title="Timeline time scale">
-        <button type="button" class="${msTimelineScale==='weekly'?'active':''}" onclick="setMsTimelineScale('weekly')" title="Weekly scale">Weekly</button>
-        <button type="button" class="${msTimelineScale==='monthly'?'active':''}" onclick="setMsTimelineScale('monthly')" title="Monthly scale">Monthly</button>
-        <button type="button" class="${msTimelineScale==='quarterly'?'active':''}" onclick="setMsTimelineScale('quarterly')" title="Quarterly scale">Quarterly</button>
-      </div>` : ''}
       <button class="ms-print-btn" onclick="printReportView()" title="Print this milestone register">🖨 Print View</button>
-    </div>`;
-
-  let bodyHtml = '';
-  if (msViewMode === 'timeline') {
-    bodyHtml = _buildMilestoneTimelineHtml(milestones, dataDate, statusOf);
-  } else {
-    const rows = milestones.map(t => {
-      const bl = B.byCode[t.code];
-      const wbs = U.wbsNodes[t.wbsId];
-      return `<tr>
-        <td style="font-family:var(--mono);color:var(--accent);font-size:10px">${escH(t.code)}</td>
-        <td title="${escH(t.name)}" style="max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(t.name)}</td>
-        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(wbs ? (wbs.shortName||wbs.name) : '—')}</td>
-        <td>${statusBadge(t)}</td>
-        <td class="num">${fmtDate(t.finish)}</td>
-        ${B.loaded ? `<td class="num" style="color:var(--muted)">${bl ? fmtDate(bl.finish) : '—'}</td>` : ''}
-        ${B.loaded ? varCell(t) : ''}
-      </tr>`;
-    }).join('');
-    bodyHtml = `
-      <div class="ms-table-wrap" id="msTableWrap">
-        <table class="data-table ms-compact">
-          <thead><tr>
-            <th>ID</th><th>Milestone Name</th><th>WBS</th><th>Status</th>
-            <th class="num">Current Finish</th>
-            ${B.loaded ? '<th class="num">Baseline Finish</th>' : ''}
-            ${B.loaded ? '<th class="num">Variance</th>' : ''}
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-      ${B.loaded ? '<div style="margin-top:8px;font-size:10.5px;color:var(--muted)">Variance = Baseline Finish − Current Finish · <span style="color:var(--red)">Negative = late (current later than baseline)</span> · <span style="color:var(--green)">Positive = ahead (current earlier than baseline)</span></div>' : ''}`;
-  }
-
-  el.innerHTML = kpiHtml + `<div class="rpt-section">${toolbarHtml}${bodyHtml}</div>`;
-}
-
-// Switch the milestone view mode and re-render the report body in place.
-function setMsViewMode(mode) {
-  if (mode !== 'table' && mode !== 'timeline') return;
-  if (msViewMode === mode) return;
-  msViewMode = mode;
-  const host = document.getElementById('reportContent') ||
-               document.querySelector('#reportView [data-report-host]') ||
-               document.querySelector('#reportView .step-content') ||
-               document.getElementById('reportView');
-  // Find the actual element renderMilestones writes into. We re-locate it by
-  // looking for the kpi-row that we just rendered and using its parent.
-  let el = null;
-  const kpi = document.querySelector('#reportView .kpi-row');
-  if (kpi) el = kpi.parentElement;
-  if (!el) el = host;
-  if (el) _renderMilestoneView(el);
-}
-
-function setMsTimelineScale(scale) {
-  if (scale !== 'weekly' && scale !== 'monthly' && scale !== 'quarterly') return;
-  if (msTimelineScale === scale) return;
-  msTimelineScale = scale;
-  if (msViewMode !== 'timeline') return;
-  let el = null;
-  const kpi = document.querySelector('#reportView .kpi-row');
-  if (kpi) el = kpi.parentElement;
-  if (!el) el = document.getElementById('reportView');
-  if (el) _renderMilestoneView(el);
-}
-
-// Build the SVG-free, CSS-positioned milestone timeline.
-// Collision-aware: cards are stacked in tiers (above & below) so labels
-// never overlap. Leader stems connect each card back to its dot.
-function _buildMilestoneTimelineHtml(milestones, dataDate, statusOf) {
-  // Collect dates: milestone finishes (+ baselines if loaded) + data date.
-  const dates = [];
-  milestones.forEach(t => {
-    const d = toDate(t.finish);
-    if (d) dates.push(d);
-    const bl = B.byCode[t.code];
-    if (B.loaded && bl && bl.finish && bl.finish !== 'N/A') {
-      const bd = toDate(bl.finish);
-      if (bd) dates.push(bd);
-    }
-  });
-  if (dataDate) dates.push(dataDate);
-  if (!dates.length) {
-    return '<div class="ms-timeline-empty">No dated milestones to plot.</div>';
-  }
-
-  let minD = new Date(Math.min(...dates.map(d => d.getTime())));
-  let maxD = new Date(Math.max(...dates.map(d => d.getTime())));
-  // Pad each side by 5% (min 7 days)
-  const span = Math.max(maxD - minD, 1);
-  const pad  = Math.max(span * 0.05, 7 * 86400000);
-  minD = new Date(minD.getTime() - pad);
-  maxD = new Date(maxD.getTime() + pad);
-  const total = maxD - minD || 1;
-
-  const pct = (d) => ((d - minD) / total) * 100;
-
-  // Build ticks across the span based on the selected time scale.
-  const ticks = [];
-  if (msTimelineScale === 'weekly') {
-    // Anchor to Monday on/before minD
-    const cursor = new Date(minD.getFullYear(), minD.getMonth(), minD.getDate());
-    const dow = cursor.getDay(); // 0=Sun..6=Sat
-    const offset = (dow === 0) ? -6 : (1 - dow);
-    cursor.setDate(cursor.getDate() + offset);
-    while (cursor <= maxD) {
-      if (cursor >= minD) ticks.push(new Date(cursor));
-      cursor.setDate(cursor.getDate() + 7);
-    }
-  } else if (msTimelineScale === 'quarterly') {
-    const qMonth = Math.floor(minD.getMonth() / 3) * 3;
-    const cursor = new Date(minD.getFullYear(), qMonth, 1);
-    while (cursor <= maxD) {
-      if (cursor >= minD) ticks.push(new Date(cursor));
-      cursor.setMonth(cursor.getMonth() + 3);
-    }
-  } else {
-    // monthly (default)
-    const cursor = new Date(minD.getFullYear(), minD.getMonth(), 1);
-    while (cursor <= maxD) {
-      if (cursor >= minD) ticks.push(new Date(cursor));
-      cursor.setMonth(cursor.getMonth() + 1);
-    }
-  }
-  // If too many ticks, sample every Nth
-  const maxTicks = 14;
-  const step = Math.max(1, Math.ceil(ticks.length / maxTicks));
-  const shownTicks = ticks.filter((_, i) => i % step === 0);
-
-  const fmtTick = (d) => {
-    if (msTimelineScale === 'weekly') {
-      // ISO-like week label: "DD MMM"
-      return d.toLocaleDateString(undefined, { day:'2-digit', month:'short' });
-    }
-    if (msTimelineScale === 'quarterly') {
-      const q = Math.floor(d.getMonth() / 3) + 1;
-      const yy = String(d.getFullYear()).slice(-2);
-      return `Q${q} '${yy}`;
-    }
-    return d.toLocaleDateString(undefined, { month:'short', year:'2-digit' });
-  };
-
-  const tickHtml = shownTicks.map(d => {
-    const left = pct(d);
-    const lbl = fmtTick(d);
-    return `<div class="ms-timeline-tick" style="left:${left.toFixed(2)}%"></div>
-            <div class="ms-timeline-tick-label" style="left:${left.toFixed(2)}%">${escH(lbl)}</div>`;
-  }).join('');
-
-  // ─── Collision-aware tier assignment ────────────────────────────────
-  // Estimate each card's horizontal footprint as a percentage of the
-  // timeline width. Then greedily place cards in tiers, alternating
-  // above/below the axis so the timeline stays balanced.
-  // Approximate average card width in px (matches CSS min/max-width).
-  const APPROX_CARD_PX = 170;
-  // Assume a rendered timeline width around 1100px for tier estimation.
-  // (Real width may differ; the half-width margin below adds slack so
-  // packing stays conservative on narrower screens.)
-  const ASSUMED_TIMELINE_PX = 1100;
-  const cardHalfPct = (APPROX_CARD_PX / ASSUMED_TIMELINE_PX) * 100 / 2;
-  // Extra horizontal padding between adjacent cards in the same tier.
-  const GAP_PCT = 0.6;
-  // Minimum %-distance between two milestone positions before they are
-  // considered "stacked" and rolled into a cluster. Tighter than card
-  // width so we only cluster milestones that truly overlap.
-  const CLUSTER_THRESHOLD_PCT = (APPROX_CARD_PX * 0.55 / ASSUMED_TIMELINE_PX) * 100;
-
-  // Build a list of plottable milestones with their %-positions.
-  const plotted = milestones
-    .map(t => ({ t, d: toDate(t.finish) }))
-    .filter(x => x.d)
-    .map(x => ({ t: x.t, d: x.d, left: pct(x.d) }))
-    .sort((a, b) => a.left - b.left);
-
-  // ─── Cluster overlapping milestones ──────────────────────────────
-  // Walk left-to-right; if a milestone falls within CLUSTER_THRESHOLD_PCT
-  // of the previous group's center, fold it into that group. Each group
-  // has one "expanded" leader (rendered as a normal pin+card) and zero
-  // or more "clustered" siblings (rolled into a count badge with a
-  // click-to-open popover). Earliest and latest milestones (globally)
-  // are forced to be the leader of whatever group they fall into so
-  // they always render expanded.
-  const earliestId = plotted.length ? plotted[0].t.code : null;
-  const latestId   = plotted.length ? plotted[plotted.length - 1].t.code : null;
-
-  const groups = [];
-  plotted.forEach(p => {
-    const last = groups[groups.length - 1];
-    if (last && Math.abs(p.left - last.center) <= CLUSTER_THRESHOLD_PCT) {
-      last.members.push(p);
-      // Recompute center as the mean of member positions.
-      last.center = last.members.reduce((s, m) => s + m.left, 0) / last.members.length;
-    } else {
-      groups.push({ center: p.left, members: [p] });
-    }
-  });
-
-  // Pick the leader of each group. Default leader = earliest finish in
-  // the group. But if the global earliest or latest milestone is in the
-  // group, prefer that one as the leader so it stays expanded.
-  groups.forEach(g => {
-    let leaderIdx = 0;
-    for (let i = 0; i < g.members.length; i++) {
-      const code = g.members[i].t.code;
-      if (code === earliestId || code === latestId) {
-        leaderIdx = i;
-        break;
-      }
-    }
-    g.leader = g.members[leaderIdx];
-    g.clustered = g.members.filter((_, i) => i !== leaderIdx);
-    g.leader.isLeader = true;
-    g.leader.clusterSize = g.members.length;
-    g.leader.clusterMembers = g.members;
-    g.clustered.forEach(m => { m.isLeader = false; });
-  });
-
-  // Two stacks of tiers — one for "above", one for "below".
-  // Each tier holds the right-edge (in %) of the last card placed in it.
-  // Only group leaders participate in tier packing; clustered siblings
-  // ride along with their leader.
-  const tiersAbove = []; // tiersAbove[i] = right edge % of last card
-  const tiersBelow = [];
-
-  const leaders = groups.map(g => g.leader);
-
-  // Decide initial side: alternate so neighboring milestones land on
-  // opposite sides whenever both are equally free.
-  leaders.forEach((p, i) => {
-    const leftEdge  = p.left - cardHalfPct;
-    const rightEdge = p.left + cardHalfPct;
-
-    // Try to place on preferred side first (alternating), then fall back.
-    const preferAbove = (i % 2 === 0);
-    const sides = preferAbove ? ['above', 'below'] : ['below', 'above'];
-
-    let placed = false;
-    for (const side of sides) {
-      const tiers = (side === 'above') ? tiersAbove : tiersBelow;
-      // Find first tier where this card fits without overlapping.
-      for (let ti = 0; ti < tiers.length; ti++) {
-        if (leftEdge >= tiers[ti] + GAP_PCT) {
-          tiers[ti] = rightEdge;
-          p.side = side;
-          p.tier = ti;
-          placed = true;
-          break;
-        }
-      }
-      if (placed) break;
-    }
-
-    // If no existing tier on either side fit, open a new tier on the
-    // preferred side.
-    if (!placed) {
-      const tiers = (preferAbove) ? tiersAbove : tiersBelow;
-      tiers.push(rightEdge);
-      p.side = preferAbove ? 'above' : 'below';
-      p.tier = tiers.length - 1;
-    }
-  });
-
-  const tierCountAbove = tiersAbove.length;
-  const tierCountBelow = tiersBelow.length;
-
-  // Vertical geometry (in px). Each tier reserves CARD_BLOCK px of space
-  // for its card; STEM_PER_TIER px is added to the leader stem so the
-  // stem reaches all the way back to the axis dot. When baseline is
-  // loaded, cards are taller (extra Baseline + Variance rows), so we
-  // expand the per-tier block to prevent vertical overlap.
-  const CARD_BLOCK    = B.loaded ? 76 : 44;   // card height + gap
-  const STEM_BASE     = 14;   // stem from axis to first-tier card
-  const STEM_PER_TIER = CARD_BLOCK;
-  const AXIS_GAP      = 6;    // gap between axis and dot/stem start
-
-  // Total padding the timeline needs above and below the axis.
-  const padAbove = STEM_BASE + tierCountAbove * CARD_BLOCK + 20;
-  const padBelow = STEM_BASE + tierCountBelow * CARD_BLOCK + 20;
-
-  // Data-date marker — must span the entire vertical range so it is
-  // visible across all tiers above and below.
-  let ddHtml = '';
-  if (dataDate) {
-    const left = pct(dataDate);
-    ddHtml = `<div class="ms-timeline-datadate"
-                   style="left:${left.toFixed(2)}%; top:-${padAbove - 4}px; height:${padAbove + padBelow - 8}px;"></div>
-              <div class="ms-timeline-datadate-label"
-                   style="left:${left.toFixed(2)}%; top:-${padAbove - 2}px;">DATA DATE · ${escH(fmtDate(dataDate))}</div>`;
-  }
-
-  // Helper to build a baseline+variance pair (used by both leader pins
-  // and clustered popover items). Returns { row, tip }.
-  const buildBaseline = (t) => {
-    let baselineRow = '', varianceRow = '', tipBaseline = '', tipVariance = '';
-    if (B.loaded) {
-      const bl = B.byCode[t.code];
-      if (bl && bl.finish && bl.finish !== 'N/A') {
-        baselineRow = `<div class="pc-baseline"><span class="pc-bl-label">Baseline</span><span>${escH(fmtDate(bl.finish))}</span></div>`;
-        tipBaseline = ` · Baseline: ${fmtDate(bl.finish)}`;
-        const v = diffDays(t.finish, bl.finish);
-        if (v !== null) {
-          const vCls = v < 0 ? 'var-neg' : v > 0 ? 'var-pos' : 'var-zero';
-          const sign = v > 0 ? '+' : '';
-          varianceRow = `<div class="pc-variance ${vCls}"><span class="pc-var-label">Variance</span><span>${sign}${v}d</span></div>`;
-          tipVariance = ` · Variance: ${sign}${v}d`;
-        }
-      } else {
-        baselineRow = `<div class="pc-baseline"><span class="pc-bl-label">Baseline</span><span>—</span></div>`;
-      }
-    }
-    return { baselineRow, varianceRow, tipBaseline, tipVariance };
-  };
-
-  // Render each leader as a normal pin. If the leader heads a cluster
-  // (clusterSize > 1), append a cluster badge at the same X-position
-  // showing the count and a popover listing all members.
-  const pinHtml = leaders.map(p => {
-    const t = p.t;
-    const cls = statusOf(t);
-    const above = (p.side === 'above');
-    // Vertical offsets for the dot/stem/card based on tier.
-    // Stem length = base + tier * per-tier so deeper tiers reach further.
-    const stemLen = STEM_BASE + p.tier * STEM_PER_TIER + AXIS_GAP;
-    // Card sits just past the end of the stem.
-    const cardOffset = stemLen + 2;
-    // Pin anchor lives ON the axis (top:0 of the axis). Use
-    // bottom/top relative to the axis container.
-    const sideStyle = above ? `bottom:0;` : `top:0;`;
-    const stemStyle = above
-      ? `height:${stemLen}px; bottom:${AXIS_GAP}px;`
-      : `height:${stemLen}px; top:${AXIS_GAP}px;`;
-    const cardStyle = above
-      ? `bottom:${cardOffset}px;`
-      : `top:${cardOffset}px;`;
-
-    const { baselineRow, varianceRow, tipBaseline, tipVariance } = buildBaseline(t);
-
-    const leaderPin = `
-      <div class="ms-timeline-pin ${cls} ${above?'above':'below'}"
-           style="left:${p.left.toFixed(2)}%; ${sideStyle}"
-           title="${escH(t.code)} · ${escH(t.name)} · ${escH(fmtDate(t.finish))}${escH(tipBaseline)}${escH(tipVariance)}">
-        <div class="pin-dot"></div>
-        <div class="pin-stem" style="${stemStyle}"></div>
-        <div class="pin-card" style="${cardStyle}">
-          <div class="pc-name">${escH(t.name)}</div>
-          <div class="pc-meta"><span>${escH(t.code)}</span><span>${escH(fmtDate(t.finish))}</span></div>
-          ${baselineRow}
-          ${varianceRow}
-        </div>
-      </div>`;
-
-    // No cluster siblings → just the leader.
-    if (p.clusterSize <= 1) return leaderPin;
-
-    // Build cluster popover items for the siblings (everything except
-    // the leader, since the leader is already shown expanded).
-    const siblingItems = p.clusterMembers
-      .filter(m => m !== p)
-      .map(m => {
-        const mt = m.t;
-        const mcls = statusOf(mt);
-        const mb = buildBaseline(mt);
-        return `
-          <div class="cl-item ${mcls}">
-            <div class="cli-name">${escH(mt.name)}</div>
-            <div class="cli-meta"><span>${escH(mt.code)}</span><span>${escH(fmtDate(mt.finish))}</span></div>
-            ${mb.baselineRow.replace(/pc-baseline/g, 'cli-baseline').replace(/pc-bl-label/g, 'cli-bl-label')}
-            ${mb.varianceRow.replace(/pc-variance/g, 'cli-variance').replace(/pc-var-label/g, 'cli-var-label')}
-          </div>`;
-      }).join('');
-
-    const siblingCount = p.clusterSize - 1;
-    // Place the cluster badge on the OPPOSITE side from the leader so
-    // the count badge doesn't overlap the leader's card.
-    const clusterAbove = !above;
-    const clusterSideStyle = clusterAbove ? `bottom:0;` : `top:0;`;
-    const clusterPin = `
-      <div class="ms-timeline-cluster ${clusterAbove?'above':'below'}"
-           style="left:${p.left.toFixed(2)}%; ${clusterSideStyle}"
-           onclick="event.stopPropagation();msToggleCluster(this);"
-           title="${siblingCount} more milestone${siblingCount>1?'s':''} at this date — click to expand">
-        <div class="cl-dot">+${siblingCount}</div>
-        <div class="cl-popover" onclick="event.stopPropagation();">
-          <div class="cl-popover-header">
-            <span>${siblingCount} more milestone${siblingCount>1?'s':''}</span>
-            <button type="button" class="cl-popover-close" onclick="event.stopPropagation();msCloseCluster(this);" title="Collapse">×</button>
-          </div>
-          ${siblingItems}
-        </div>
-      </div>`;
-
-    return leaderPin + clusterPin;
-  }).join('');
-
-  const legend = `
-    <div class="ms-timeline-legend">
-      <span class="lg-item" style="color:var(--green)"><span class="lg-dot"></span>Complete</span>
-      <span class="lg-item" style="color:var(--amber)"><span class="lg-dot"></span>In Progress</span>
-      <span class="lg-item" style="color:var(--red)"><span class="lg-dot"></span>Late</span>
-      <span class="lg-item" style="color:var(--muted)"><span class="lg-dot"></span>Not Completed</span>
-      ${dataDate ? '<span class="lg-item" style="color:var(--accent);margin-left:auto"><span class="lg-dot"></span>Data Date</span>' : ''}
-    </div>`;
-
-  return `
-    <div class="ms-timeline-wrap">
-      <div class="ms-timeline" style="padding:${padAbove}px 20px ${padBelow}px;">
-        <div class="ms-timeline-axis" style="position:relative;">
-          ${tickHtml}${ddHtml}${pinHtml}
-        </div>
-      </div>
-      ${legend}
-    </div>`;
-}
-
-// Toggle a cluster popover open/closed. Closes any other open clusters
-// first so only one is open at a time. Also auto-expands the timeline
-// wrapper so the popover is fully visible (not clipped by overflow).
-function msToggleCluster(el) {
-  if (!el) return;
-  const wasOpen = el.classList.contains('open');
-  document.querySelectorAll('.ms-timeline-cluster.open').forEach(n => {
-    if (n !== el) n.classList.remove('open');
-  });
-  // Reset any prior auto-expand padding before recomputing.
-  msResetTimelineExpansion();
-  el.classList.toggle('open', !wasOpen);
-  if (!wasOpen) {
-    // Defer to next frame so the popover is laid out before measuring.
-    requestAnimationFrame(() => msFitTimelineToCluster(el));
-  }
-}
-
-// Close button inside a cluster popover.
-function msCloseCluster(btn) {
-  const cluster = btn && btn.closest('.ms-timeline-cluster');
-  if (cluster) cluster.classList.remove('open');
-  msResetTimelineExpansion();
-}
-
-// Click anywhere outside an open cluster popover to dismiss it.
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.ms-timeline-cluster')) {
-    const anyOpen = document.querySelector('.ms-timeline-cluster.open');
-    document.querySelectorAll('.ms-timeline-cluster.open').forEach(n => n.classList.remove('open'));
-    if (anyOpen) msResetTimelineExpansion();
-  }
-});
-
-// Reset any auto-expansion padding previously applied to the timeline.
-function msResetTimelineExpansion() {
-  const wrap = document.querySelector('.ms-timeline-wrap');
-  if (!wrap) return;
-  const tl = wrap.querySelector('.ms-timeline');
-  if (tl && tl.dataset.origPadding) {
-    tl.style.padding = tl.dataset.origPadding;
-    delete tl.dataset.origPadding;
-  }
-  if (wrap.dataset.origMinWidth !== undefined) {
-    wrap.style.minWidth = wrap.dataset.origMinWidth;
-    delete wrap.dataset.origMinWidth;
-  }
-}
-
-// Grow the timeline wrap so an opened cluster popover is fully visible.
-// Increases vertical padding on .ms-timeline (above or below the axis,
-// depending on the cluster side) and, if the popover overflows
-// horizontally, increases the wrap's min-width so the scroll container
-// reveals it instead of clipping.
-function msFitTimelineToCluster(cluster) {
-  if (!cluster || !cluster.classList.contains('open')) return;
-  const wrap = cluster.closest('.ms-timeline-wrap');
-  const tl   = cluster.closest('.ms-timeline');
-  const popover = cluster.querySelector('.cl-popover');
-  if (!wrap || !tl || !popover) return;
-
-  const popRect  = popover.getBoundingClientRect();
-  const wrapRect = wrap.getBoundingClientRect();
-  const tlRect   = tl.getBoundingClientRect();
-
-  // Save original padding once so we can restore it on close.
-  if (!tl.dataset.origPadding) {
-    tl.dataset.origPadding = tl.style.padding || '';
-  }
-  if (wrap.dataset.origMinWidth === undefined) {
-    wrap.dataset.origMinWidth = wrap.style.minWidth || '';
-  }
-
-  // Parse current padding (top, right, bottom, left).
-  const cs = getComputedStyle(tl);
-  let pT = parseFloat(cs.paddingTop)    || 0;
-  let pR = parseFloat(cs.paddingRight)  || 0;
-  let pB = parseFloat(cs.paddingBottom) || 0;
-  let pL = parseFloat(cs.paddingLeft)   || 0;
-
-  const MARGIN = 16; // breathing room around the popover
-
-  // Vertical: does the popover extend past the timeline element?
-  const isAbove = cluster.classList.contains('above');
-  if (isAbove) {
-    const overflowTop = tlRect.top - popRect.top;
-    if (overflowTop > 0) pT += overflowTop + MARGIN;
-  } else {
-    const overflowBottom = popRect.bottom - tlRect.bottom;
-    if (overflowBottom > 0) pB += overflowBottom + MARGIN;
-  }
-  tl.style.padding = `${pT}px ${pR}px ${pB}px ${pL}px`;
-
-  // Horizontal: does the popover extend past the wrap's scrollable area?
-  // Measure relative to the wrap's content (use scrollLeft + viewport).
-  const popLeftInWrap  = (popRect.left - wrapRect.left) + wrap.scrollLeft;
-  const popRightInWrap = popLeftInWrap + popRect.width;
-  const neededWidth = popRightInWrap + MARGIN;
-  if (neededWidth > wrap.scrollWidth) {
-    wrap.style.minWidth = neededWidth + 'px';
-  }
-
-  // Scroll the popover into view if it would otherwise be clipped.
-  try {
-    popover.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'nearest' });
-  } catch(_) { /* older browsers — silent */ }
+    </div>
+    <div class="ms-table-wrap" id="msTableWrap">
+      <table class="data-table ms-compact">
+        <thead><tr>
+          <th>ID</th><th>Milestone Name</th><th>WBS</th><th>Status</th>
+          <th class="num">Current Finish</th>
+          ${B.loaded ? '<th class="num">Baseline Finish</th>' : ''}
+          ${B.loaded ? '<th class="num">Variance</th>' : ''}
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    ${B.loaded ? '<div style="margin-top:8px;font-size:10.5px;color:var(--muted)">Variance = Baseline Finish − Current Finish · <span style="color:var(--red)">Negative = late (current later than baseline)</span> · <span style="color:var(--green)">Positive = ahead (current earlier than baseline)</span></div>' : ''}
+  </div>`;
 }
 
 function msPrintTable() {
@@ -3803,57 +2899,6 @@ function printReportView() {
       + '.ms-badge.complete{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.25);}'
       + '.ms-badge.inprog{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.25);}'
       + '.ms-badge.notstart{background:rgba(90,122,150,.12);color:#5a7a96;border:1px solid #263550;}'
-      /* === Milestone Timeline (mirror on-screen rendering) === */
-      + '.ms-table-wrap,.ms-timeline-wrap{background:#111827;border:1px solid #1e2d42;border-radius:8px;padding:18px;overflow:visible !important;}'
-      + '.ms-timeline{position:relative;padding:20px;}'
-      + '.ms-timeline-axis{position:relative;height:2px;background:#1e2d42;margin:0;}'
-      + '.ms-timeline-datadate{position:absolute;width:0;border-left:2px dashed #00d4ff;opacity:.45;pointer-events:none;z-index:0;}'
-      + '.ms-timeline-datadate-label{position:absolute;transform:translateX(-50%);font-size:10px;font-weight:700;color:#00d4ff;text-transform:uppercase;letter-spacing:.6px;background:#0a0f1a;padding:2px 6px;border-radius:3px;border:1px solid rgba(0,212,255,.4);white-space:nowrap;z-index:3;}'
-      + '.ms-timeline-tick{position:absolute;top:-6px;width:1px;height:14px;background:#3d5a75;}'
-      + '.ms-timeline-tick-label{position:absolute;top:14px;transform:translateX(-50%);font-size:10px;color:#5a7a96;font-family:monospace;white-space:nowrap;}'
-      + '.ms-timeline-pin{position:absolute;transform:translateX(-50%);z-index:1;}'
-      + '.ms-timeline-pin .pin-stem{position:absolute;left:50%;width:2px;background:currentColor;opacity:.65;transform:translateX(-50%);}'
-      + '.ms-timeline-pin.above .pin-stem{bottom:0;}.ms-timeline-pin.below .pin-stem{top:0;}'
-      + '.ms-timeline-pin .pin-dot{width:14px;height:14px;border-radius:50%;background:currentColor;border:2px solid #0a0f1a;box-shadow:0 0 0 2px currentColor;position:absolute;left:50%;transform:translateX(-50%);z-index:2;}'
-      + '.ms-timeline-pin.above .pin-dot{bottom:-7px;}.ms-timeline-pin.below .pin-dot{top:-7px;}'
-      + '.ms-timeline-pin .pin-card{position:absolute;left:50%;transform:translateX(-50%);background:#111827;border:1px solid #1e2d42;border-radius:6px;padding:6px 10px;min-width:140px;max-width:220px;font-size:11px;color:#e2eaf4;}'
-      + '.ms-timeline-pin.above .pin-card{bottom:0;}.ms-timeline-pin.below .pin-card{top:0;}'
-      + '.ms-timeline-pin .pin-card .pc-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}'
-      + '.ms-timeline-pin .pin-card .pc-meta{font-size:10px;color:#5a7a96;font-family:monospace;display:flex;justify-content:space-between;gap:8px;}'
-      + '.ms-timeline-pin .pin-card .pc-baseline{font-size:10px;color:#e8b84b;font-family:monospace;display:flex;justify-content:space-between;gap:8px;margin-top:3px;padding-top:3px;border-top:1px dashed #1e2d42;}'
-      + '.ms-timeline-pin .pin-card .pc-baseline .pc-bl-label{color:#5a7a96;}'
-      + '.ms-timeline-pin .pin-card .pc-variance{font-size:10px;font-family:monospace;font-weight:600;display:flex;justify-content:space-between;gap:8px;margin-top:2px;}'
-      + '.ms-timeline-pin .pin-card .pc-variance .pc-var-label{color:#5a7a96;font-weight:400;}'
-      + '.ms-timeline-pin .pin-card .pc-variance.var-neg{color:#ef4444;}'
-      + '.ms-timeline-pin .pin-card .pc-variance.var-pos{color:#22c55e;}'
-      + '.ms-timeline-pin .pin-card .pc-variance.var-zero{color:#5a7a96;}'
-      + '.ms-timeline-pin.complete{color:#22c55e;}.ms-timeline-pin.inprog{color:#f59e0b;}.ms-timeline-pin.late{color:#ef4444;}.ms-timeline-pin.notstart{color:#5a7a96;}'
-      + '.ms-timeline-pin.collapsed .pin-card{display:none;}.ms-timeline-pin.collapsed .pin-stem{display:none;}'
-      + '.ms-timeline-pin.collapsed .pin-dot{width:10px;height:10px;bottom:-5px !important;top:auto !important;}'
-      + '.ms-timeline-pin.collapsed.below .pin-dot{top:-5px !important;bottom:auto !important;}'
-      + '.ms-timeline-cluster{position:absolute;transform:translateX(-50%);z-index:3;}'
-      + '.ms-timeline-cluster .cl-dot{width:18px;height:18px;border-radius:50%;background:#192035;border:2px solid #00d4ff;position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#00d4ff;font-family:monospace;line-height:1;}'
-      + '.ms-timeline-cluster.above .cl-dot{bottom:-9px;}.ms-timeline-cluster.below .cl-dot{top:-9px;}'
-      + '.ms-timeline-cluster .cl-popover{position:absolute;left:50%;transform:translateX(-50%);background:#111827;border:1px solid #00d4ff;border-radius:8px;padding:8px;min-width:220px;max-width:280px;display:none;z-index:40;}'
-      + '.ms-timeline-cluster.open .cl-popover{display:block;}'
-      + '.ms-timeline-cluster.above .cl-popover{bottom:18px;}.ms-timeline-cluster.below .cl-popover{top:18px;}'
-      + '.ms-timeline-cluster .cl-popover-header{font-size:10px;font-weight:700;color:#00d4ff;text-transform:uppercase;letter-spacing:.6px;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid #1e2d42;display:flex;justify-content:space-between;align-items:center;}'
-      + '.ms-timeline-cluster .cl-item{padding:6px 8px;border-radius:4px;font-size:11px;color:#e2eaf4;border-left:3px solid currentColor;margin-bottom:4px;background:#192035;}'
-      + '.ms-timeline-cluster .cl-item.complete{color:#22c55e;}.ms-timeline-cluster .cl-item.inprog{color:#f59e0b;}.ms-timeline-cluster .cl-item.late{color:#ef4444;}.ms-timeline-cluster .cl-item.notstart{color:#5a7a96;}'
-      + '.ms-timeline-cluster .cl-item .cli-name{font-weight:600;color:#e2eaf4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
-      + '.ms-timeline-cluster .cl-item .cli-meta{font-size:10px;color:#5a7a96;font-family:monospace;display:flex;justify-content:space-between;gap:8px;margin-top:2px;}'
-      + '.ms-timeline-cluster .cl-item .cli-baseline{font-size:10px;color:#e8b84b;font-family:monospace;display:flex;justify-content:space-between;gap:8px;margin-top:3px;padding-top:3px;border-top:1px dashed #1e2d42;}'
-      + '.ms-timeline-cluster .cl-item .cli-baseline .cli-bl-label{color:#5a7a96;}'
-      + '.ms-timeline-cluster .cl-item .cli-variance{font-size:10px;font-family:monospace;font-weight:600;display:flex;justify-content:space-between;gap:8px;margin-top:2px;}'
-      + '.ms-timeline-cluster .cl-item .cli-variance .cli-var-label{color:#5a7a96;font-weight:400;}'
-      + '.ms-timeline-cluster .cl-item .cli-variance.var-neg{color:#ef4444;}'
-      + '.ms-timeline-cluster .cl-item .cli-variance.var-pos{color:#22c55e;}'
-      + '.ms-timeline-cluster .cl-item .cli-variance.var-zero{color:#5a7a96;}'
-      + '.ms-timeline-cluster .cl-popover-close{display:none;}'
-      + '.ms-timeline-legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid #1e2d42;font-size:11px;color:#5a7a96;}'
-      + '.ms-timeline-legend .lg-item{display:inline-flex;align-items:center;gap:6px;}'
-      + '.ms-timeline-legend .lg-dot{width:9px;height:9px;border-radius:50%;background:currentColor;display:inline-block;}'
-      + '.ms-view-toggle,.ms-print-btn{display:none !important;}'
       + 'img,canvas{max-width:100%;height:auto;}'
       + '.empty{padding:14px;color:#5a7a96;text-align:center;font-style:italic;}'
       + '.foot{margin-top:10px;font-size:9px;color:#5a7a96;text-align:center;border-top:1px solid #1e2d42;padding-top:6px;}'
@@ -4226,7 +3271,7 @@ function laStatusBadge(t) {
   if (t.status === 'done') return '<span class="ms-badge complete">Complete</span>';
   if (t.status === 'ip')   return '<span class="ms-badge inprog">In Progress</span>';
   if (LA.dataDate && toDate(t.finish) && toDate(t.finish) < LA.dataDate) return '<span class="ms-badge late">Late</span>';
-  return '<span class="ms-badge notstart">Not Completed</span>';
+  return '<span class="ms-badge notstart">Not Started</span>';
 }
 
 function laRenderTable() {
