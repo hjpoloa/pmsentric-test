@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WBS % Complete Report — PMsentric</title>
+<script>try{if(sessionStorage.getItem('pms_xer_current')){document.write('<style>.landing-drop{display:none!important}</style>');}}catch(e){}</script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
@@ -1248,6 +1249,9 @@ function onUpdateXerLoaded(text, name) {
     if (selectedWbsIds.size > 0) {
       try { generateReport(); } catch(e) { console.error(e); }
     }
+    // Persist to sessionStorage for cross-tool sync
+    try { sessionStorage.setItem('pms_xer_current', text); sessionStorage.setItem('pms_xer_current_name', name||'file.xer'); } catch(e){}
+    if (!window.__xerSyncInbound) { try { parent.postMessage({type:'xer:current:load', text:text, name:name||'file.xer'}, '*'); } catch(e){} }
   } catch (err) {
     setSt('Error parsing Update XER: ' + err.message, 'err');
   }
@@ -1303,6 +1307,9 @@ function clearUpdate() {
   clearBaseline();
   setSt('Ready — Load an Update XER file to begin', '');
   showStep('landing');
+  // Clear sessionStorage so other tools forget the XER too
+  try { sessionStorage.removeItem('pms_xer_current'); sessionStorage.removeItem('pms_xer_current_name'); } catch(e){}
+  if (!window.__xerSyncInbound) { try { parent.postMessage({type:'xer:current:close'}, '*'); } catch(e){} }
 }
 function clearBaseline() {
   B.loaded = false; B.fileName = ''; B.byCode = {}; B.rawText = '';
@@ -4300,6 +4307,29 @@ function installReaderLookaheadHandler(iframe) {
 function escH(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ─── Cross-tool XER sync bridge ───────────────────────────────────────
+(function(){
+  try{
+    const stored = sessionStorage.getItem('pms_xer_current');
+    const name   = sessionStorage.getItem('pms_xer_current_name') || 'file.xer';
+    if(stored){
+      const run = ()=>{ if(typeof onUpdateXerLoaded==='function'){ window.__xerSyncInbound = true; try{ onUpdateXerLoaded(stored, name); } finally { window.__xerSyncInbound = false; } } };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>setTimeout(run, 50));
+      else setTimeout(run, 50);
+    }
+  }catch(e){}
+})();
+window.addEventListener('message', ev => {
+  const m = ev.data || {};
+  if (!m || typeof m.type !== 'string') return;
+  window.__xerSyncInbound = true;
+  try {
+    if (m.type === 'xer:current:load') { onUpdateXerLoaded(m.text, m.name || 'file.xer'); }
+    else if (m.type === 'xer:current:close') { try{ clearUpdate(); }catch(e){} }
+  } finally { window.__xerSyncInbound = false; }
+});
+window.addEventListener('load', ()=>{ try{ parent.postMessage({type:'xer:ready'}, '*'); }catch(e){} });
 </script>
 
 <!-- ═════════════════════════════════════════════════════════════════
