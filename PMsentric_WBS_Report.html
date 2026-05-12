@@ -958,7 +958,7 @@ html.light .pms-tn-item, .light .pms-tn-item{color:#1A1C22;}
         </select>
       </label>
       <button class="btn btn-ghost btn-sm" id="rptCustomBtn" onclick="openWbsConfig()" title="Pick individual WBSs">⚙ Custom WBS</button>
-      <button class="btn btn-ghost btn-sm" id="printBtn" onclick="printReportView()">🖨 Print View</button>
+      <button class="btn btn-ghost btn-sm" id="printBtn" onclick="pmsPdfShow()">↓ PDF</button>
     </div>
     <div class="report-content" id="reportContent"></div>
   </div>
@@ -2814,7 +2814,7 @@ function renderMilestones(el) {
   <div class="rpt-section">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
       <div class="rpt-section-title" style="margin:0;flex:1">Milestone Register · ${escH(proj.name)} · Data Date: ${fmtDate(proj.dataDate)}</div>
-      <button class="ms-print-btn" onclick="printReportView()" title="Print this milestone register">🖨 Print View</button>
+      <button class="ms-print-btn" onclick="pmsPdfShow()" title="Export as PDF">↓ PDF</button>
     </div>
     <div class="ms-table-wrap" id="msTableWrap">
       <table class="data-table ms-compact">
@@ -4325,6 +4325,361 @@ function escH(s) {
   }
 })();
 </script>
+
+<!-- ══════════ PMSENTRIC PDF EXPORT MODULE (injected) ══════════ -->
+<style id="pms-pdf-style">
+.pms-pdf-mo{position:fixed;inset:0;background:rgba(4,6,10,.85);backdrop-filter:blur(6px);z-index:9000;display:none;align-items:center;justify-content:center;}
+.pms-pdf-mo.open{display:flex;}
+.pms-pdf-mb{background:#111827;border:1px solid #243550;border-radius:12px;padding:28px 32px;min-width:340px;max-width:420px;width:90%;color:#e2eaf4;font-family:'Sora',Arial,sans-serif;}
+.pms-pdf-mb .pms-pdf-ttl{font-family:'Bebas Neue','Sora',Arial,sans-serif;font-size:20px;color:#C9A84C;margin-bottom:18px;letter-spacing:.5px;}
+.pms-pdf-mb .pms-pdf-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.pms-pdf-mb .pms-pdf-lbl{font-size:.78em;color:#5a7a96;margin-bottom:6px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.06em;}
+.pms-pdf-mb .pms-pdf-sel{background:#111827;border:1px solid #243550;color:#e2eaf4;border-radius:5px;padding:6px 28px 6px 8px;font-family:'DM Mono',monospace;cursor:pointer;font-size:12px;width:100%;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a7a96'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+.pms-pdf-mb .pms-pdf-sel:focus{outline:none;border-color:#C9A84C;}
+.pms-pdf-mb .pms-pdf-btns{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
+.pms-pdf-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;font-family:'Sora',Arial,sans-serif;font-weight:600;cursor:pointer;border:none;transition:all .18s;white-space:nowrap;font-size:12px;}
+.pms-pdf-btn.bg{background:transparent;border:1px solid #243550;color:#5a7a96;}
+.pms-pdf-btn.bg:hover{border-color:#C9A84C;color:#C9A84C;}
+.pms-pdf-btn.bp{background:linear-gradient(135deg,#C9A84C,#a8721a);color:#000;}
+.pms-pdf-btn.bp:hover{box-shadow:0 0 16px rgba(201,168,76,.35);transform:translateY(-1px);}
+.pms-pdf-preview-modal{display:none;position:fixed;inset:0;background:rgba(4,6,10,.92);backdrop-filter:blur(8px);z-index:9100;flex-direction:column;}
+.pms-pdf-preview-modal.open{display:flex;}
+.pms-pdf-preview-bar{display:flex;align-items:center;gap:10px;padding:10px 18px;background:rgba(11,14,21,.97);border-bottom:1px solid #243550;flex-shrink:0;color:#e2eaf4;font-family:'Sora',Arial,sans-serif;}
+.pms-pdf-preview-bar .pms-pdf-pt{font-family:'Bebas Neue','Sora',Arial,sans-serif;font-size:18px;color:#C9A84C;letter-spacing:.5px;}
+.pms-pdf-preview-bar .pms-pdf-pm{font-family:'DM Mono',monospace;font-size:10px;color:#5a7a96;margin-left:4px;}
+.pms-pdf-preview-bar .pms-pdf-pbtns{margin-left:auto;display:flex;gap:8px;}
+.pms-pdf-preview-frame{flex:1;border:none;background:#555;width:100%;}
+.pms-pdf-spinner{position:fixed;inset:0;background:rgba(4,6,10,.9);z-index:9200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#C9A84C;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.5px;}
+.pms-pdf-spinner.open{display:flex;}
+.pms-pdf-spinner .sp{width:38px;height:38px;border:3px solid rgba(201,168,76,.18);border-top-color:#C9A84C;border-radius:50%;animation:pmsPdfSpin .8s linear infinite;}
+@keyframes pmsPdfSpin{to{transform:rotate(360deg);}}
+</style>
+
+<!-- PDF Options Modal -->
+<div class="pms-pdf-mo" id="pmsPdfModal" onclick="if(event.target===this)pmsPdfClose()">
+  <div class="pms-pdf-mb">
+    <div class="pms-pdf-ttl">PDF Export</div>
+    <div class="pms-pdf-row">
+      <div>
+        <div class="pms-pdf-lbl">Page Size</div>
+        <select class="pms-pdf-sel" id="pmsPdfSize">
+          <option value="a4">A4</option>
+          <option value="a3" selected>A3</option>
+          <option value="letter">Letter</option>
+        </select>
+      </div>
+      <div>
+        <div class="pms-pdf-lbl">Orientation</div>
+        <select class="pms-pdf-sel" id="pmsPdfOrient">
+          <option value="landscape" selected>Landscape</option>
+          <option value="portrait">Portrait</option>
+        </select>
+      </div>
+    </div>
+    <div class="pms-pdf-btns">
+      <button class="pms-pdf-btn bg" onclick="pmsPdfClose()">Cancel</button>
+      <button class="pms-pdf-btn bg" style="padding:7px 18px;" onclick="pmsPdfTriggerPreview()">👁 Preview</button>
+      <button class="pms-pdf-btn bp" style="padding:7px 18px;" onclick="pmsPdfConfirmExport()">↓ Export PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF Preview Modal -->
+<div class="pms-pdf-preview-modal" id="pmsPdfPreviewModal">
+  <div class="pms-pdf-preview-bar">
+    <span class="pms-pdf-pt">PDF Preview</span>
+    <span class="pms-pdf-pm" id="pmsPdfPreviewMeta"></span>
+    <div class="pms-pdf-pbtns">
+      <button class="pms-pdf-btn bp" id="pmsPdfPreviewDownload" style="padding:5px 14px;font-size:12px;">↓ Download</button>
+      <button class="pms-pdf-btn bg" onclick="pmsPdfClosePreview()" style="padding:5px 14px;font-size:12px;">✕ Close</button>
+    </div>
+  </div>
+  <iframe id="pmsPdfPreviewFrame" class="pms-pdf-preview-frame" src="about:blank"></iframe>
+</div>
+
+<!-- Spinner -->
+<div class="pms-pdf-spinner" id="pmsPdfSpinner">
+  <div class="sp"></div>
+  <div>Generating PDF…</div>
+</div>
+
+<script>
+(function(){
+  // ── Public API ──
+  window.pmsPdfShow = function() {
+    document.getElementById('pmsPdfModal').classList.add('open');
+  };
+  window.pmsPdfClose = function() {
+    document.getElementById('pmsPdfModal').classList.remove('open');
+  };
+  window.pmsPdfTriggerPreview = function() {
+    pmsPdfClose();
+    pmsPdfGenerate(
+      document.getElementById('pmsPdfSize').value,
+      document.getElementById('pmsPdfOrient').value,
+      'preview'
+    );
+  };
+  window.pmsPdfConfirmExport = function() {
+    pmsPdfClose();
+    pmsPdfGenerate(
+      document.getElementById('pmsPdfSize').value,
+      document.getElementById('pmsPdfOrient').value,
+      'download'
+    );
+  };
+  window.pmsPdfClosePreview = function() {
+    var m = document.getElementById('pmsPdfPreviewModal');
+    m.classList.remove('open');
+    document.getElementById('pmsPdfPreviewFrame').src = 'about:blank';
+    if (window._pmsPdfUrl) { URL.revokeObjectURL(window._pmsPdfUrl); window._pmsPdfUrl = null; }
+  };
+
+  // ── Build the report HTML by invoking the existing printReportView pipeline ──
+  // We reuse the existing builder by temporarily intercepting window.open.
+  function capturePrintHtml() {
+    return new Promise(function(resolve, reject){
+      try {
+        if (typeof printReportView !== 'function') {
+          reject(new Error('printReportView() not available'));
+          return;
+        }
+        var captured = null;
+        var realOpen = window.open;
+        // Fake window object that captures the html written to it
+        var fakeWin = {
+          document: {
+            open: function(){},
+            write: function(html){ captured = (captured || '') + html; },
+            close: function(){}
+          },
+          close: function(){},
+          addEventListener: function(){},
+          print: function(){},
+          location: {}
+        };
+        window.open = function(){ return fakeWin; };
+        try { printReportView(); }
+        finally { window.open = realOpen; }
+        // Strip any auto-print script & on-page Print/Close buttons from the captured HTML
+        if (captured) {
+          captured = captured
+            .replace(/<script>[\s\S]*?window\.print[\s\S]*?<\/script>/gi, '')
+            .replace(/<div class="no-print"[\s\S]*?<\/div>/i, '');
+        }
+        resolve(captured);
+      } catch(e) { reject(e); }
+    });
+  }
+
+  // ── Build the report HTML for 3WLA (no printReportView; build from current DOM) ──
+  function build3WLAHtml() {
+    var projName = '3-Week Lookahead';
+    try {
+      if (typeof S !== 'undefined' && S && S.projectName) projName = S.projectName;
+      else {
+        var pn = document.querySelector('[id*="proj" i],[class*="proj" i]');
+        if (pn && pn.textContent) projName = pn.textContent.trim().slice(0,80) || projName;
+      }
+    } catch(_) {}
+    var dateNow = new Date().toLocaleString();
+
+    // Capture the main content area — exclude header/toolbar/modals/menus
+    var content = document.querySelector('.main, #main, main, .content, #content, .body, #appBody');
+    if (!content) content = document.body;
+    var clone = content.cloneNode(true);
+    // Remove interactive UI that doesn't belong in a print snapshot
+    clone.querySelectorAll('header, .toolbar, .pms-tn-wrap, .pms-tn-menu, #pmsPdfModal, #pmsPdfPreviewModal, #pmsPdfSpinner, .resizer, .modal, .fm, .mo, button, select, input[type=file]').forEach(function(el){
+      try { el.remove(); } catch(_){}
+    });
+    // Inline all canvas elements as images
+    clone.querySelectorAll('canvas').forEach(function(cv){
+      try {
+        var realCv = document.querySelector('canvas#'+cv.id) || cv;
+        var dataUrl = realCv.toDataURL('image/png');
+        var img = document.createElement('img');
+        img.src = dataUrl;
+        img.style.cssText = 'max-width:100%;height:auto;display:block;';
+        cv.parentNode.replaceChild(img, cv);
+      } catch(_){}
+    });
+
+    var styles = '';
+    Array.from(document.styleSheets).forEach(function(ss){
+      try {
+        if (ss.cssRules) {
+          Array.from(ss.cssRules).forEach(function(r){ styles += r.cssText + '\n'; });
+        }
+      } catch(_){}
+    });
+
+    var html = ''
+      + '<!DOCTYPE html><html><head><meta charset="utf-8">'
+      + '<title>' + projName + ' — PDF</title>'
+      + '<style>' + styles + '</style>'
+      + '<style>'
+      + 'html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#0a0f1a;color:#e2eaf4;margin:0;padding:14px 20px;font-family:Arial,sans-serif;}'
+      + '.pms-hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #C9A84C;padding-bottom:8px;margin-bottom:12px;}'
+      + '.pms-hdr .ttl{font-size:18px;font-weight:700;color:#C9A84C;}'
+      + '.pms-hdr .sub{font-size:11px;color:#5a7a96;margin-top:2px;}'
+      + '.pms-hdr .meta{font-size:10px;color:#5a7a96;text-align:right;}'
+      + '@page{size:A3 landscape;margin:8mm;}'
+      + '</style></head><body>'
+      + '<div class="pms-hdr">'
+      +   '<div><div class="ttl">' + projName + ' — 3-Week Lookahead</div>'
+      +   '<div class="sub">PMsentric · 3-Week Lookahead Report</div></div>'
+      +   '<div class="meta">Printed: ' + dateNow + '</div>'
+      + '</div>'
+      + clone.outerHTML
+      + '</body></html>';
+    return html;
+  }
+
+  // ── Generate PDF using html2canvas + jsPDF ──
+  window.pmsPdfGenerate = function(pageSize, orient, mode) {
+    pageSize = pageSize || 'a3';
+    orient   = orient   || 'landscape';
+
+    if (typeof window.jspdf === 'undefined' || typeof window.html2canvas === 'undefined') {
+      alert('PDF libraries not loaded. Please check your connection and reload.');
+      return;
+    }
+
+    var spinner = document.getElementById('pmsPdfSpinner');
+    spinner.classList.add('open');
+
+    var buildPromise;
+    if (typeof printReportView === 'function') {
+      buildPromise = capturePrintHtml();
+    } else {
+      buildPromise = Promise.resolve(build3WLAHtml());
+    }
+
+    buildPromise.then(function(html){
+      if (!html) throw new Error('No content captured for PDF.');
+
+      // Render the HTML inside a hidden iframe so html2canvas can capture it at high fidelity
+      var iframe = document.createElement('iframe');
+      iframe.style.cssText = 'position:fixed;left:-99999px;top:0;width:1600px;height:auto;border:0;background:#0a0f1a;';
+      document.body.appendChild(iframe);
+      iframe.contentDocument.open();
+      iframe.contentDocument.write(html);
+      iframe.contentDocument.close();
+
+      // Wait for images inside the iframe (donut/canvas conversions, etc.) to load
+      function waitImages(doc) {
+        var imgs = Array.from(doc.images || []);
+        return Promise.all(imgs.map(function(im){
+          if (im.complete && im.naturalWidth) return Promise.resolve();
+          return new Promise(function(res){
+            im.addEventListener('load', res, {once:true});
+            im.addEventListener('error', res, {once:true});
+            setTimeout(res, 2500);
+          });
+        }));
+      }
+
+      // Allow layout
+      setTimeout(function(){
+        waitImages(iframe.contentDocument).then(function(){
+          var target = iframe.contentDocument.body;
+          // Resize iframe height to full content
+          var fullH = Math.max(target.scrollHeight, target.offsetHeight, 800);
+          iframe.style.height = fullH + 'px';
+
+          html2canvas(target, {
+            backgroundColor: '#0a0f1a',
+            scale: 1.8,
+            useCORS: true,
+            logging: false,
+            width: target.scrollWidth,
+            height: fullH,
+            windowWidth: target.scrollWidth,
+            windowHeight: fullH
+          }).then(function(canvas){
+            try { document.body.removeChild(iframe); } catch(_){}
+
+            var { jsPDF } = window.jspdf;
+            var doc = new jsPDF({ orientation: orient, unit: 'pt', format: pageSize });
+            var pw = doc.internal.pageSize.getWidth();
+            var ph = doc.internal.pageSize.getHeight();
+            var margin = 12;
+            var usableW = pw - margin*2;
+            var usableH = ph - margin*2;
+
+            // Scale the canvas to page width, then paginate vertically
+            var imgW = usableW;
+            var imgH = canvas.height * (imgW / canvas.width);
+            var pageData = canvas.toDataURL('image/jpeg', 0.92);
+
+            if (imgH <= usableH) {
+              doc.addImage(pageData, 'JPEG', margin, margin, imgW, imgH);
+            } else {
+              // Slice the canvas into page-sized chunks
+              var pxPerPt = canvas.width / imgW;
+              var slicePxH = Math.floor(usableH * pxPerPt);
+              var sy = 0;
+              var pageIdx = 0;
+              while (sy < canvas.height) {
+                var sh = Math.min(slicePxH, canvas.height - sy);
+                var slice = document.createElement('canvas');
+                slice.width = canvas.width;
+                slice.height = sh;
+                slice.getContext('2d').drawImage(canvas, 0, sy, canvas.width, sh, 0, 0, canvas.width, sh);
+                var sliceData = slice.toDataURL('image/jpeg', 0.92);
+                var sliceHpt = sh / pxPerPt;
+                if (pageIdx > 0) doc.addPage(pageSize, orient);
+                doc.addImage(sliceData, 'JPEG', margin, margin, imgW, sliceHpt);
+                sy += sh;
+                pageIdx++;
+              }
+            }
+
+            var projName = 'Report';
+            try {
+              var t = (iframe.contentDocument && iframe.contentDocument.title) || document.title || 'Report';
+              projName = t.split('—')[0].split('-')[0].trim() || 'Report';
+            } catch(_){}
+
+            spinner.classList.remove('open');
+            if (mode === 'preview') {
+              var blob = doc.output('blob');
+              var url  = URL.createObjectURL(blob);
+              if (window._pmsPdfUrl) URL.revokeObjectURL(window._pmsPdfUrl);
+              window._pmsPdfUrl = url;
+              document.getElementById('pmsPdfPreviewFrame').src = url;
+              document.getElementById('pmsPdfPreviewMeta').textContent =
+                projName + ' · ' + pageSize.toUpperCase() + ' ' + orient;
+              document.getElementById('pmsPdfPreviewDownload').onclick = function(){
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = projName.replace(/\s+/g,'_') + '_report.pdf';
+                a.click();
+              };
+              document.getElementById('pmsPdfPreviewModal').classList.add('open');
+            } else {
+              doc.save(projName.replace(/\s+/g,'_') + '_report.pdf');
+            }
+          }).catch(function(e){
+            try { document.body.removeChild(iframe); } catch(_){}
+            spinner.classList.remove('open');
+            console.error('PDF generation failed:', e);
+            alert('PDF generation failed: ' + (e && e.message ? e.message : e));
+          });
+        });
+      }, 250);
+    }).catch(function(e){
+      spinner.classList.remove('open');
+      console.error('PDF build failed:', e);
+      alert('Could not build PDF content: ' + (e && e.message ? e.message : e));
+    });
+  };
+})();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- ══════════ /PMSENTRIC PDF EXPORT MODULE ══════════ -->
 
 </body>
 </html>
