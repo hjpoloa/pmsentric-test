@@ -132,6 +132,142 @@ main{flex:1;display:flex;min-height:0}
     <button class="btn" onclick="document.getElementById('tplInput').click()">⬆ Load Template</button>
     <button class="btn btn-gold" onclick="saveTemplate()">💾 Save Template</button>
     <button class="btn btn-danger" onclick="clearCanvas()">✕ Clear</button>
+
+    <!-- ══════════ PMSENTRIC TOOLS NAV (auto-injected) ══════════ -->
+<style id="pms-toolsnav-style">
+.pms-tn-wrap{position:relative;display:inline-block;}
+.pms-tn-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:6px;cursor:pointer;
+  font:500 13px/1 'DM Sans','Inter',system-ui,sans-serif;
+  background:rgba(201,168,76,.10);
+  color:#C9A84C;
+  border:1px solid rgba(201,168,76,.35);
+  transition:all .18s;text-decoration:none;
+}
+.pms-tn-btn:hover{background:rgba(201,168,76,.20);border-color:#C9A84C;}
+.pms-tn-btn .pms-tn-caret{font-size:10px;opacity:.7;transition:transform .18s;}
+.pms-tn-wrap.open .pms-tn-btn .pms-tn-caret{transform:rotate(180deg);}
+.pms-tn-menu{
+  position:fixed !important;
+  min-width:240px;
+  background-color:#111318 !important;
+  background-image:none !important;
+  border:1px solid #252D3A;
+  border-radius:8px;
+  box-shadow:0 12px 40px rgba(0,0,0,.5);
+  padding:6px;display:none;
+  z-index:2147483647 !important;
+  isolation:isolate;
+  transform:translateZ(0);
+  opacity:1 !important;
+  pointer-events:auto;
+}
+html.light .pms-tn-menu, .light .pms-tn-menu{background-color:#FFFFFF !important;border-color:#C8C4BC;box-shadow:0 8px 28px rgba(0,0,0,.15);}
+.pms-tn-menu.open{display:block !important;}
+.pms-tn-divider{height:1px;background:#1E2530;margin:6px 4px;}
+html.light .pms-tn-divider, .light .pms-tn-divider{background:#DDD9D2;}
+.pms-tn-section{
+  font:600 10px/1 'DM Mono',monospace;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:#6B5420;padding:8px 10px 4px;
+}
+html.light .pms-tn-section, .light .pms-tn-section{color:#A8751E;}
+.pms-tn-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 10px;border-radius:5px;cursor:pointer;
+  font:500 13px/1.2 'DM Sans','Inter',system-ui,sans-serif;
+  color:#F0EDE8;text-decoration:none;
+  transition:background .14s;
+}
+html.light .pms-tn-item, .light .pms-tn-item{color:#1A1C22;}
+.pms-tn-item:hover{background:rgba(201,168,76,.10);}
+.pms-tn-item.current{background:rgba(201,168,76,.14);color:#C9A84C;cursor:default;}
+.pms-tn-item .pms-tn-ico{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
+.pms-tn-item .pms-tn-lbl{flex:1;}
+</style>
+<div class="pms-tn-wrap" id="pmsToolsNav">
+  <button type="button" class="pms-tn-btn" onclick="pmsTnToggle(event)">
+    <span>⊞ Tools</span><span class="pms-tn-caret">▾</span>
+  </button>
+</div>
+<script>
+(function(){
+  var menuHTML =
+    '<div class="pms-tn-menu" id="pmsToolsMenu">' +
+    '<div class="pms-tn-section">Schedule</div>' +
+    '<a href="#" class="pms-tn-item" data-tool="iwpmsschedule-reader.html"><span class="pms-tn-ico">📅</span><span class="pms-tn-lbl">Schedule Reader</span></a>' +
+    '<a href="#" class="pms-tn-item" data-tool="iwpmsresource-analyzer.html"><span class="pms-tn-ico">📊</span><span class="pms-tn-lbl">Resource Analyzer</span></a>' +
+    '<a href="#" class="pms-tn-item" data-tool="iwpmscriticalpath.html"><span class="pms-tn-ico">🔗</span><span class="pms-tn-lbl">Critical Path Analyzer</span></a>' +
+    '<a href="#" class="pms-tn-item" data-tool="iwpmsscheduler-light.html"><span class="pms-tn-ico">🗓️</span><span class="pms-tn-lbl">Scheduler Light</span></a>' +
+    '<div class="pms-tn-divider"></div>' +
+    '<div class="pms-tn-section">Reporting Suite</div>' +
+    '<a href="#" class="pms-tn-item" data-tool="PMsentric_Milestones_Report_R07.html"><span class="pms-tn-ico">🎯</span><span class="pms-tn-lbl">Milestones Report</span></a>' +
+    '<a href="#" class="pms-tn-item" data-tool="PMsentric_WBS_Report.html"><span class="pms-tn-ico">🗂️</span><span class="pms-tn-lbl">WBS Report</span></a>' +
+    '<a href="#" class="pms-tn-item" data-tool="PMsentric_SCurve_Report__3_.html"><span class="pms-tn-ico">📈</span><span class="pms-tn-lbl">S-Curve Report</span></a>' +
+    '<a href="#" class="pms-tn-item" data-tool="PMSentric-3WLA.html"><span class="pms-tn-ico">📋</span><span class="pms-tn-lbl">3-Week Lookahead</span></a>' +
+    '<div class="pms-tn-divider"></div>' +
+    '<div class="pms-tn-section">Canvas</div>' +
+    '<a href="#" class="pms-tn-item" data-tool="canvas-builder.html"><span class="pms-tn-ico">🖼️</span><span class="pms-tn-lbl">Canvas Builder</span></a>' +
+    '</div>';
+
+  function init(){
+    var wrap = document.getElementById('pmsToolsNav');
+    var btn  = wrap.querySelector('.pms-tn-btn');
+    var holder = document.createElement('div');
+    holder.innerHTML = menuHTML;
+    var menu = holder.firstChild;
+    document.body.appendChild(menu);
+
+    var CURRENT = (location.pathname.split('/').pop() || '').toLowerCase();
+    menu.querySelectorAll('.pms-tn-item').forEach(function(a){
+      var tool = a.getAttribute('data-tool');
+      if (tool.toLowerCase() === CURRENT) { a.classList.add('current'); }
+      a.addEventListener('click', function(ev){
+        ev.preventDefault();
+        if (a.classList.contains('current')) { pmsTnClose(); return; }
+        pmsTnClose();
+        window.location.href = './' + tool;
+      });
+    });
+
+    function positionMenu(){
+      var r = btn.getBoundingClientRect();
+      var menuW = 240;
+      var left = r.right - menuW;
+      if (left < 8) left = 8;
+      if (left + menuW > window.innerWidth - 8) left = window.innerWidth - menuW - 8;
+      menu.style.top  = (r.bottom + 6) + 'px';
+      menu.style.left = left + 'px';
+    }
+
+    window.pmsTnToggle = function(ev){
+      if (ev) ev.stopPropagation();
+      if (menu.classList.contains('open')) { pmsTnClose(); return; }
+      positionMenu();
+      menu.classList.add('open');
+      wrap.classList.add('open');
+    };
+    window.pmsTnClose = function(){
+      menu.classList.remove('open');
+      wrap.classList.remove('open');
+    };
+    document.addEventListener('click', function(ev){
+      if (!menu.classList.contains('open')) return;
+      if (wrap.contains(ev.target) || menu.contains(ev.target)) return;
+      pmsTnClose();
+    });
+    document.addEventListener('keydown', function(ev){
+      if (ev.key === 'Escape') pmsTnClose();
+    });
+    window.addEventListener('resize', function(){ if (menu.classList.contains('open')) positionMenu(); });
+    window.addEventListener('scroll',  function(){ if (menu.classList.contains('open')) positionMenu(); }, true);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+<!-- ══════════ /PMSENTRIC TOOLS NAV ══════════ -->
     <button class="theme-toggle" id="themeToggle" title="Toggle theme">◐</button>
   </div>
   <input type="file" id="xerInput" accept=".xer" style="display:none">
@@ -278,6 +414,41 @@ window.addEventListener('drop',e=>{
   if(!f.name.toLowerCase().endsWith('.xer')){toast('Please drop a .xer file',true);return;}
   const r=new FileReader();r.onload=ev=>loadXERText(ev.target.result,f.name);r.readAsText(f);
 });
+
+/* ── Cross-tool XER sync bridge ─────────────────────────────────── */
+let __xerSyncInbound = false;
+function __xerBroadcast(msg){ try{ parent.postMessage(msg,'*'); }catch(e){} }
+
+// Wrap loadXERText to persist to sessionStorage and broadcast
+(function(){
+  var _orig = window.loadXERText;
+  window.loadXERText = function(txt, fn){
+    try{ sessionStorage.setItem('pms_xer_current', txt); sessionStorage.setItem('pms_xer_current_name', fn||'file.xer'); }catch(e){}
+    _orig(txt, fn);
+    if(!__xerSyncInbound) __xerBroadcast({type:'xer:current:load', text:txt, name:fn||'file.xer'});
+  };
+})();
+
+// Auto-load stored XER on page open
+(function(){
+  try{
+    var stored = sessionStorage.getItem('pms_xer_current');
+    var name   = sessionStorage.getItem('pms_xer_current_name') || 'file.xer';
+    if(stored){ setTimeout(function(){ if(window.loadXERText) window.loadXERText(stored, name); }, 300); }
+  }catch(e){}
+})();
+
+// Cross-iframe inbound listener
+window.addEventListener('message', function(ev){
+  var m = ev.data || {};
+  if(!m || typeof m.type !== 'string') return;
+  __xerSyncInbound = true;
+  try{
+    if(m.type === 'xer:current:load'){ loadXERText(m.text, m.name||'file.xer'); }
+  }finally{ __xerSyncInbound = false; }
+});
+window.addEventListener('load', function(){ try{ parent.postMessage({type:'xer:ready'},'*'); }catch(e){} });
+
 
 /* ══ WBS HELPERS ════════════════════════════════════════════ */
 function wbsDesc(rootId){const s=new Set([rootId]);function w(id){for(const n of Object.values(S.wbsNodes)){if(n.parentId===id){s.add(n.id);w(n.id);}}}w(rootId);return s;}
