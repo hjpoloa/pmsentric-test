@@ -74,7 +74,8 @@ main{flex:1;display:flex;min-height:0}
 .widget-cell{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);display:flex;flex-direction:column;overflow:hidden;height:100%;box-shadow:var(--shadow-card)}
 .widget-head{display:flex;align-items:center;padding:7px 8px 7px 11px;border-bottom:1px solid var(--border);background:var(--surface2);flex-shrink:0;cursor:move;gap:7px;user-select:none}
 .wh-icon{width:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px}
-.wh-title{flex:1;font-size:11px;font-weight:600;color:var(--text);letter-spacing:.02em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wh-title{flex:1;font-size:clamp(8px,1.4cqw,13px);font-weight:600;color:var(--text);letter-spacing:.02em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.widget-cell{container-type:inline-size;container-name:wc}
 .wh-actions{display:flex;gap:1px;flex-shrink:0}
 .wh-actions button{width:22px;height:22px;background:transparent;border:none;color:var(--text-dim);cursor:pointer;border-radius:3px;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .wh-actions button:hover{color:var(--gold);background:var(--muted-bg)}
@@ -87,7 +88,7 @@ main{flex:1;display:flex;min-height:0}
 .wc-pill{background:var(--surface);border:1px solid var(--border2);color:var(--text-mid);font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;border-radius:9px;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.05em}
 .wc-pill.active{background:var(--gold-glow);border-color:var(--gold-dim);color:var(--gold)}
 .wc-pill:hover{border-color:var(--gold-dim)}
-.widget-body{flex:1;min-height:0;padding:10px;overflow:auto;position:relative}
+.widget-body{flex:1 1 auto;min-height:0;padding:10px;overflow:auto;position:relative;width:100%}
 .widget-body.no-pad{padding:0} .widget-body.tight{padding:6px}
 .w-ph{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-dim);text-align:center;gap:5px}
 .w-ph .wpi{font-size:28px;opacity:.3} .w-ph .wpt{font-size:12px} .w-ph .wps{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em}
@@ -109,7 +110,8 @@ main{flex:1;display:flex;min-height:0}
 .drop-inner p{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-mid);text-transform:uppercase;letter-spacing:.1em}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--gold-dim);color:var(--text);padding:9px 16px;border-radius:var(--radius-sm);font-size:12px;font-family:'DM Mono',monospace;letter-spacing:.04em;z-index:10000;box-shadow:var(--shadow-card);opacity:0;pointer-events:none;transition:opacity .25s}
 .toast.show{opacity:1} .toast.err{border-color:var(--red)}
-.grid-stack-item-content{inset:0 !important;overflow:hidden !important}
+.grid-stack-item-content{position:absolute !important;inset:0 !important;overflow:hidden !important;display:flex !important;flex-direction:column !important}
+.grid-stack-item-content>.widget-cell{flex:1 1 auto !important;width:100% !important;height:100% !important;min-height:0 !important;display:flex !important;flex-direction:column !important}
 .grid-stack>.grid-stack-item.gs-placeholder>.placeholder-content{background:var(--gold-glow);border:1px dashed var(--gold);border-radius:var(--radius)}
 .ui-resizable-handle.ui-resizable-se{background:var(--gold-dim);width:8px;height:8px;border-radius:2px;bottom:4px;right:4px;transform:rotate(45deg)}
 .widget-cell:hover .ui-resizable-handle.ui-resizable-se{background:var(--gold)}
@@ -118,6 +120,36 @@ main{flex:1;display:flex;min-height:0}
 .sidebar::-webkit-scrollbar-thumb,.canvas-wrap::-webkit-scrollbar-thumb,.widget-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 .note-editor{width:100%;height:100%;background:transparent;border:none;outline:none;resize:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);line-height:1.6;padding:0}
 .note-editor::placeholder{color:var(--text-dim)}
+
+/* ── WBS Tree Dropdown ──────────────────────────────────── */
+.wbs-dd-wrap{position:relative;display:inline-block;vertical-align:middle}
+.wbs-dd-btn{background:var(--surface);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:3px 24px 3px 7px;border-radius:4px;cursor:pointer;outline:none;min-width:120px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;text-align:left;transition:border-color .18s}
+.wbs-dd-btn::after{content:'▾';position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--text-dim);pointer-events:none}
+.wbs-dd-btn:focus,.wbs-dd-btn.open{border-color:var(--gold)}
+.wbs-dd-panel{position:fixed;z-index:9990;background:var(--surface);border:1px solid var(--border2);border-radius:6px;box-shadow:0 8px 32px rgba(0,0,0,.45);min-width:240px;max-width:340px;max-height:340px;display:none;flex-direction:column;overflow:hidden}
+.wbs-dd-panel.open{display:flex}
+.wbs-dd-toolbar{display:flex;gap:4px;padding:6px 7px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.wbs-dd-tbtn{background:var(--surface2);border:1px solid var(--border2);color:var(--text-mid);font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer;letter-spacing:.05em;text-transform:uppercase;transition:all .15s;white-space:nowrap}
+.wbs-dd-tbtn:hover{border-color:var(--gold-dim);color:var(--gold)}
+.wbs-dd-list{overflow-y:auto;flex:1;padding:4px 0}
+.wbs-dd-item{display:flex;align-items:center;gap:4px;padding:4px 8px;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;color:var(--text);transition:background .12s;user-select:none}
+.wbs-dd-item:hover{background:var(--muted-bg)}
+.wbs-dd-item.selected{background:var(--gold-glow);color:var(--gold)}
+.wbs-dd-toggle{width:14px;height:14px;flex-shrink:0;background:transparent;border:1px solid var(--border2);border-radius:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);transition:all .12s;line-height:1}
+.wbs-dd-toggle:hover{border-color:var(--gold-dim);color:var(--gold)}
+.wbs-dd-toggle.leaf{border-color:transparent;cursor:default;color:transparent}
+.wbs-dd-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wbs-dd-code{font-size:9px;color:var(--text-dim);flex-shrink:0}
+.wbs-dd-indent{flex-shrink:0}
+
+/* ── Baseline XER Panel ─────────────────────────────────── */
+.xer-panel-bl{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px;margin-bottom:12px;transition:all .25s}
+.xer-panel-bl.loaded{border-color:var(--steel);background:rgba(46,95,138,.08)}
+.xer-bl-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--steel-light);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
+.xer-bl-status{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.xer-bl-project{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;word-break:break-all}
+.xer-bl-meta{font-size:11px;color:var(--text-mid);line-height:1.5;margin-bottom:8px}
+.xer-bl-hint{font-size:11px;color:var(--text-mid);line-height:1.5}
 </style>
 </head>
 <body>
@@ -272,6 +304,7 @@ html.light .pms-tn-item, .light .pms-tn-item{color:#1A1C22;}
     <button class="theme-toggle" id="themeToggle" title="Toggle theme">◐</button>
   </div>
   <input type="file" id="xerInput" accept=".xer" style="display:none">
+  <input type="file" id="blInput" accept=".xer" style="display:none">
   <input type="file" id="tplInput" accept=".json,application/json" style="display:none">
 </header>
 <main>
@@ -281,6 +314,18 @@ html.light .pms-tn-item, .light .pms-tn-item{color:#1A1C22;}
       <div class="xer-project" id="xerProject" style="display:none"></div>
       <div class="xer-meta" id="xerMeta" style="display:none"></div>
       <div class="xer-hint" id="xerHint">Load a P6 XER file to populate widget data. Drag widgets to canvas in the meantime.</div>
+    </div>
+    <!-- Baseline XER Panel -->
+    <div class="xer-panel-bl" id="blPanel">
+      <div class="xer-bl-label">⬡ Baseline</div>
+      <div class="xer-bl-status" id="blStatus">● No Baseline Loaded</div>
+      <div class="xer-bl-project" id="blProject" style="display:none"></div>
+      <div class="xer-bl-meta" id="blMeta" style="display:none"></div>
+      <div class="xer-bl-hint" id="blHint">Load a baseline XER to enable variance comparisons.</div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="btn" style="font-size:11px;padding:5px 10px;flex:1" onclick="document.getElementById('blInput').click()">📂 Load Baseline</button>
+        <button class="btn btn-danger" id="closeBlBtn" onclick="closeBaseline()" style="display:none;font-size:11px;padding:5px 10px">✕</button>
+      </div>
     </div>
     <div class="sb-title">Widget Library</div>
     <div class="sb-group">
@@ -330,7 +375,8 @@ html.light .pms-tn-item, .light .pms-tn-item{color:#1A1C22;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
 /* ══ STATE ══════════════════════════════════════════════════ */
-const S={projects:{},wbsNodes:{},taskData:{},taskBudget:{},fileName:null,dataDate:null,charts:new Map(),wc:0};
+const S={projects:{},wbsNodes:{},taskData:{},taskBudget:{},fileName:null,dataDate:null,charts:new Map(),wc:0,
+  baseline:{projects:{},wbsNodes:{},taskData:{},fileName:null,dataDate:null}};
 let __xerSyncInbound=false;
 function __xerBroadcast(msg){try{parent.postMessage(msg,'*');}catch(e){}}
 const MONS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -420,6 +466,79 @@ function updateXERPanel(){
   document.getElementById('xerMeta').style.display='';document.getElementById('xerHint').style.display='none';
 }
 document.getElementById('xerInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>loadXERText(ev.target.result,f.name);r.readAsText(f);e.target.value='';});
+
+/* ══ BASELINE XER ════════════════════════════════════════════ */
+function parseXERInto(txt, target){
+  target.projects={};target.wbsNodes={};target.taskData={};
+  let tbl=null,flds=[];
+  for(const raw of txt.split('\n')){
+    const l=raw.replace(/\r$/,'');
+    if(l.startsWith('%T\t')){tbl=l.slice(3).trim();flds=[];}
+    else if(l.startsWith('%F\t'))flds=l.slice(3).split('\t');
+    else if(l.startsWith('%R\t')){
+      const v=l.slice(3).split('\t'),r={};flds.forEach((f,i)=>{r[f]=i<v.length?v[i]:'';});
+      if(tbl==='PROJECT') target.projects[r.proj_id||'']={id:r.proj_id||'',name:r.proj_short_name||r.proj_id||'',dataDate:r.last_recalc_date||''};
+      else if(tbl==='PROJWBS'){const id=r.wbs_id||'';target.wbsNodes[id]={id,name:r.wbs_name||'',shortName:r.wbs_short_name||'',parentId:r.parent_wbs_id||'',projId:r.proj_id||''};}
+      else if(tbl==='TASK'){
+        const id=r.task_id||'';
+        const aS=parseDt(r.act_start_date||''),aE=parseDt(r.act_end_date||'');
+        const eS=parseDt(r.early_start_date||r.target_start_date||''),eF=parseDt(r.early_end_date||r.target_end_date||''),rF=parseDt(r.reend_date||r.remain_early_end_date||'');
+        let dS,dF,st;
+        if(!aS){dS=eS;dF=eF;st='ns';}else if(!aE){dS=aS;dF=rF||eF;st='ip';}else{dS=aS;dF=aE;st='done';}
+        let pct;
+        if(r.complete_pct_type==='CP_Drtn'){const t=parseFloat(r.target_drtn_hr_cnt)||0,rm=parseFloat(r.remain_drtn_hr_cnt)||0;pct=t>0?Math.round((t-rm)/t*1000)/10:0;}
+        else pct=Math.round((parseFloat(r.phys_complete_pct||r.perf_complete_pct||r.complete_pct||'0')||0)*10)/10;
+        const tf=parseFloat(r.total_float_hr_cnt)||0;
+        const crit=(r.driving_path_flag||'').trim().toUpperCase()==='Y'||tf<=0;
+        target.taskData[id]={id,code:r.task_code||'',name:r.task_name||'',wbsId:r.wbs_id||'',projId:r.proj_id||'',start:dS,finish:dF,actualStart:aS,actualEnd:aE,completePct:pct,status:st,critical:crit,totalFloat:tf,isMilestone:(r.task_type||'').toLowerCase().includes('mile')};
+      }
+    }
+  }
+}
+function loadBaselineText(txt,fn){
+  try{
+    parseXERInto(txt, S.baseline);
+    S.baseline.fileName=fn;
+    const pj=Object.values(S.baseline.projects)[0];
+    if(pj&&pj.dataDate)S.baseline.dataDate=new Date((pj.dataDate||'').trim().slice(0,10));
+    updateBlPanel();
+    // Do NOT rerenderAll() — baseline is comparison data only; widgets read S.wbsNodes exclusively
+    toast(`Baseline loaded — ${Object.keys(S.baseline.taskData).length} activities`);
+    try{localStorage.setItem('pms_xer_baseline',txt);localStorage.setItem('pms_xer_baseline_name',fn||'baseline.xer');}catch(e){}
+    document.getElementById('closeBlBtn').style.display='inline-flex';
+  }catch(e){console.error(e);toast('Failed to parse baseline XER',true);}
+}
+function closeBaseline(){
+  S.baseline={projects:{},wbsNodes:{},taskData:{},fileName:null,dataDate:null};
+  updateBlPanel();rerenderAll();
+  document.getElementById('closeBlBtn').style.display='none';
+  try{localStorage.removeItem('pms_xer_baseline');localStorage.removeItem('pms_xer_baseline_name');}catch(e){}
+  toast('Baseline cleared');
+}
+function updateBlPanel(){
+  const panel=document.getElementById('blPanel');
+  if(!S.baseline.fileName){
+    panel.classList.remove('loaded');
+    document.getElementById('blStatus').textContent='● No Baseline Loaded';
+    document.getElementById('blProject').style.display='none';
+    document.getElementById('blMeta').style.display='none';
+    document.getElementById('blHint').style.display='';
+    return;
+  }
+  panel.classList.add('loaded');
+  document.getElementById('blStatus').textContent='● Baseline Active';
+  const pj=Object.values(S.baseline.projects)[0];
+  document.getElementById('blProject').textContent=pj?pj.name:S.baseline.fileName;
+  document.getElementById('blProject').style.display='';
+  document.getElementById('blMeta').innerHTML=`<div>${Object.keys(S.baseline.taskData).length} activities · ${Object.keys(S.baseline.wbsNodes).length} WBS</div>`+(S.baseline.dataDate?`<div>Data date: ${fmtD(S.baseline.dataDate)}</div>`:'');
+  document.getElementById('blMeta').style.display='';
+  document.getElementById('blHint').style.display='none';
+}
+document.getElementById('blInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>loadBaselineText(ev.target.result,f.name);r.readAsText(f);e.target.value='';});
+// Auto-restore baseline
+(function(){
+  try{const s=localStorage.getItem('pms_xer_baseline'),n=localStorage.getItem('pms_xer_baseline_name')||'baseline.xer';if(s){setTimeout(()=>loadBaselineText(s,n),400);}}catch(e){}
+})();;
 let _dc=0;
 window.addEventListener('dragenter',e=>{if(!e.dataTransfer||!e.dataTransfer.types.includes('Files'))return;_dc++;document.getElementById('dropOverlay').classList.add('active');});
 window.addEventListener('dragleave',()=>{_dc--;if(_dc<=0){_dc=0;document.getElementById('dropOverlay').classList.remove('active');}});
@@ -458,15 +577,181 @@ window.addEventListener('load', function(){ try{ parent.postMessage({type:'xer:r
 
 /* ══ WBS HELPERS ════════════════════════════════════════════ */
 function wbsDesc(rootId){const s=new Set([rootId]);function w(id){for(const n of Object.values(S.wbsNodes)){if(n.parentId===id){s.add(n.id);w(n.id);}}}w(rootId);return s;}
-function buildWBSOpts(all=true){
-  const nodes=Object.values(S.wbsNodes);
-  if(!nodes.length)return all?'<option value="all">All WBS</option>':'';
-  const ids=new Set(nodes.map(n=>n.id));
-  const roots=nodes.filter(n=>!ids.has(n.parentId));
-  let o=all?'<option value="all">All WBS</option>':'';
-  function walk(n,d){o+=`<option value="${eA(n.id)}">${'—'.repeat(d)}${d?' ':''} ${eT(n.shortName||n.name)}</option>`;nodes.filter(c=>c.parentId===n.id).forEach(c=>walk(c,d+1));}
-  roots.forEach(r=>walk(r,0));return o;
+
+/* WBS Tree Dropdown — replaces plain <select> */
+let _wbsDDOpen=null;
+function closeAllWbsDD(){if(_wbsDDOpen){_wbsDDOpen.classList.remove('open');_wbsDDOpen=null;}}
+document.addEventListener('click',e=>{if(_wbsDDOpen&&!_wbsDDOpen.closest('.wbs-dd-wrap')?.contains(e.target)&&!e.target.closest('.wbs-dd-wrap'))closeAllWbsDD();});
+
+function buildWBSTree(nodes){
+  // Build id->children map
+  const childMap={};const all=Object.values(nodes);
+  const ids=new Set(all.map(n=>n.id));
+  const roots=all.filter(n=>!ids.has(n.parentId));
+  all.forEach(n=>{if(!childMap[n.parentId])childMap[n.parentId]=[];childMap[n.parentId].push(n);});
+  return{roots,childMap};
 }
+
+function buildWBSOpts(){
+  // Returns empty string — kept for compat. Real UI is renderWBSDropdown.
+  return '';
+}
+
+function renderWBSDropdown(container, cell, ctrlKey){
+  ctrlKey=ctrlKey||'wbs';
+  // STRICT: always use ONLY current XER WBS nodes — never baseline
+  const nodes=S.wbsNodes;
+  const nodeList=Object.values(nodes);
+  const cs=getCS(cell);
+  const curVal=cs[ctrlKey]||'all';
+
+  // Collapse state per dropdown instance — persisted on container
+  if(!container._wbsCollapsed)container._wbsCollapsed=new Set();
+  const collapsed=container._wbsCollapsed;
+
+  function getFullName(val){
+    if(!val||val==='all')return'All WBS';
+    const n=nodes[val];
+    if(!n)return val;
+    return n.name||(n.shortName||val);
+  }
+  function getShortLabel(val){
+    if(!val||val==='all')return'All WBS';
+    const n=nodes[val];
+    if(!n)return val;
+    // Show short code if available, else truncate full name
+    return n.shortName||(n.name||val);
+  }
+
+  container.innerHTML='';
+  const wrap=document.createElement('div');wrap.className='wbs-dd-wrap';
+
+  const btn=document.createElement('button');btn.type='button';btn.className='wbs-dd-btn';
+  btn.title=getFullName(curVal);
+  btn.textContent=getShortLabel(curVal);
+  wrap.appendChild(btn);
+
+  const panel=document.createElement('div');panel.className='wbs-dd-panel';
+
+  // Toolbar
+  const tb=document.createElement('div');tb.className='wbs-dd-toolbar';
+  const mkTb=(lbl,fn)=>{
+    const b=document.createElement('button');b.type='button';b.className='wbs-dd-tbtn';
+    b.textContent=lbl;b.addEventListener('click',e=>{e.stopPropagation();fn();});return b;
+  };
+  tb.appendChild(mkTb('▼ Expand All',()=>{collapsed.clear();renderList();}));
+  tb.appendChild(mkTb('▶ Collapse All',()=>{
+    const {childMap:cm}=buildWBSTree(nodes);
+    Object.keys(cm).forEach(id=>{if(id&&nodes[id])collapsed.add(id);});
+    renderList();
+  }));
+  tb.appendChild(mkTb('✕ Reset',()=>{
+    setCS(cell,ctrlKey,'all');
+    btn.textContent='All WBS';btn.title='All WBS';
+    closeAllWbsDD();rerenderWidget(cell);rebuildCtrl(cell);
+  }));
+  panel.appendChild(tb);
+
+  const list=document.createElement('div');list.className='wbs-dd-list';
+  panel.appendChild(list);
+  document.body.appendChild(panel);
+
+  const {roots,childMap}=buildWBSTree(nodes);
+
+  function renderList(){
+    list.innerHTML='';
+    // "All WBS" row
+    const allRow=document.createElement('div');
+    allRow.className='wbs-dd-item'+((!curVal||curVal==='all')?' selected':'');
+    const allTog=document.createElement('span');allTog.className='wbs-dd-toggle leaf';allRow.appendChild(allTog);
+    const allNm=document.createElement('span');allNm.className='wbs-dd-name';allNm.textContent='All WBS';allRow.appendChild(allNm);
+    allRow.addEventListener('click',()=>{
+      setCS(cell,ctrlKey,'all');btn.textContent='All WBS';btn.title='All WBS';
+      closeAllWbsDD();rerenderWidget(cell);rebuildCtrl(cell);
+    });
+    list.appendChild(allRow);
+
+    function walk(n,depth){
+      // Skip any node that somehow doesn't belong to S.wbsNodes (safety guard)
+      if(!nodes[n.id])return;
+      if(collapsed.has(n.parentId)&&depth>0)return;
+      const children=childMap[n.id]||[];
+      const hasChildren=children.length>0;
+      const isSelected=n.id===curVal;
+
+      const row=document.createElement('div');row.className='wbs-dd-item'+(isSelected?' selected':'');
+
+      // indent spacer
+      const indent=document.createElement('span');
+      indent.className='wbs-dd-indent';indent.style.width=(depth*14)+'px';
+      row.appendChild(indent);
+
+      // expand/collapse toggle
+      const tog=document.createElement('span');
+      tog.className='wbs-dd-toggle'+(hasChildren?'':' leaf');
+      if(hasChildren){
+        tog.textContent=collapsed.has(n.id)?'▶':'▼';
+        tog.addEventListener('click',e=>{
+          e.stopPropagation();
+          if(collapsed.has(n.id))collapsed.delete(n.id);else collapsed.add(n.id);
+          renderList();
+        });
+      }
+      row.appendChild(tog);
+
+      // WBS full name — DM Sans font
+      const nm=document.createElement('span');
+      nm.className='wbs-dd-name';
+      nm.style.fontFamily="'DM Sans',sans-serif";
+      nm.style.fontSize='12px';
+      nm.textContent=n.name||(n.shortName||n.id);
+      nm.title=n.name||(n.shortName||n.id);
+      row.appendChild(nm);
+
+      // Short code badge — DM Mono, dimmed
+      if(n.shortName&&n.shortName!==n.name){
+        const cd=document.createElement('span');
+        cd.className='wbs-dd-code';
+        cd.style.fontFamily="'DM Mono',monospace";
+        cd.textContent=n.shortName;
+        row.appendChild(cd);
+      }
+
+      row.addEventListener('click',()=>{
+        setCS(cell,ctrlKey,n.id);
+        btn.textContent=n.shortName||(n.name||n.id);
+        btn.title=n.name||(n.shortName||n.id);
+        closeAllWbsDD();rerenderWidget(cell);rebuildCtrl(cell);
+      });
+      list.appendChild(row);
+      if(!collapsed.has(n.id))children.forEach(c=>walk(c,depth+1));
+    }
+    roots.forEach(r=>walk(r,0));
+  }
+
+  if(!nodeList.length){
+    list.innerHTML='<div class="wbs-dd-item" style="color:var(--text-dim);font-family:\'DM Sans\',sans-serif">No WBS loaded</div>';
+  } else {
+    renderList();
+  }
+
+  btn.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(panel.classList.contains('open')){closeAllWbsDD();return;}
+    closeAllWbsDD();
+    const r=btn.getBoundingClientRect();
+    panel.style.top=(r.bottom+4)+'px';
+    const left=Math.min(r.left,window.innerWidth-350);
+    panel.style.left=Math.max(4,left)+'px';
+    panel.classList.add('open');
+    btn.classList.add('open');
+    _wbsDDOpen=panel;
+  });
+
+  wrap.appendChild(btn);
+  container.appendChild(wrap);
+}
+
 function filterByWBS(tasks,wv){if(!wv||wv==='all')return tasks;const s=wbsDesc(wv);return tasks.filter(t=>s.has(t.wbsId));}
 
 /* ══ HELPERS ════════════════════════════════════════════════ */
@@ -491,7 +776,11 @@ const W={
   },
 
   'gantt':{title:'Gantt Chart',icon:'▤',sz:{w:10,h:6},
-    ctrl(cell){const cs=getCS(cell);return`<span class="wc-label">WBS</span><select class="wc-select" data-ctrl="wbs">${buildWBSOpts()}</select><span class="wc-label">Show</span><select class="wc-select" data-ctrl="limit" style="width:66px"><option value="25">25</option><option value="50">50</option><option value="100">100</option></select><div class="wc-pills"><button class="wc-pill${cs.crit==='true'?' active':''}" data-ctrl-toggle="crit" data-ctrl-val="true">Critical</button></div>`;},
+    ctrl(cell,cb){
+      const cs=getCS(cell);
+      if(cb){setTimeout(()=>renderWBSDropdown(cb.querySelector('.wbs-dd-host'),cell,'wbs'),0);}
+      return`<span class="wc-label">WBS</span><span class="wbs-dd-host"></span><span class="wc-label">Show</span><select class="wc-select" data-ctrl="limit" style="width:66px"><option value="25">25</option><option value="50">50</option><option value="100">100</option></select><div class="wc-pills"><button class="wc-pill${cs.crit==='true'?' active':''}" data-ctrl-toggle="crit" data-ctrl-val="true">Critical</button></div>`;
+    },
     render(body,cell){
       const cs=getCS(cell);let t=Object.values(S.taskData);
       if(!t.length)return ph(body,'▤','Awaiting XER data');
@@ -504,7 +793,10 @@ const W={
   },
 
   'scurve':{title:'S-Curve · Planned vs Actual',icon:'📈',sz:{w:8,h:5},
-    ctrl(cell){return`<span class="wc-label">WBS</span><select class="wc-select" data-ctrl="wbs">${buildWBSOpts()}</select>`;},
+    ctrl(cell,cb){
+      if(cb){setTimeout(()=>renderWBSDropdown(cb.querySelector('.wbs-dd-host'),cell,'wbs'),0);}
+      return`<span class="wc-label">WBS</span><span class="wbs-dd-host"></span>`;
+    },
     render(body,cell){
       const cs=getCS(cell);let t=Object.values(S.taskData);
       if(!t.length)return ph(body,'📈','Awaiting XER data');
@@ -543,25 +835,58 @@ const W={
   },
 
   'wbs-pie':{title:'WBS Progress Pie',icon:'◐',sz:{w:4,h:5},
-    ctrl(cell){return`<span class="wc-label">WBS Node</span><select class="wc-select" data-ctrl="wbs">${buildWBSOpts()}</select>`;},
+    ctrl(cell,cb){
+      if(cb){setTimeout(()=>renderWBSDropdown(cb.querySelector('.wbs-dd-host'),cell,'wbs'),0);}
+      return`<span class="wc-label">WBS Node</span><span class="wbs-dd-host"></span>`;
+    },
     render(body,cell){
       const cs=getCS(cell);let t=Object.values(S.taskData);
       if(!t.length)return ph(body,'◐','Awaiting XER data');
       t=filterByWBS(t,cs.wbs);if(!t.length)return ph(body,'◐','No activities in selected WBS');
       const avg=t.reduce((a,x)=>a+(x.completePct||0),0)/t.length,rem=100-avg;
       body.innerHTML='<canvas></canvas>';const c=css();
-      const wn=cs.wbs&&cs.wbs!=='all'?(S.wbsNodes[cs.wbs]?.name||'WBS'):'All WBS';
+      const wn=cs.wbs&&cs.wbs!=='all'?(S.wbsNodes[cs.wbs]?.name||S.wbsNodes[cs.wbs]?.shortName||'WBS'):'All WBS';
       const ch=new Chart(body.querySelector('canvas'),{type:'doughnut',
         data:{labels:['Complete','Remaining'],datasets:[{data:[avg,rem],backgroundColor:[c.gold,c.bd2],borderWidth:0}]},
         options:{maintainAspectRatio:false,responsive:true,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:c.tm,font:{size:11,family:'DM Sans'},boxWidth:10,padding:8}},tooltip:{callbacks:{label:ct=>`${ct.label}: ${ct.parsed.toFixed(1)}%`}}}},
-        plugins:[{id:'ct',beforeDraw(ch){const{width:w,height:h,ctx}=ch;ctx.save();const fs=Math.min(w,h)*.14;ctx.font=`700 ${fs}px 'Bebas Neue',sans-serif`;ctx.fillStyle=c.gold;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(avg.toFixed(1)+'%',w/2,(h-40)/2+20);ctx.font=`${fs*.55}px 'DM Mono',monospace`;ctx.fillStyle=c.tm;ctx.fillText(wn.slice(0,20),w/2,(h-40)/2+20+fs*1.1);ctx.restore();}}]
+        plugins:[{id:'ct',beforeDraw(ch){
+          const{width:w,height:h,ctx}=ch;ctx.save();
+          const minWH=Math.min(w,h-40);
+          const holeR=minWH*0.65*0.5;
+          const maxTxtW=holeR*1.55;
+          const cx=w/2,cy=(h-40)/2+20;
+          const pctFs=Math.max(10,Math.min(minWH*.14,44));
+          ctx.font=`700 ${pctFs}px 'Bebas Neue',sans-serif`;
+          ctx.fillStyle=c.gold;ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillText(avg.toFixed(1)+'%',cx,cy-pctFs*0.3);
+          const nmFs=Math.max(8,Math.min(pctFs*0.42,13));
+          ctx.font=`500 ${nmFs}px 'DM Sans',sans-serif`;
+          ctx.fillStyle=c.tm;
+          const words=wn.split(/\s+/);
+          const lines=[];let line='';
+          for(const word of words){
+            const test=line?line+' '+word:word;
+            if(ctx.measureText(test).width<=maxTxtW){line=test;}
+            else{if(line)lines.push(line);line=word;}
+          }
+          if(line)lines.push(line);
+          const maxLines=3;
+          if(lines.length>maxLines){lines.splice(maxLines);lines[maxLines-1]=lines[maxLines-1].slice(0,14)+'…';}
+          const lineH=nmFs*1.3;
+          const startY=cy+pctFs*0.55;
+          lines.forEach((ln,i)=>ctx.fillText(ln,cx,startY+i*lineH));
+          ctx.restore();
+        }}]
       });
       S.charts.set(body,ch);
     }
   },
 
   'resource-histogram':{title:'Activity Load',icon:'▥',sz:{w:6,h:4},
-    ctrl(cell){return`<span class="wc-label">WBS</span><select class="wc-select" data-ctrl="wbs">${buildWBSOpts()}</select>`;},
+    ctrl(cell,cb){
+      if(cb){setTimeout(()=>renderWBSDropdown(cb.querySelector('.wbs-dd-host'),cell,'wbs'),0);}
+      return`<span class="wc-label">WBS</span><span class="wbs-dd-host"></span>`;
+    },
     render(body,cell){
       const cs=getCS(cell);let t=Object.values(S.taskData);
       if(!t.length)return ph(body,'▥','Awaiting XER data');
@@ -577,7 +902,11 @@ const W={
   },
 
   'milestones':{title:'Milestones',icon:'🏁',sz:{w:7,h:5},
-    ctrl(cell){const cs=getCS(cell);return`<span class="wc-label">WBS</span><select class="wc-select" data-ctrl="wbs">${buildWBSOpts()}</select><input class="wc-input" data-ctrl="search" placeholder="Search…" value="${eA(cs.search||'')}"><div class="wc-pills"><button class="wc-pill${!cs.status||cs.status==='all'?' active':''}" data-ctrl-toggle="status" data-ctrl-val="all">All</button><button class="wc-pill${cs.status==='ns'?' active':''}" data-ctrl-toggle="status" data-ctrl-val="ns">Pending</button><button class="wc-pill${cs.status==='ip'?' active':''}" data-ctrl-toggle="status" data-ctrl-val="ip">In Prog</button><button class="wc-pill${cs.status==='done'?' active':''}" data-ctrl-toggle="status" data-ctrl-val="done">Done</button></div>`;},
+    ctrl(cell,cb){
+      const cs=getCS(cell);
+      if(cb){setTimeout(()=>renderWBSDropdown(cb.querySelector('.wbs-dd-host'),cell,'wbs'),0);}
+      return`<span class="wc-label">WBS</span><span class="wbs-dd-host"></span><input class="wc-input" data-ctrl="search" placeholder="Search…" value="${eA(cs.search||'')}"><div class="wc-pills"><button class="wc-pill${!cs.status||cs.status==='all'?' active':''}" data-ctrl-toggle="status" data-ctrl-val="all">All</button><button class="wc-pill${cs.status==='ns'?' active':''}" data-ctrl-toggle="status" data-ctrl-val="ns">Pending</button><button class="wc-pill${cs.status==='ip'?' active':''}" data-ctrl-toggle="status" data-ctrl-val="ip">In Prog</button><button class="wc-pill${cs.status==='done'?' active':''}" data-ctrl-toggle="status" data-ctrl-val="done">Done</button></div>`;
+    },
     render(body,cell){
       const cs=getCS(cell);
       if(!Object.keys(S.taskData).length)return ph(body,'🏁','Awaiting XER data');
@@ -603,7 +932,11 @@ const W={
   },
 
   'lookahead':{title:'3-Week Lookahead',icon:'📅',sz:{w:8,h:5},
-    ctrl(cell){const cs=getCS(cell);return`<span class="wc-label">WBS</span><select class="wc-select" data-ctrl="wbs">${buildWBSOpts()}</select><div class="wc-pills"><button class="wc-pill${cs.crit==='true'?' active':''}" data-ctrl-toggle="crit" data-ctrl-val="true">Critical only</button></div>`;},
+    ctrl(cell,cb){
+      const cs=getCS(cell);
+      if(cb){setTimeout(()=>renderWBSDropdown(cb.querySelector('.wbs-dd-host'),cell,'wbs'),0);}
+      return`<span class="wc-label">WBS</span><span class="wbs-dd-host"></span><div class="wc-pills"><button class="wc-pill${cs.crit==='true'?' active':''}" data-ctrl-toggle="crit" data-ctrl-val="true">Critical only</button></div>`;
+    },
     render(body,cell){
       const cs=getCS(cell);
       if(!Object.keys(S.taskData).length)return ph(body,'📅','Awaiting XER data');
@@ -618,7 +951,10 @@ const W={
   },
 
   'critical-list':{title:'Critical Activities',icon:'🔗',sz:{w:7,h:5},
-    ctrl(cell){return`<span class="wc-label">WBS</span><select class="wc-select" data-ctrl="wbs">${buildWBSOpts()}</select>`;},
+    ctrl(cell,cb){
+      if(cb){setTimeout(()=>renderWBSDropdown(cb.querySelector('.wbs-dd-host'),cell,'wbs'),0);}
+      return`<span class="wc-label">WBS</span><span class="wbs-dd-host"></span>`;
+    },
     render(body,cell){
       const cs=getCS(cell);if(!Object.keys(S.taskData).length)return ph(body,'🔗','Awaiting XER data');
       let t=Object.values(S.taskData).filter(x=>x.critical&&x.status!=='done');
@@ -729,7 +1065,10 @@ function wireCell(gsItem,cell){
 function rebuildCtrl(cell){
   const cb=cell.querySelector('.widget-controls');if(!cb)return;
   const def=W[cell.dataset.widgetType];if(!def||!def.ctrl)return;
-  cb.innerHTML=def.ctrl(cell);
+  cb.innerHTML=def.ctrl(cell,cb);
+  // Inject WBS dropdown if host exists
+  const host=cb.querySelector('.wbs-dd-host');
+  if(host)renderWBSDropdown(host,cell,'wbs');
   const cs=getCS(cell);cb.querySelectorAll('[data-ctrl]').forEach(el=>{const k=el.dataset.ctrl;if(cs[k]!==undefined&&el.tagName==='SELECT'){const o=[...el.options].find(x=>x.value===cs[k]);if(o)el.value=cs[k];}});
 }
 
@@ -750,20 +1089,16 @@ GridStack.setupDragIn('.widget-item',{appendTo:'body',helper:'clone'});
 
 // FIX: inject content in-place — no removeWidget in dropped handler
 grid.on('dropped',(ev,prev,newItem)=>{
-  if(!newItem||!newItem.el)return;
-  const clone=newItem.el.querySelector('[data-widget]');
-  const type=clone?.dataset.widget;
-  if(!type||!W[type])return;
-  const def=W[type];const sz=def.sz||{w:4,h:4};
-  const id='w'+(++S.wc);
-  newItem.el.dataset.widgetType=type;newItem.el.dataset.widgetId=id;
-  grid.update(newItem.el,{w:sz.w,h:sz.h});
-  const contentDiv=newItem.el.querySelector('.grid-stack-item-content');if(!contentDiv)return;
-  contentDiv.innerHTML='';
-  const cell=buildCell(type,id,{});contentDiv.appendChild(cell);
-  wireCell(newItem.el,cell);
-  if(def.ctrl)rebuildCtrl(cell);
-  rerenderWidget(cell);updateEmptyState();autoSave();
+  console.log('[PMS-Canvas] dropped event fired, newItem:',newItem);
+  if(!newItem||!newItem.el){console.log('[PMS-Canvas] no newItem.el');return;}
+  // data-widget may be on newItem.el itself OR on a descendant
+  let type=newItem.el.dataset.widget;
+  if(!type){const c=newItem.el.querySelector('[data-widget]');type=c?.dataset.widget;}
+  console.log('[PMS-Canvas] dropped type:',type);
+  if(!type||!W[type]){console.log('[PMS-Canvas] unknown widget type, available:',Object.keys(W));return;}
+  const pos={x:newItem.x||0,y:newItem.y||0};
+  grid.removeWidget(newItem.el,true);
+  addWidgetProg(type,pos,null);
 });
 
 grid.on('change',()=>{S.charts.forEach(ch=>{try{ch.resize();}catch(_){}});updateEmptyState();autoSave();});
@@ -772,13 +1107,22 @@ grid.on('resizestop',()=>S.charts.forEach(ch=>{try{ch.resize();}catch(_){}}));
 /* ══ PROGRAMMATIC ADD (template load) ══════════════════════ */
 function addWidgetProg(type,pos,restored){
   const def=W[type];if(!def)return;const sz=def.sz||{w:4,h:4};
-  const id='w'+(++S.wc);const cell=buildCell(type,id,restored||{});
-  const gsItem=grid.addWidget({x:pos.x||0,y:pos.y||0,w:restored?.w||sz.w,h:restored?.h||sz.h,minW:2,minH:2,id,content:cell.outerHTML});
-  const ins=gsItem.querySelector('.widget-cell');if(!ins)return;
-  ins.dataset.widgetType=type;ins.dataset.widgetId=id;
-  if(restored?.ctrlState)ins.dataset.ctrlState=restored.ctrlState;
-  if(restored?.noteText)ins.dataset.noteText=restored.noteText;
-  wireCell(gsItem,ins);if(def.ctrl)rebuildCtrl(ins);rerenderWidget(ins);updateEmptyState();
+  const id='w'+(++S.wc);
+  const cell=buildCell(type,id,restored||{});
+  const gsItem=grid.addWidget({x:pos.x||0,y:pos.y||0,w:restored?.w||sz.w,h:restored?.h||sz.h,minW:2,minH:2,id});
+  if(!gsItem)return;
+  let contentDiv=gsItem.querySelector('.grid-stack-item-content');
+  if(!contentDiv){contentDiv=document.createElement('div');contentDiv.className='grid-stack-item-content';gsItem.appendChild(contentDiv);}
+  contentDiv.innerHTML='';
+  contentDiv.appendChild(cell);
+  console.log('[PMS-Canvas] Added widget:',type,'id:',id,'gsItem dims:',gsItem.offsetWidth+'x'+gsItem.offsetHeight,'contentDiv dims:',contentDiv.offsetWidth+'x'+contentDiv.offsetHeight,'cell dims:',cell.offsetWidth+'x'+cell.offsetHeight);
+  wireCell(gsItem,cell);
+  if(def.ctrl)rebuildCtrl(cell);
+  setTimeout(()=>{
+    const body=cell.querySelector('.widget-body');
+    console.log('[PMS-Canvas] Render:',type,'body dims:',body?.offsetWidth+'x'+body?.offsetHeight,'taskData count:',Object.keys(S.taskData).length);
+    rerenderWidget(cell);updateEmptyState();autoSave();
+  },50);
 }
 
 /* ══ TEMPLATE ═══════════════════════════════════════════════ */
@@ -812,13 +1156,34 @@ function clearCanvas(silent){
 /* ══ AUTO-SAVE ══════════════════════════════════════════════ */
 let _at;
 function autoSave(){clearTimeout(_at);_at=setTimeout(()=>{try{localStorage.setItem('pms_canvas_autosave',JSON.stringify(serializeCanvas()));}catch(_){}},600);}
-function tryRestore(){
-  try{const raw=localStorage.getItem('pms_canvas_autosave');if(!raw)return;const tpl=JSON.parse(raw);if(tpl?.items?.length){loadTemplate(tpl);toast('Canvas restored from last session');}}
-  catch(_){}
-}
+
+/* ══ DEFAULT TEMPLATE ════════════════════════════════════════ */
+const DEFAULT_TEMPLATE={
+  name:'Default Dashboard',version:2,createdAt:'2026-01-01T00:00:00.000Z',
+  items:[
+    {widgetType:'kpi-activities',     x:0,  y:0,  w:4, h:3, ctrlState:'{}'},
+    {widgetType:'kpi-progress',       x:4,  y:0,  w:4, h:3, ctrlState:'{}'},
+    {widgetType:'kpi-critical',       x:8,  y:0,  w:4, h:3, ctrlState:'{}'},
+    {widgetType:'scurve',             x:0,  y:3,  w:12,h:4, ctrlState:'{"wbs":"all"}'},
+    {widgetType:'lookahead',          x:0,  y:7,  w:12,h:6, ctrlState:'{"wbs":"all","crit":"true"}'},
+    {widgetType:'resource-histogram', x:0,  y:13, w:4, h:5, ctrlState:'{"wbs":"all"}'},
+    {widgetType:'wbs-pie',            x:4,  y:13, w:3, h:5, ctrlState:'{"wbs":"all"}'},
+    {widgetType:'wbs-pie',            x:7,  y:13, w:3, h:5, ctrlState:'{"wbs":"all"}'},
+    {widgetType:'note',               x:10, y:13, w:2, h:5, ctrlState:'{}',
+      noteText:'Click to edit. Add context, labels, or instructions for your team.'}
+  ]
+};
 
 /* ══ INIT ════════════════════════════════════════════════════ */
-updateXERPanel();updateEmptyState();tryRestore();
+updateXERPanel();updateEmptyState();
+(function(){
+  try{
+    const raw=localStorage.getItem('pms_canvas_autosave');
+    if(raw){const tpl=JSON.parse(raw);if(tpl?.items?.length){loadTemplate(tpl);toast('Canvas restored from last session');return;}}
+  }catch(_){}
+  loadTemplate(DEFAULT_TEMPLATE);
+  document.getElementById('tplName').value='Default Dashboard';
+})();
 window.addEventListener('resize',()=>S.charts.forEach(ch=>{try{ch.resize();}catch(_){}}));
 </script>
 </body>
