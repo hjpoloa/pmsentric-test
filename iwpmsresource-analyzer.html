@@ -2303,6 +2303,9 @@ function __xerBroadcast(msg){try{parent.postMessage(msg,'*');}catch(e){}}
 
 function loadFileText(text,name){
   try {
+    // Inline persist + broadcast (cross-tool sync)
+    try{sessionStorage.setItem('pms_xer_current',text);sessionStorage.setItem('pms_xer_current_name',name||'file.xer');}catch(e){}
+    if(!__xerSyncInbound)__xerBroadcast({type:'xer:current:load',text:text,name:name||'file.xer'});
     parseXER(text);
     const projs = Object.values(S.projects);
     if (!projs.length) { setSt('No projects found in file.', 'err'); return; }
@@ -2355,6 +2358,7 @@ function closeFile() {
   const _prev=__xerSyncInbound;__xerSyncInbound=true;
   try{clearBaseline();}finally{__xerSyncInbound=_prev;}
   setSt('Ready — load a Primavera P6 XER file to begin','');
+  try{sessionStorage.removeItem('pms_xer_current');sessionStorage.removeItem('pms_xer_current_name');}catch(e){}
   if(!__xerSyncInbound)__xerBroadcast({type:'xer:current:close'});
 }
 
@@ -2920,23 +2924,12 @@ function closeExitModal(){ document.getElementById('exitModal').classList.remove
 function confirmExit(){ try{sessionStorage.removeItem('pms_xer_current');sessionStorage.removeItem('pms_xer_current_name');}catch(e){} window.location.href = _exitTarget; }
 function switchTool(url){ window.location.href = url; }
 
-// ── SessionStorage XER bridge ──────────────────────────────────────────
-const _ra_origLoadFileText = window.loadFileText;
-window.loadFileText = function(text, name){
-  try{ sessionStorage.setItem('pms_xer_current', text); sessionStorage.setItem('pms_xer_current_name', name||'file.xer'); }catch(e){}
-  _ra_origLoadFileText(text, name);
-};
-const _ra_origCloseFile3 = window.closeFile;
-window.closeFile = function(){
-  _ra_origCloseFile3 && _ra_origCloseFile3();
-  try{ sessionStorage.removeItem('pms_xer_current'); sessionStorage.removeItem('pms_xer_current_name'); }catch(e){}
-};
 // Auto-load from session if available
 (function(){
   try{
     const stored = sessionStorage.getItem('pms_xer_current');
     const name   = sessionStorage.getItem('pms_xer_current_name') || 'file.xer';
-    if(stored){ setTimeout(()=>{ if(window.loadFileText) window.loadFileText(stored, name); }, 300); }
+    if(stored){ setTimeout(()=>{ loadFileText(stored, name); }, 300); }
   }catch(e){}
 })();
 
