@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Milestones Report — PMsentric</title>
-<script>try{if(sessionStorage.getItem('pms_xer_current')){document.write('<style>.landing-drop{display:none!important}</style>');}}catch(e){}</script>
+<script>try{if(localStorage.getItem('pms_xer_current')){document.write('<style>.landing-drop{display:none!important}</style>');}}catch(e){}</script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
@@ -1482,7 +1482,7 @@ function __pmsOnUpdateXerLoaded(text, name) {
         }
       } catch(e) {}
       // Persist to sessionStorage for cross-tool sync
-      try { sessionStorage.setItem('pms_xer_current', text); sessionStorage.setItem('pms_xer_current_name', name||'file.xer'); } catch(e){}
+      try { localStorage.setItem('pms_xer_current',text);localStorage.setItem('pms_xer_current_name',name||'file.xer');console.log('[PMS-XER] Saved to localStorage:',name||'file.xer','('+(text).length+' chars)'); } catch(e){}
       if (!window.__xerSyncInbound) { try { parent.postMessage({type:'xer:current:load', text:text, name:name||'file.xer'}, '*'); } catch(e){} }
     } catch (err) {
       setSt('Error parsing Update XER: ' + err.message, 'err');
@@ -1537,7 +1537,7 @@ function clearUpdate() {
   setSt('Ready — Load an Update XER file to begin', '');
   goStep(1);  // back to landing
   // Clear sessionStorage so other tools forget the XER too
-  try { sessionStorage.removeItem('pms_xer_current'); sessionStorage.removeItem('pms_xer_current_name'); } catch(e){}
+  try { localStorage.removeItem('pms_xer_current');localStorage.removeItem('pms_xer_current_name');console.log('[PMS-XER] Cleared from localStorage'); } catch(e){}
   if (!window.__xerSyncInbound) { try { parent.postMessage({type:'xer:current:close'}, '*'); } catch(e){} }
 }
 function clearBaseline() {
@@ -5203,8 +5203,9 @@ function escH(s) {
 // Auto-load XER from sessionStorage on first open
 (function(){
   try{
-    const stored = sessionStorage.getItem('pms_xer_current');
-    const name   = sessionStorage.getItem('pms_xer_current_name') || 'file.xer';
+    const stored = localStorage.getItem('pms_xer_current');
+    const name   = localStorage.getItem('pms_xer_current_name') || 'file.xer';
+    console.log('[PMS-XER] Auto-load check: stored='+(stored?stored.length+' chars':'none')+', name='+name);
     if(stored){
       const run = ()=>{ if(typeof __pmsOnUpdateXerLoaded==='function'){ window.__xerSyncInbound = true; try{ __pmsOnUpdateXerLoaded(stored, name); } finally { window.__xerSyncInbound = false; } } };
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>setTimeout(run, 50));

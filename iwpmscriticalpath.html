@@ -234,7 +234,7 @@ tr.fp-banner .fp-banner-badge{font-family:'Space Mono',monospace;font-size:9px;p
 <body>
 <script>if(window.self !== window.top){ window.top.location.href = window.self.location.href; }
 // Suppress dropzone flash if XER data already in sessionStorage
-try{if(sessionStorage.getItem('pms_xer_current')){document.addEventListener('DOMContentLoaded',function(){var dz=document.getElementById('dropZone');if(dz)dz.style.display='none';});}}catch(e){}
+try{if(localStorage.getItem('pms_xer_current')){document.addEventListener('DOMContentLoaded',function(){var dz=document.getElementById('dropZone');if(dz)dz.style.display='none';});}}catch(e){}
 </script>
 <div class="app">
 
@@ -1148,7 +1148,7 @@ function __xerBroadcast(msg){try{parent.postMessage(msg,'*');}catch(e){}}
 function loadFileText(text,name){
   try{
     // Save to sessionStorage so other tools can pick it up
-    try{sessionStorage.setItem('pms_xer_current',text);sessionStorage.setItem('pms_xer_current_name',name||'file.xer');}catch(e){}
+    try{localStorage.setItem('pms_xer_current',text);localStorage.setItem('pms_xer_current_name',name||'file.xer');console.log('[PMS-XER] Saved to localStorage:',name||'file.xer','('+(text).length+' chars)');}catch(e){}
     parseXER(text);
     const projs=Object.values(S.projects);
     if(!projs.length){setSt('No projects found.','err');return;}
@@ -1198,7 +1198,7 @@ function closeFile(){
   document.getElementById('divider').style.display='none';
   const tp=document.getElementById('tablePart');tp.style.width='';tp.style.flex='1';
   setSt('Ready — load an XER file to begin','');
-  try{sessionStorage.removeItem('pms_xer_current');sessionStorage.removeItem('pms_xer_current_name');}catch(e){}
+  try{localStorage.removeItem('pms_xer_current');localStorage.removeItem('pms_xer_current_name');console.log('[PMS-XER] Cleared from localStorage');}catch(e){}
   if(!__xerSyncInbound)__xerBroadcast({type:'xer:current:close'});
 }
 
@@ -1211,8 +1211,9 @@ window.addEventListener('DOMContentLoaded',initSplitter);
 // Auto-load from sessionStorage
 window.addEventListener('DOMContentLoaded',()=>{
   try{
-    const stored=sessionStorage.getItem('pms_xer_current');
-    const name=sessionStorage.getItem('pms_xer_current_name')||'file.xer';
+    const stored=localStorage.getItem('pms_xer_current');
+    const name=localStorage.getItem('pms_xer_current_name')||'file.xer';
+    console.log('[PMS-XER] Auto-load check: stored='+(stored?stored.length+' chars':'none')+', name='+name);
     if(stored){
       // Hide drop zone immediately — no flash
       document.getElementById('dropZone').style.display='none';
@@ -1265,7 +1266,7 @@ window.addEventListener('load',function(){try{parent.postMessage({type:'xer:read
 let _exitTarget='/';
 function askExit(url){_exitTarget=url||'/';document.getElementById('exitModal').classList.add('open');}
 function closeExitModal(){document.getElementById('exitModal').classList.remove('open');}
-function confirmExit(){try{sessionStorage.removeItem('pms_xer_current');sessionStorage.removeItem('pms_xer_current_name');}catch(e){}window.location.href=_exitTarget;}
+function confirmExit(){try{localStorage.removeItem('pms_xer_current');localStorage.removeItem('pms_xer_current_name');console.log('[PMS-XER] Cleared from localStorage');}catch(e){}window.location.href=_exitTarget;}
 function switchTool(url){window.location.href=url;}
 </script>
 

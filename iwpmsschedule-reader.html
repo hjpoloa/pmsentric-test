@@ -268,7 +268,7 @@ tr.crit td:first-child{box-shadow:inset 3px 0 0 #f87171;}
 </style>
 </head>
 <body>
-<script>try{if(sessionStorage.getItem('pms_xer_current')){document.write('<style>#dropZone{display:none!important}</style>');}}catch(e){}</script>
+<script>try{if(localStorage.getItem('pms_xer_current')){document.write('<style>#dropZone{display:none!important}</style>');}}catch(e){}</script>
 
 <div class="app">
 
@@ -1378,7 +1378,7 @@ function __xerBroadcast(msg){try{parent.postMessage(msg,'*');}catch(e){}}
 function loadFileText(text,name){
   try{
     // Inline persist + broadcast (cross-tool sync)
-    try{sessionStorage.setItem('pms_xer_current',text);sessionStorage.setItem('pms_xer_current_name',name||'file.xer');}catch(e){}
+    try{localStorage.setItem('pms_xer_current',text);localStorage.setItem('pms_xer_current_name',name||'file.xer');console.log('[PMS-XER] Saved to localStorage:',name||'file.xer','('+(text).length+' chars)');}catch(e){}
     if(!__xerSyncInbound)__xerBroadcast({type:'xer:current:load',text:text,name:name||'file.xer'});
     parseXER(text);
     const projs=Object.values(S.projects);
@@ -1437,7 +1437,7 @@ function closeFile(){
   document.getElementById('divider').style.display='none';
   const tp=document.getElementById('tablePart');tp.style.width='';tp.style.flex='1';
   setSt('Ready — load an XER file to begin','');
-  try{sessionStorage.removeItem('pms_xer_current');sessionStorage.removeItem('pms_xer_current_name');}catch(e){}
+  try{localStorage.removeItem('pms_xer_current');localStorage.removeItem('pms_xer_current_name');console.log('[PMS-XER] Cleared from localStorage');}catch(e){}
   if(!__xerSyncInbound)__xerBroadcast({type:'xer:current:close'});
 }
 
@@ -1712,14 +1712,15 @@ async function appSignOut(){
 let _exitTarget = '/';
 function askExit(url){ _exitTarget = url||'/'; document.getElementById('exitModal').classList.add('open'); }
 function closeExitModal(){ document.getElementById('exitModal').classList.remove('open'); }
-function confirmExit(){ try{sessionStorage.removeItem('pms_xer_current');sessionStorage.removeItem('pms_xer_current_name');}catch(e){} window.location.href = _exitTarget; }
+function confirmExit(){ try{localStorage.removeItem('pms_xer_current');localStorage.removeItem('pms_xer_current_name');console.log('[PMS-XER] Cleared from localStorage');}catch(e){} window.location.href = _exitTarget; }
 function switchTool(url){ window.location.href = url; }
 
 // Auto-load from session if available
 (function(){
   try{
-    const stored = sessionStorage.getItem('pms_xer_current');
-    const name   = sessionStorage.getItem('pms_xer_current_name') || 'file.xer';
+    const stored = localStorage.getItem('pms_xer_current');
+    const name   = localStorage.getItem('pms_xer_current_name') || 'file.xer';
+    console.log('[PMS-XER] Auto-load check: stored='+(stored?stored.length+' chars':'none')+', name='+name);
     if(stored){ setTimeout(()=>{ loadFileText(stored, name); }, 300); }
   }catch(e){}
 })();

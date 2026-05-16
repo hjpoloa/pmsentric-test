@@ -395,7 +395,7 @@ function loadXERText(txt,fn){
   try{
     parseXER(txt);S.fileName=fn;updateXERPanel();rerenderAll();
     toast(`XER loaded — ${Object.keys(S.taskData).length} activities`);
-    try{ sessionStorage.setItem('pms_xer_current', txt); sessionStorage.setItem('pms_xer_current_name', fn||'file.xer'); }catch(e){}
+    try{ localStorage.setItem('pms_xer_current',txt);localStorage.setItem('pms_xer_current_name',fn||'file.xer');console.log('[PMS-XER] Saved to localStorage:',fn||'file.xer','('+(txt).length+' chars)'); }catch(e){}
     document.getElementById('closeXerBtn').style.display='inline-flex';
     if(!__xerSyncInbound) __xerBroadcast({type:'xer:current:load', text:txt, name:fn||'file.xer'});
   }
@@ -405,7 +405,7 @@ function closeFile(){
   S.projects={};S.wbsNodes={};S.taskData={};S.taskBudget={};S.fileName=null;S.dataDate=null;
   updateXERPanel();rerenderAll();
   document.getElementById('closeXerBtn').style.display='none';
-  try{ sessionStorage.removeItem('pms_xer_current'); sessionStorage.removeItem('pms_xer_current_name'); }catch(e){}
+  try{ localStorage.removeItem('pms_xer_current');localStorage.removeItem('pms_xer_current_name');console.log('[PMS-XER] Cleared from localStorage'); }catch(e){}
   toast('XER closed');
   if(!__xerSyncInbound) __xerBroadcast({type:'xer:current:close'});
 }
@@ -436,8 +436,9 @@ window.addEventListener('drop',e=>{
 // Auto-load stored XER on page open
 (function(){
   try{
-    var stored = sessionStorage.getItem('pms_xer_current');
-    var name   = sessionStorage.getItem('pms_xer_current_name') || 'file.xer';
+    var stored = localStorage.getItem('pms_xer_current');
+    var name   = localStorage.getItem('pms_xer_current_name') || 'file.xer';
+    console.log('[PMS-XER] Auto-load check: stored='+(stored?stored.length+' chars':'none')+', name='+name);
     if(stored){ setTimeout(function(){ loadXERText(stored, name); }, 300); }
   }catch(e){}
 })();
