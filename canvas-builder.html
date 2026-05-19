@@ -121,6 +121,38 @@ main{flex:1;display:flex;min-height:0}
 .note-editor{width:100%;height:100%;background:transparent;border:none;outline:none;resize:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);line-height:1.6;padding:0}
 .note-editor::placeholder{color:var(--text-dim)}
 
+/* ── S-Curve filter bar ─────────────────────────────────── */
+.sc2-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:5px 8px;background:var(--bg-deep);border-bottom:1px solid var(--border);flex-shrink:0}
+.sc2-btn{background:var(--surface);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:10px;padding:3px 9px;border-radius:4px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
+.sc2-btn:hover{border-color:var(--gold-dim);color:var(--gold)}
+.sc2-dd{position:fixed;z-index:9995;background:var(--surface);border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.5);width:340px;max-height:320px;display:flex;flex-direction:column}
+.sc2-item{display:flex;align-items:center;gap:6px;padding:4px 8px;cursor:pointer;font-size:10px;color:var(--text)}
+.sc2-item:hover{background:var(--muted-bg)}
+.sc2-tog{width:14px;height:14px;flex-shrink:0;background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:8px;display:flex;align-items:center;justify-content:center;padding:0;transition:color .12s}
+.sc2-tog:hover{color:var(--gold)}
+.sc2-tog.leaf{visibility:hidden;pointer-events:none}
+.sc2-mini{background:transparent;border:1px solid var(--border2);color:var(--text-mid);font-family:'DM Mono',monospace;font-size:9px;padding:2px 6px;border-radius:3px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;transition:all .12s}
+.sc2-mini:hover{border-color:var(--gold-dim);color:var(--gold)}
+.wvp-wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px 10px}
+.wvp-donut{position:relative;flex-shrink:0}
+.wvp-donut canvas{display:block}
+.wvp-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.wvp-center-lbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+.wvp-center-val{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,3.5cqw,36px);line-height:1;color:var(--gold)}
+.wvp-legend{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.wvp-leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-mid);font-family:'DM Sans',sans-serif}
+.wvp-leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.wvp-stats{display:flex;gap:6px;width:100%}
+.wvp-stat{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 6px;text-align:center}
+.wvp-stat-lbl{font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.wvp-stat-val{font-family:'Bebas Neue',sans-serif;font-size:clamp(13px,2cqw,20px);line-height:1}
+.wvp-stat-val.planned{color:var(--steel-light)}
+.wvp-stat-val.actual{color:var(--gold)}
+.wvp-stat-val.var-pos{color:var(--green-light)}
+.wvp-stat-val.var-neg{color:var(--red)}
+.wvp-stat-val.var-zero{color:var(--text-mid)}
+.wvp-no-bl{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.07em;text-align:center;padding:4px 0}
+
 /* ── WBS Tree Dropdown ──────────────────────────────────── */
 .wbs-dd-wrap{position:relative;display:inline-block;vertical-align:middle}
 .wbs-dd-btn{background:var(--surface);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:3px 24px 3px 7px;border-radius:4px;cursor:pointer;outline:none;min-width:120px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;text-align:left;transition:border-color .18s}
@@ -339,7 +371,7 @@ html.light .pms-tn-item, .light .pms-tn-item{color:#1A1C22;}
       <div class="widget-item" data-widget="gantt"><div class="wi-icon">▤</div><div class="wi-text"><div class="wi-name">Gantt Chart</div><div class="wi-tool">Schedule Reader</div></div></div>
       <div class="widget-item" data-widget="scurve"><div class="wi-icon">📈</div><div class="wi-text"><div class="wi-name">S-Curve</div><div class="wi-tool">S-Curve Report</div></div></div>
       <div class="widget-item" data-widget="status-bar"><div class="wi-icon">📊</div><div class="wi-text"><div class="wi-name">Status Bar Chart</div><div class="wi-tool">Schedule Reader</div></div></div>
-      <div class="widget-item" data-widget="wbs-pie"><div class="wi-icon">◐</div><div class="wi-text"><div class="wi-name">WBS Progress Pie</div><div class="wi-tool">WBS Report</div></div></div>
+      <div class="widget-item" data-widget="wbs-progress-pct"><div class="wi-icon">⊙</div><div class="wi-text"><div class="wi-name">WBS Progress %</div><div class="wi-tool">WBS Report</div></div></div>
       <div class="widget-item" data-widget="resource-histogram"><div class="wi-icon">▥</div><div class="wi-text"><div class="wi-name">Activity Load</div><div class="wi-tool">Resource Analyzer</div></div></div>
     </div>
     <div class="sb-group">
@@ -376,7 +408,7 @@ html.light .pms-tn-item, .light .pms-tn-item{color:#1A1C22;}
 <script>
 /* ══ STATE ══════════════════════════════════════════════════ */
 const S={projects:{},wbsNodes:{},taskData:{},taskBudget:{},fileName:null,dataDate:null,charts:new Map(),wc:0,
-  baseline:{projects:{},wbsNodes:{},taskData:{},fileName:null,dataDate:null}};
+  baseline:{projects:{},wbsNodes:{},taskData:{},blByCode:{},fileName:null,dataDate:null}};
 let __xerSyncInbound=false;
 function __xerBroadcast(msg){try{parent.postMessage(msg,'*');}catch(e){}}
 const MONS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -495,21 +527,27 @@ function parseXERInto(txt, target){
     }
   }
 }
+function buildBlByCode(){
+  const bc={};
+  for(const t of Object.values(S.baseline.taskData)){if(t.code)bc[t.code]={start:t.start,finish:t.finish};}
+  S.baseline.blByCode=bc;
+}
 function loadBaselineText(txt,fn){
   try{
     parseXERInto(txt, S.baseline);
     S.baseline.fileName=fn;
     const pj=Object.values(S.baseline.projects)[0];
     if(pj&&pj.dataDate)S.baseline.dataDate=new Date((pj.dataDate||'').trim().slice(0,10));
+    buildBlByCode();
     updateBlPanel();
-    // Do NOT rerenderAll() — baseline is comparison data only; widgets read S.wbsNodes exclusively
+    rerenderAll();
     toast(`Baseline loaded — ${Object.keys(S.baseline.taskData).length} activities`);
     try{localStorage.setItem('pms_xer_baseline',txt);localStorage.setItem('pms_xer_baseline_name',fn||'baseline.xer');}catch(e){}
     document.getElementById('closeBlBtn').style.display='inline-flex';
   }catch(e){console.error(e);toast('Failed to parse baseline XER',true);}
 }
 function closeBaseline(){
-  S.baseline={projects:{},wbsNodes:{},taskData:{},fileName:null,dataDate:null};
+  S.baseline={projects:{},wbsNodes:{},taskData:{},blByCode:{},fileName:null,dataDate:null};
   updateBlPanel();rerenderAll();
   document.getElementById('closeBlBtn').style.display='none';
   try{localStorage.removeItem('pms_xer_baseline');localStorage.removeItem('pms_xer_baseline_name');}catch(e){}
@@ -763,6 +801,93 @@ function ph(body,icon,txt){body.innerHTML=`<div class="w-ph"><div class="wpi">${
 function getCS(cell){try{return JSON.parse(cell.dataset.ctrlState||'{}');}catch{return{};}}
 function setCS(cell,k,v){const cs=getCS(cell);cs[k]=v;cell.dataset.ctrlState=JSON.stringify(cs);}
 
+/* ══ SCURVE FILTER HELPERS ══════════════════════════════════ */
+function _scurveFilterBar(st,allWbs,maxDepth,c){
+  const levelOpts=['<option value="0">All Levels</option>'];
+  for(let i=1;i<=maxDepth+1;i++)levelOpts.push(`<option value="${i}"${st.levelCap===i?' selected':''}>Up to L${i}</option>`);
+  const selCnt=st.selWbs?st.selWbs.size:allWbs.length,allSel=selCnt===allWbs.length;
+  const badge=allSel?'All':String(selCnt);
+  // WBS dropdown HTML
+  let ddHtml='';
+  if(st.ddOpen){
+    const childrenOf={};allWbs.forEach(w=>{childrenOf[w.id]=allWbs.filter(x=>x.parentId===w.id).sort((a,b)=>(a.shortName||'').localeCompare(b.shortName||''));});
+    function allDescIds(wid){const out=new Set();function dfs(id){for(const c of(childrenOf[id]||[])){out.add(c.id);dfs(c.id);}}dfs(wid);return out;}
+    function getDepth(w){let d=0,cur=w;while(cur&&cur.parentId&&S.wbsNodes[cur.parentId]){d++;cur=S.wbsNodes[cur.parentId];}return d;}
+    const roots=allWbs.filter(w=>!w.parentId||!S.wbsNodes[w.parentId]).sort((a,b)=>(a.shortName||'').localeCompare(b.shortName||''));
+    const items=[];
+    function walkDD(w,depth){
+      const kids=childrenOf[w.id]||[];const hasKids=kids.length>0;
+      const cap=st.levelCap;if(cap>0&&depth+1>cap)return;
+      const descIds=allDescIds(w.id);
+      const selfCk=st.selWbs&&st.selWbs.has(w.id);
+      const anyDesc=descIds.size>0&&[...descIds].some(id=>st.selWbs&&st.selWbs.has(id));
+      const allDesc=descIds.size===0||[...descIds].every(id=>st.selWbs&&st.selWbs.has(id));
+      const indet=selfCk?!allDesc:anyDesc;
+      const isCol=st.collapsed&&st.collapsed.has(w.id);
+      items.push(`<div class="sc2-item" data-sc2-wid="${eA(w.id)}" style="padding-left:${6+depth*14}px">
+        <button class="sc2-tog${hasKids?'':' leaf'}" data-sc2-col="${eA(w.id)}">${isCol?'▶':'▼'}</button>
+        <input type="checkbox" data-sc2-cb="${eA(w.id)}"${selfCk?' checked':''}${indet?' data-indet="1"':''}>
+        <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);min-width:50px">${eT(w.shortName||'')}</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px" title="${eA(w.name||'')}">${eT(w.name||'')}</span>
+        <span style="font-size:8px;color:var(--text-dim);flex-shrink:0">L${depth+1}</span>
+      </div>`);
+      if(!isCol)kids.forEach(k=>{if(cap===0||(depth+1+1)<=cap)walkDD(k,depth+1);});
+    }
+    roots.forEach(r=>walkDD(r,0));
+    ddHtml=`<div class="sc2-dd" id="sc2dd">
+      <div style="padding:6px 8px;border-bottom:1px solid var(--border)">
+        <input type="text" id="sc2search" placeholder="Search WBS…" style="width:100%;background:var(--surface);border:1px solid var(--border2);color:var(--text);font-size:10px;padding:4px 7px;border-radius:4px;outline:none;font-family:'DM Mono',monospace">
+      </div>
+      <div style="display:flex;gap:4px;padding:5px 8px;border-bottom:1px solid var(--border);flex-wrap:wrap">
+        <button id="sc2all" class="sc2-mini">Select All</button>
+        <button id="sc2none" class="sc2-mini">Clear</button>
+        <button id="sc2exp" class="sc2-mini">Expand All</button>
+        <button id="sc2col" class="sc2-mini">Collapse All</button>
+        <button id="sc2close" class="sc2-mini">✕ Close</button>
+      </div>
+      <div id="sc2list" style="flex:1;overflow-y:auto;padding:3px 0">${items.join('')}</div>
+    </div>`;
+  }
+  return`<div class="sc2-bar">
+    <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em">WBS Filter</span>
+    <select id="sc2level" style="background:var(--surface);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:10px;padding:3px 7px;border-radius:4px;outline:none">${levelOpts.join('')}</select>
+    <div style="position:relative">
+      <button id="sc2toggle" class="sc2-btn"><span>📁 WBS</span><span style="background:var(--gold);color:#1A1410;padding:1px 5px;border-radius:7px;font-size:9px;font-weight:700;margin-left:4px">${badge}</span></button>
+      ${ddHtml}
+    </div>
+    <button id="sc2reset" class="sc2-btn">↺ Reset</button>
+    <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim)">${selCnt}/${allWbs.length} WBS</span>
+  </div>`;
+}
+
+function _wireScurve(body,cell,allWbs,maxDepth,getDescIds,st){
+  const rerender=()=>rerenderWidget(cell);
+  const $ =id=>body.querySelector('#'+id)||document.getElementById(id);
+  const lvl=$('sc2level');if(lvl)lvl.onchange=e=>{st.levelCap=parseInt(e.target.value)||0;rerender();};
+  const tgl=$('sc2toggle');if(tgl)tgl.onclick=e=>{e.stopPropagation();st.ddOpen=!st.ddOpen;rerender();};
+  const rst=$('sc2reset');if(rst)rst.onclick=()=>{st.selWbs=new Set(allWbs.map(w=>w.id));st.levelCap=0;st.ddOpen=false;st.collapsed=new Set();st.page=1;rerender();};
+  if(st.ddOpen){
+    const childrenOf={};allWbs.forEach(w=>{childrenOf[w.id]=allWbs.filter(x=>x.parentId===w.id);});
+    function allDescIds(wid){const out=new Set();function dfs(id){for(const c of(childrenOf[id]||[])){out.add(c.id);dfs(c.id);}}dfs(wid);return out;}
+    const all=$('sc2all');if(all)all.onclick=()=>{st.selWbs=new Set(allWbs.map(w=>w.id));st.page=1;rerender();};
+    const none=$('sc2none');if(none)none.onclick=()=>{st.selWbs=new Set();st.page=1;rerender();};
+    const exp=$('sc2exp');if(exp)exp.onclick=()=>{st.collapsed=new Set();rerender();};
+    const colAll=$('sc2col');if(colAll)colAll.onclick=()=>{st.collapsed=new Set(allWbs.filter(w=>(childrenOf[w.id]||[]).length>0).map(w=>w.id));rerender();};
+    const cls=$('sc2close');if(cls)cls.onclick=()=>{st.ddOpen=false;rerender();};
+    const list=document.getElementById('sc2list');
+    if(list){
+      list.querySelectorAll('input[data-sc2-cb]').forEach(cb=>{
+        if(cb.getAttribute('data-indet')==='1')cb.indeterminate=true;
+        cb.onchange=e=>{const id=e.target.getAttribute('data-sc2-cb');const chk=e.target.checked;const desc=allDescIds(id);if(chk){st.selWbs.add(id);desc.forEach(d=>st.selWbs.add(d));}else{st.selWbs.delete(id);desc.forEach(d=>st.selWbs.delete(d));}st.page=1;rerender();};
+      });
+      list.querySelectorAll('[data-sc2-col]').forEach(btn=>{btn.onclick=e=>{e.stopPropagation();const id=btn.getAttribute('data-sc2-col');if(st.collapsed.has(id))st.collapsed.delete(id);else st.collapsed.add(id);rerender();};});
+    }
+    const srch=document.getElementById('sc2search');
+    if(srch){srch.oninput=e=>{const q=(e.target.value||'').toLowerCase();if(list)list.querySelectorAll('.sc2-item').forEach(it=>{const t=it.textContent.toLowerCase();it.style.display=q&&!t.includes(q)?'none':'';});};srch.focus();}
+    setTimeout(()=>{document.addEventListener('click',function outsideClose(ev){const dd=document.getElementById('sc2dd');if(dd&&!dd.contains(ev.target)&&ev.target.id!=='sc2toggle'){st.ddOpen=false;rerender();}document.removeEventListener('click',outsideClose);},{once:true});},50);
+  }
+}
+
 /* ══ WIDGET REGISTRY ════════════════════════════════════════ */
 const W={
   'kpi-activities':{title:'Total Activities',icon:'∑',sz:{w:3,h:3},
@@ -793,35 +918,190 @@ const W={
   },
 
   'scurve':{title:'S-Curve · Planned vs Actual',icon:'📈',sz:{w:8,h:5},
-    ctrl(cell,cb){
-      if(cb){setTimeout(()=>renderWBSDropdown(cb.querySelector('.wbs-dd-host'),cell,'wbs'),0);}
-      return`<span class="wc-label">WBS</span><span class="wbs-dd-host"></span>`;
+    // Per-cell state for WBS multi-select, pagination, dropdown
+    _state:new WeakMap(),
+    _getState(cell){
+      if(!this._state.has(cell))this._state.set(cell,{selWbs:null,page:1,pageSize:12,ddOpen:false,collapsed:new Set(),levelCap:0});
+      return this._state.get(cell);
     },
     render(body,cell){
-      const cs=getCS(cell);let t=Object.values(S.taskData);
-      if(!t.length)return ph(body,'📈','Awaiting XER data');
-      t=filterByWBS(t,cs.wbs);if(!t.length)return ph(body,'📈','No activities in selected WBS');
-      const all=t.flatMap(x=>[x.start,x.finish,x.actualStart,x.actualEnd]).filter(Boolean);
-      if(!all.length)return ph(body,'📈','No date data');
-      const minD=new Date(Math.min(...all));minD.setDate(1);
-      const maxD=new Date(Math.max(...all));maxD.setMonth(maxD.getMonth()+1);maxD.setDate(1);
-      const bks=[];const cur=new Date(minD);while(cur<=maxD){bks.push(new Date(cur));cur.setMonth(cur.getMonth()+1);}
-      const useBdg=t.reduce((a,x)=>a+(x.budget||0),0)>0;
-      const totW=t.reduce((a,x)=>a+(useBdg?(x.budget||0):1),0)||t.length;
-      const planned=[],actual=[];let pC=0,aC=0;
-      for(const bk of bks){
-        const mE=new Date(bk.getFullYear(),bk.getMonth()+1,0);let pi=0,ai=0;
-        for(const x of t){
-          const w=useBdg?(x.budget||0):1;
-          if(x.start&&x.finish&&x.finish>=x.start){const os=Math.max(x.start,bk),oe=Math.min(x.finish,mE);if(oe>=os){pi+=w*((oe-os)/(x.finish-x.start||1));}}
-          if(x.actualStart){const ae=x.actualEnd||(S.dataDate&&x.actualStart<S.dataDate?S.dataDate:x.actualStart);const os=Math.max(x.actualStart,bk),oe=Math.min(ae,mE);if(oe>=os&&ae>=x.actualStart){ai+=w*((oe-os)/(ae-x.actualStart||1))*((x.completePct||100)/100);}}
-        }
-        pC+=pi;aC+=ai;planned.push(Math.min((pC/totW)*100,100));actual.push(Math.min((aC/totW)*100,100));
+      const tasks=Object.values(S.taskData);
+      if(!tasks.length)return ph(body,'📈','Awaiting XER data');
+      const st=this._getState(cell);
+      const cid='sc_'+cell.dataset.widgetId;
+      const hasBL=S.baseline.fileName&&Object.keys(S.baseline.blByCode).length>0;
+      const c=css();
+      const allWbs=Object.values(S.wbsNodes);
+      // Build children map + depth
+      const childrenOf={};
+      allWbs.forEach(w=>{childrenOf[w.id]=allWbs.filter(x=>x.parentId===w.id).sort((a,b)=>(a.shortName||'').localeCompare(b.shortName||''));});
+      function getDescIds(wid){const out=new Set();function dfs(id){for(const c of(childrenOf[id]||[])){out.add(c.id);dfs(c.id);}}dfs(wid);return out;}
+      function getDepth(w){let d=0,cur=w;while(cur&&cur.parentId&&S.wbsNodes[cur.parentId]){d++;cur=S.wbsNodes[cur.parentId];}return d;}
+      const maxDepth=allWbs.reduce((m,w)=>Math.max(m,getDepth(w)),0);
+      // Init selection to all
+      if(st.selWbs===null)st.selWbs=new Set(allWbs.map(w=>w.id));
+      else{const valid=new Set(allWbs.map(w=>w.id));st.selWbs=new Set([...st.selWbs].filter(id=>valid.has(id)));}
+      // Compute included WBS descendants
+      const inclWbs=new Set();
+      for(const id of st.selWbs){inclWbs.add(id);getDescIds(id).forEach(d=>inclWbs.add(d));}
+      const filtTasks=tasks.filter(t=>!t.isMilestone&&inclWbs.has(t.wbsId));
+      // Helper: month key
+      const mKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      function addMonths(d,n){const r=new Date(d);r.setMonth(r.getMonth()+n);return r;}
+      function fmtK(v){if(v==null)return'—';if(Math.abs(v)>=1e6)return(v/1e6).toFixed(1)+'M';if(Math.abs(v)>=1e3)return(v/1e3).toFixed(0)+'K';return v.toFixed(0);}
+      function fmtMon(d){return`${MONS[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`;}
+      // Build month labels from date range
+      const allDates=filtTasks.flatMap(x=>[x.start,x.finish,x.actualStart,x.actualEnd]).filter(Boolean);
+      if(hasBL)for(const x of filtTasks){const bl=S.baseline.blByCode[x.code];if(bl){if(bl.start)allDates.push(bl.start);if(bl.finish)allDates.push(bl.finish);}}
+      if(!allDates.length){body.classList.add('no-pad');body.innerHTML=`<div style="padding:10px">${_scurveFilterBar(st,allWbs,maxDepth,c)}<div class="w-ph" style="padding:30px"><div class="wpt">No date data in selected WBS</div></div></div>`;_wireScurve(body,cell,allWbs,maxDepth,getDescIds,st);return;}
+      const minD=new Date(Math.min(...allDates));minD.setDate(1);
+      const maxD=new Date(Math.max(...allDates));
+      const labels=[];let cur=new Date(minD.getFullYear(),minD.getMonth(),1);
+      const endD=new Date(maxD.getFullYear(),maxD.getMonth()+1,1);
+      while(cur<endD){labels.push(new Date(cur));cur=addMonths(cur,1);}
+      // Build Actual (BAC-weighted earned value)
+      const actMonthly={};
+      for(const t of filtTasks){
+        const bac=t.budget||0;if(!bac)continue;
+        const earned=bac*(t.completePct/100);
+        const s=t.actualStart||(t.status!=='ns'?t.start:null);
+        const f=t.status==='done'?(t.actualEnd||t.finish):(S.dataDate||t.finish);
+        if(!s||!f)continue;
+        let mc=new Date(s.getFullYear(),s.getMonth(),1);
+        const fe=new Date(f.getFullYear(),f.getMonth()+1,1);
+        const months=[];while(mc<fe){months.push(new Date(mc));mc=addMonths(mc,1);}
+        const share=earned/(months.length||1);
+        for(const m of months){const k=mKey(m);actMonthly[k]=(actMonthly[k]||0)+share;}
       }
-      const aClip=actual.map((v,i)=>(S.dataDate&&bks[i]>S.dataDate)?null:v);
-      body.innerHTML='<canvas></canvas>';const c=css();
-      const ch=new Chart(body.querySelector('canvas'),{type:'line',data:{labels:bks.map(d=>`${MONS[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`),datasets:[{label:'Planned',data:planned,borderColor:c.gold,backgroundColor:c.gold+'22',borderWidth:2,tension:.3,pointRadius:0,fill:true},{label:'Actual',data:aClip,borderColor:c.steel,backgroundColor:c.steel+'22',borderWidth:2,tension:.3,pointRadius:0,fill:false}]},options:{maintainAspectRatio:false,responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:c.tm,font:{size:11,family:'DM Sans'},boxWidth:10}}},scales:{x:{ticks:{color:c.tm,font:{size:10},maxRotation:45},grid:{color:c.bd}},y:{ticks:{color:c.tm,font:{size:10},callback:v=>v.toFixed(0)+'%'},grid:{color:c.bd},min:0,max:100}}}});
+      const actSeries=labels.map(l=>actMonthly[mKey(l)]||0);
+      const actCum=(()=>{let s=0;return actSeries.map((v,i)=>{if(S.dataDate){const lm=new Date(labels[i].getFullYear(),labels[i].getMonth(),1);const dm=new Date(S.dataDate.getFullYear(),S.dataDate.getMonth(),1);if(lm>dm)return null;}s+=v;return s;});})();
+      // Build Baseline (BAC-weighted spread from BL dates)
+      let blMonthly=null,blCumSeries=null;
+      if(hasBL){
+        blMonthly={};
+        for(const t of filtTasks){
+          const bac=t.budget||0;if(!bac)continue;
+          const bl=S.baseline.blByCode[t.code];if(!bl||!bl.start||!bl.finish)continue;
+          const s=bl.start,f=bl.finish;
+          let mc=new Date(s.getFullYear(),s.getMonth(),1);
+          const fe=new Date(f.getFullYear(),f.getMonth()+1,1);
+          const months=[];while(mc<fe){months.push(new Date(mc));mc=addMonths(mc,1);}
+          const share=bac/(months.length||1);
+          for(const m of months){const k=mKey(m);blMonthly[k]=(blMonthly[k]||0)+share;}
+        }
+        const blSeries=labels.map(l=>blMonthly[mKey(l)]||0);
+        let bs=0;blCumSeries=blSeries.map(v=>{bs+=v;return bs;});
+      }
+      // Paginated data table
+      const ddIdx=S.dataDate?(()=>{const dm=new Date(S.dataDate.getFullYear(),S.dataDate.getMonth(),1);return labels.findIndex(l=>new Date(l.getFullYear(),l.getMonth(),1).getTime()===dm.getTime());})():-1;
+      const totalRows=labels.length,pageSize=st.pageSize;
+      const totalPages=Math.max(1,Math.ceil(totalRows/pageSize));
+      if(st.page>totalPages)st.page=totalPages;
+      const si=(st.page-1)*pageSize,ei=Math.min(totalRows,si+pageSize);
+      const tableRows=labels.slice(si,ei).map((l,idx)=>{
+        const i=si+idx,isDD=(i===ddIdx),isClicked=(i===st.clickedIdx);
+        const blP=blCumSeries?(blMonthly?labels.map(l2=>blMonthly[mKey(l2)]||0)[i]:0):null;
+        const blC=blCumSeries?blCumSeries[i]:null;
+        const acP=actSeries[i];const acC=actCum[i];
+        const ddBadge=isDD?`<span style="display:inline-block;margin-left:4px;padding:1px 4px;border-radius:6px;background:rgba(201,168,76,.18);border:1px solid var(--gold-dim);color:var(--gold);font-size:8px;font-weight:700;font-family:'DM Mono',monospace">DD</span>`:'';
+        let varPH='',varCH='';
+        if(blCumSeries){
+          const vP=acC!=null?((acP||0)-(blP||0)):null,vC=acC!=null?((acC||0)-(blC||0)):null;
+          const cpP=vP==null?'var(--text-dim)':vP<0?'var(--red)':vP>0?'var(--green-light)':'var(--text-mid)';
+          const cpC=vC==null?'var(--text-dim)':vC<0?'var(--red)':vC>0?'var(--green-light)':'var(--text-mid)';
+          const fv=v=>v==null?'—':(v>0?'+'+fmtK(v):fmtK(v));
+          varPH=`<td class="nr" style="color:${cpP};font-family:'DM Mono',monospace;font-size:10px">${fv(vP)}</td>`;
+          varCH=`<td class="nr" style="color:${cpC};font-family:'DM Mono',monospace;font-size:10px;font-weight:700">${fv(vC)}</td>`;
+        }
+        return`<tr style="${isClicked?'background:rgba(74,138,181,.18);outline:1px solid rgba(74,138,181,.4)':isDD?'background:rgba(201,168,76,.06)':''}" id="${cid}_row_${i}">
+          <td style="font-family:'DM Mono',monospace;font-size:10px;white-space:nowrap">${fmtMon(l)}${ddBadge}</td>
+          ${blCumSeries?`<td class="nr" style="color:var(--gold);font-family:'DM Mono',monospace;font-size:10px">${fmtK(blP)}</td>`:''}
+          ${blCumSeries?`<td class="nr" style="color:var(--gold);font-family:'DM Mono',monospace;font-size:10px;font-weight:700">${fmtK(blC)}</td>`:''}
+          <td class="nr" style="color:var(--green-light);font-family:'DM Mono',monospace;font-size:10px">${acC==null?'—':fmtK(acP)}</td>
+          <td class="nr" style="color:var(--green-light);font-family:'DM Mono',monospace;font-size:10px;font-weight:700">${acC==null?'—':fmtK(acC)}</td>
+          ${varPH}${varCH}
+        </tr>`;
+      }).join('');
+      // Chart datasets
+      const datasets=[];
+      if(blCumSeries)datasets.push({label:'Baseline',data:blCumSeries,borderColor:'#C9A84C',backgroundColor:'rgba(201,168,76,.07)',fill:true,tension:.4,borderWidth:2,borderDash:[6,3],pointRadius:0,pointHoverRadius:4});
+      datasets.push({label:'Actual / Earned',data:actCum,borderColor:c.green,backgroundColor:c.green+'1A',fill:true,tension:.4,borderWidth:2.5,pointRadius:0,pointHoverRadius:4,spanGaps:false});
+      // WBS label for title
+      const selCnt=st.selWbs.size,allSel=selCnt===allWbs.length;
+      const wbsLbl=allSel?'All WBS':selCnt===0?'None':(()=>{const ns=[...st.selWbs].map(id=>S.wbsNodes[id]?.shortName||S.wbsNodes[id]?.name||id).filter(Boolean);return ns.length<=2?ns.join(', '):`${ns[0]} +${ns.length-1} more`;})();
+      // Render HTML
+      body.classList.add('no-pad');
+      body.innerHTML=`<div style="display:flex;flex-direction:column;height:100%;overflow:hidden">
+        <!-- Filter bar -->
+        ${_scurveFilterBar(st,allWbs,maxDepth,c)}
+        <!-- Chart -->
+        <div style="flex:0 0 auto;padding:6px 10px 0">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+            <div style="font-size:10px;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:.06em;font-family:'DM Mono',monospace">Cumulative Cost / Earned Value · ${eT(wbsLbl)}</div>
+            <div style="margin-left:auto;display:flex;gap:12px;align-items:center">
+              ${blCumSeries?`<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-mid)"><div style="width:14px;height:3px;background:#C9A84C;border-radius:1px;border-top:1px dashed #C9A84C"></div>Baseline</div>`:''}
+              <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-mid)"><div style="width:14px;height:3px;background:${c.green};border-radius:1px"></div>Actual</div>
+            </div>
+          </div>
+          <div style="position:relative;height:160px"><canvas id="${cid}"></canvas></div>
+        </div>
+        <!-- Data table -->
+        <div style="flex:1 1 auto;overflow:auto;padding:6px 10px 0">
+          <div style="font-size:9px;font-family:'DM Mono',monospace;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">
+            📋 Data Table · ${blCumSeries?'Baseline + Actual + Variance':'Actual only · load baseline for variance'}
+          </div>
+          <table class="w-tbl" style="font-size:10px">
+            <thead><tr>
+              <th>Period</th>
+              ${blCumSeries?'<th class="nr">BL (Period)</th><th class="nr">BL (Cum)</th>':''}
+              <th class="nr">Actual (Period)</th>
+              <th class="nr">Actual (Cum)</th>
+              ${blCumSeries?'<th class="nr">Var (Period)</th><th class="nr">Var (Cum)</th>':''}
+            </tr></thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+          <!-- Pagination -->
+          <div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-top:1px solid var(--border);margin-top:2px;flex-wrap:wrap">
+            <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim)">${si+1}–${ei} of ${totalRows}</span>
+            <span style="margin-left:auto;display:flex;gap:4px;align-items:center">
+              <span style="font-size:9px;color:var(--text-dim)">Rows</span>
+              <select id="${cid}_ps" style="background:var(--surface);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 4px;border-radius:3px;font-family:'DM Mono',monospace">
+                ${[8,12,16,24,totalRows].filter((v,i,a)=>a.indexOf(v)===i).map(v=>`<option value="${v}"${pageSize===v?' selected':''}>${v===totalRows?'All':v}</option>`).join('')}
+              </select>
+              <button id="${cid}_f" style="background:var(--surface);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer" ${st.page===1?'disabled':''}>«</button>
+              <button id="${cid}_p" style="background:var(--surface);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer" ${st.page===1?'disabled':''}>‹</button>
+              <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-mid)">p${st.page}/${totalPages}</span>
+              <button id="${cid}_n" style="background:var(--surface);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer" ${st.page===totalPages?'disabled':''}>›</button>
+              <button id="${cid}_l" style="background:var(--surface);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer" ${st.page===totalPages?'disabled':''}>»</button>
+            </span>
+          </div>
+        </div>
+      </div>`;
+      // Wire pagination
+      const rerender=()=>rerenderWidget(cell);
+      const pg=id=>document.getElementById(id);
+      if(pg(cid+'_f'))pg(cid+'_f').onclick=()=>{st.page=1;rerender();};
+      if(pg(cid+'_p'))pg(cid+'_p').onclick=()=>{st.page=Math.max(1,st.page-1);rerender();};
+      if(pg(cid+'_n'))pg(cid+'_n').onclick=()=>{st.page=Math.min(totalPages,st.page+1);rerender();};
+      if(pg(cid+'_l'))pg(cid+'_l').onclick=()=>{st.page=totalPages;rerender();};
+      if(pg(cid+'_ps'))pg(cid+'_ps').onchange=e=>{st.pageSize=parseInt(e.target.value)||12;st.page=1;rerender();};
+      // Wire WBS filter
+      _wireScurve(body,cell,allWbs,maxDepth,getDescIds,st);
+      // Draw chart
+      const ctx=document.getElementById(cid);if(!ctx)return;
+      const lblStr=labels.map(l=>fmtMon(l));
+      const ch=new Chart(ctx,{type:'line',data:{labels:lblStr,datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},onClick(e,els){if(!els||!els.length)return;const idx=els[0].index;const ps=st.pageSize;st.page=Math.floor(idx/ps)+1;st.clickedIdx=idx;rerender();},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(8,10,15,.95)',borderColor:c.bd,borderWidth:1,titleColor:c.tm,bodyColor:c.steel,callbacks:{label:ctx2=>` ${ctx2.dataset.label}: ${fmtK(ctx2.parsed.y)}`}}},scales:{x:{grid:{color:c.bd+'44'},ticks:{color:c.tm,font:{size:9},maxTicksLimit:14}},y:{grid:{color:c.bd+'44'},ticks:{color:c.tm,font:{size:9},callback:v=>fmtK(v)}}}}});
       S.charts.set(body,ch);
+      // Vertical data date line plugin + click highlight line
+      const ddPlugin={id:'ddLine',afterDraw(chart){const{ctx:cx,chartArea:{top,bottom},scales:{x:xs}}=chart;
+        // Data date line
+        if(S.dataDate){const idx=lblStr.findIndex(l=>{const[mn,yr]=l.split('-');const m=MONS.indexOf(mn);const y=parseInt('20'+yr);if(m<0)return false;return S.dataDate.getMonth()===m&&S.dataDate.getFullYear()===y;});if(idx>=0){const xPos=xs.getPixelForValue(idx);cx.save();cx.beginPath();cx.moveTo(xPos,top);cx.lineTo(xPos,bottom);cx.strokeStyle=c.gold;cx.lineWidth=1.5;cx.setLineDash([4,3]);cx.stroke();cx.setLineDash([]);cx.fillStyle=c.gold;cx.font="bold 9px 'DM Mono',monospace";cx.textAlign='center';cx.fillText('DD',xPos,top-2);cx.restore();}}
+        // Clicked month highlight
+        if(st.clickedIdx!=null&&st.clickedIdx>=0&&st.clickedIdx<lblStr.length){const xPos=xs.getPixelForValue(st.clickedIdx);cx.save();cx.beginPath();cx.moveTo(xPos,top);cx.lineTo(xPos,bottom);cx.strokeStyle='rgba(255,255,255,0.35)';cx.lineWidth=1;cx.setLineDash([3,2]);cx.stroke();cx.setLineDash([]);cx.restore();}
+      }};
+      ch.options.plugins.ddLine=true;ch.plugins=[ddPlugin];ch.update();
+      // Scroll highlighted row into view
+      if(st.clickedIdx!=null){const tbl=body.querySelector('tbody');if(tbl){const rowIdx=st.clickedIdx-si;const row=tbl.querySelectorAll('tr')[rowIdx];if(row)setTimeout(()=>row.scrollIntoView({block:'nearest'}),60);}}
     }
   },
 
@@ -834,70 +1114,269 @@ const W={
     }
   },
 
-  'wbs-pie':{title:'WBS Progress Pie',icon:'◐',sz:{w:4,h:5},
+  /* ── WBS Progress % (Planned vs Actual dual-ring, from WBS Report) ─ */
+  'wbs-progress-pct':{title:'WBS Progress %',icon:'⊙',sz:{w:4,h:6},
     ctrl(cell,cb){
       if(cb){setTimeout(()=>renderWBSDropdown(cb.querySelector('.wbs-dd-host'),cell,'wbs'),0);}
       return`<span class="wc-label">WBS Node</span><span class="wbs-dd-host"></span>`;
     },
     render(body,cell){
-      const cs=getCS(cell);let t=Object.values(S.taskData);
-      if(!t.length)return ph(body,'◐','Awaiting XER data');
-      t=filterByWBS(t,cs.wbs);if(!t.length)return ph(body,'◐','No activities in selected WBS');
-      const avg=t.reduce((a,x)=>a+(x.completePct||0),0)/t.length,rem=100-avg;
-      body.innerHTML='<canvas></canvas>';const c=css();
+      const cs=getCS(cell);
+      if(!Object.keys(S.taskData).length)return ph(body,'⊙','Awaiting XER data');
+      // ── Gather tasks under selected WBS ──
+      let tasks=Object.values(S.taskData);
+      tasks=filterByWBS(tasks,cs.wbs);
+      if(!tasks.length)return ph(body,'⊙','No activities in selected WBS');
+      // ── Actual % (BAC-weighted, fallback to simple avg) ──
+      let pvSum=0,bacSum=0,simpleSum=0;
+      for(const t of tasks){const bac=t.budget||0;pvSum+=bac*(t.completePct/100);bacSum+=bac;simpleSum+=(t.completePct||0);}
+      const actualPct=bacSum>0?(pvSum/bacSum)*100:(tasks.length?simpleSum/tasks.length:0);
+      // ── Planned % from Baseline (BAC-weighted PV/BAC at data date) ──
+      const hasBL=S.baseline.fileName&&Object.keys(S.baseline.blByCode).length>0;
+      let plannedPct=null;
+      if(hasBL&&S.dataDate){
+        let blPvSum=0,blBacSum=0;
+        for(const t of tasks){
+          const bac=t.budget||0;if(bac<=0)continue;
+          const bl=S.baseline.blByCode[t.code];if(!bl||!bl.start||!bl.finish)continue;
+          const bs=bl.start,bf=bl.finish,dd=S.dataDate;
+          const span=bf-bs;
+          let frac;
+          if(span<=0)frac=dd>=bf?1:0;
+          else if(dd<=bs)frac=0;
+          else if(dd>=bf)frac=1;
+          else frac=(dd-bs)/span;
+          blPvSum+=bac*frac;blBacSum+=bac;
+        }
+        if(blBacSum>0)plannedPct=Math.round(blPvSum/blBacSum*1000)/10;
+      }
+      const variance=plannedPct!==null?Math.round((actualPct-plannedPct)*10)/10:null;
+      // ── WBS label ──
       const wn=cs.wbs&&cs.wbs!=='all'?(S.wbsNodes[cs.wbs]?.name||S.wbsNodes[cs.wbs]?.shortName||'WBS'):'All WBS';
-      const ch=new Chart(body.querySelector('canvas'),{type:'doughnut',
-        data:{labels:['Complete','Remaining'],datasets:[{data:[avg,rem],backgroundColor:[c.gold,c.bd2],borderWidth:0}]},
-        options:{maintainAspectRatio:false,responsive:true,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:c.tm,font:{size:11,family:'DM Sans'},boxWidth:10,padding:8}},tooltip:{callbacks:{label:ct=>`${ct.label}: ${ct.parsed.toFixed(1)}%`}}}},
-        plugins:[{id:'ct',beforeDraw(ch){
-          const{width:w,height:h,ctx}=ch;ctx.save();
-          const minWH=Math.min(w,h-40);
-          const holeR=minWH*0.65*0.5;
-          const maxTxtW=holeR*1.55;
-          const cx=w/2,cy=(h-40)/2+20;
-          const pctFs=Math.max(10,Math.min(minWH*.14,44));
-          ctx.font=`700 ${pctFs}px 'Bebas Neue',sans-serif`;
-          ctx.fillStyle=c.gold;ctx.textAlign='center';ctx.textBaseline='middle';
-          ctx.fillText(avg.toFixed(1)+'%',cx,cy-pctFs*0.3);
-          const nmFs=Math.max(8,Math.min(pctFs*0.42,13));
-          ctx.font=`500 ${nmFs}px 'DM Sans',sans-serif`;
-          ctx.fillStyle=c.tm;
-          const words=wn.split(/\s+/);
-          const lines=[];let line='';
-          for(const word of words){
-            const test=line?line+' '+word:word;
-            if(ctx.measureText(test).width<=maxTxtW){line=test;}
-            else{if(line)lines.push(line);line=word;}
-          }
-          if(line)lines.push(line);
-          const maxLines=3;
-          if(lines.length>maxLines){lines.splice(maxLines);lines[maxLines-1]=lines[maxLines-1].slice(0,14)+'…';}
-          const lineH=nmFs*1.3;
-          const startY=cy+pctFs*0.55;
-          lines.forEach((ln,i)=>ctx.fillText(ln,cx,startY+i*lineH));
-          ctx.restore();
-        }}]
-      });
+      const wCode=cs.wbs&&cs.wbs!=='all'?(S.wbsNodes[cs.wbs]?.shortName||''):'';
+      // ── Color rules (from WBS Report reference) ──
+      const NAVY='#0a2463',GRAY=getComputedStyle(document.documentElement).getPropertyValue('--border2').trim()||'#252D3A';
+      const GREEN='#22c55e',AMBER='#C9A84C',RED='#D86A5A';
+      let actualColor=AMBER;
+      if(plannedPct!==null&&variance!==null){
+        const absVar=Math.abs(variance);
+        if(absVar===0)actualColor=GREEN;
+        else if(absVar<=20)actualColor=AMBER;
+        else actualColor=RED;
+      }
+      const aVal=Math.min(100,Math.max(0,actualPct));
+      const pVal=plannedPct!==null?Math.min(100,Math.max(0,plannedPct)):0;
+      // ── Build chart canvas inside layout ──
+      body.classList.add('no-pad');
+      body.innerHTML=`
+        <div class="wvp-wrap">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;text-align:center;padding:2px 0">
+            ${eT(wCode?wCode+' · ':'')}${eT(wn)}
+          </div>
+          <div class="wvp-donut" style="position:relative;width:min(140px,80cqw);height:min(140px,80cqw)">
+            <canvas id="wvp_${cell.dataset.widgetId}" style="width:100%;height:100%"></canvas>
+            <div class="wvp-center">
+              <div class="wvp-center-lbl">Actual</div>
+              <div class="wvp-center-val" style="color:${actualColor}">${aVal.toFixed(1)}%</div>
+            </div>
+          </div>
+          <div class="wvp-legend">
+            <div class="wvp-leg-item"><div class="wvp-leg-dot" style="background:${NAVY}"></div>Planned</div>
+            <div class="wvp-leg-item"><div class="wvp-leg-dot" style="background:${actualColor}"></div>Actual</div>
+            <div class="wvp-leg-item"><div class="wvp-leg-dot" style="background:${GRAY}"></div>Remaining</div>
+          </div>
+          <div class="wvp-stats">
+            <div class="wvp-stat">
+              <div class="wvp-stat-lbl">Planned</div>
+              <div class="wvp-stat-val planned">${plannedPct!==null?plannedPct.toFixed(1)+'%':'N/A'}</div>
+            </div>
+            <div class="wvp-stat">
+              <div class="wvp-stat-lbl">Actual</div>
+              <div class="wvp-stat-val actual">${aVal.toFixed(1)}%</div>
+            </div>
+            <div class="wvp-stat">
+              <div class="wvp-stat-lbl">Variance</div>
+              <div class="wvp-stat-val ${variance===null?'var-zero':variance<0?'var-neg':variance>0?'var-pos':'var-zero'}">${variance===null?'N/A':(variance>0?'+':'')+variance.toFixed(1)+'%'}</div>
+            </div>
+          </div>
+          ${!hasBL?'<div class="wvp-no-bl">⬡ Load baseline XER for Planned % &amp; Variance</div>':''}
+        </div>`;
+      // Chart.js dual-ring doughnut
+      const ctx=body.querySelector('canvas');if(!ctx)return;
+      const datasets=[
+        {data:plannedPct!==null?[pVal,Math.max(0,100-pVal)]:[0,100],backgroundColor:plannedPct!==null?[NAVY,GRAY]:[GRAY,GRAY],borderColor:'transparent',borderWidth:2,weight:1,_ringLabels:plannedPct!==null?['Planned %','Remaining']:['Planned (N/A)','Remaining']},
+        {data:[aVal,Math.max(0,100-aVal)],backgroundColor:[actualColor,GRAY],borderColor:'transparent',borderWidth:2,weight:1,_ringLabels:['Actual %','Remaining']}
+      ];
+      const ch=new Chart(ctx,{type:'doughnut',data:{datasets},options:{responsive:false,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const ds=c.dataset;const lbl=(ds._ringLabels&&ds._ringLabels[c.dataIndex])||'';return` ${lbl}: ${c.parsed.toFixed(1)}%`;}}}}}} );
       S.charts.set(body,ch);
     }
   },
 
-  'resource-histogram':{title:'Activity Load',icon:'▥',sz:{w:6,h:4},
-    ctrl(cell,cb){
-      if(cb){setTimeout(()=>renderWBSDropdown(cb.querySelector('.wbs-dd-host'),cell,'wbs'),0);}
-      return`<span class="wc-label">WBS</span><span class="wbs-dd-host"></span>`;
+  'resource-histogram':{title:'Activity Load',icon:'▥',sz:{w:6,h:5},
+    _state:new WeakMap(),
+    _getState(cell){
+      if(!this._state.has(cell))this._state.set(cell,{selWbs:null,page:1,pageSize:12,ddOpen:false,collapsed:new Set(),levelCap:0,mode:'active'});
+      return this._state.get(cell);
     },
     render(body,cell){
-      const cs=getCS(cell);let t=Object.values(S.taskData);
-      if(!t.length)return ph(body,'▥','Awaiting XER data');
-      t=filterByWBS(t,cs.wbs);
-      const all=t.flatMap(x=>[x.start,x.finish]).filter(Boolean);if(!all.length)return ph(body,'▥','No date data');
-      const minD=new Date(Math.min(...all));minD.setDate(1);const maxD=new Date(Math.max(...all));
-      const bks=[];const cur=new Date(minD);while(cur<=maxD){bks.push(new Date(cur));cur.setMonth(cur.getMonth()+1);}
-      const counts=bks.map(b=>{const mE=new Date(b.getFullYear(),b.getMonth()+1,0);return t.filter(x=>x.start&&x.finish&&x.start<=mE&&x.finish>=b).length;});
-      body.innerHTML='<canvas></canvas>';const c=css();
-      const ch=new Chart(body.querySelector('canvas'),{type:'bar',data:{labels:bks.map(d=>`${MONS[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`),datasets:[{label:'Active Activities',data:counts,backgroundColor:c.steel,borderWidth:0}]},options:{maintainAspectRatio:false,responsive:true,plugins:{legend:{labels:{color:c.tm,font:{size:11,family:'DM Sans'}}}},scales:{x:{ticks:{color:c.tm,font:{size:10},maxRotation:45},grid:{display:false}},y:{ticks:{color:c.tm,font:{size:10}},grid:{color:c.bd},beginAtZero:true}}}});
+      const tasks=Object.values(S.taskData);
+      if(!tasks.length)return ph(body,'▥','Awaiting XER data');
+      const st=this._getState(cell);
+      const cid='rl_'+cell.dataset.widgetId;
+      const hasBL=S.baseline.fileName&&Object.keys(S.baseline.blByCode).length>0;
+      const c=css();
+      const allWbs=Object.values(S.wbsNodes);
+      const childrenOf={};
+      allWbs.forEach(w=>{childrenOf[w.id]=allWbs.filter(x=>x.parentId===w.id).sort((a,b)=>(a.shortName||'').localeCompare(b.shortName||''));});
+      function getDescIds(wid){const out=new Set();function dfs(id){for(const ch of(childrenOf[id]||[])){out.add(ch.id);dfs(ch.id);}}dfs(wid);return out;}
+      function getDepth(w){let d=0,cur=w;while(cur&&cur.parentId&&S.wbsNodes[cur.parentId]){d++;cur=S.wbsNodes[cur.parentId];}return d;}
+      const maxDepth=allWbs.reduce((m,w)=>Math.max(m,getDepth(w)),0);
+      if(st.selWbs===null)st.selWbs=new Set(allWbs.map(w=>w.id));
+      else{const valid=new Set(allWbs.map(w=>w.id));st.selWbs=new Set([...st.selWbs].filter(id=>valid.has(id)));}
+      const inclWbs=new Set();
+      for(const id of st.selWbs){inclWbs.add(id);getDescIds(id).forEach(d=>inclWbs.add(d));}
+      const filtTasks=tasks.filter(t=>!t.isMilestone&&inclWbs.has(t.wbsId));
+      if(!filtTasks.length){body.classList.add('no-pad');body.innerHTML=`<div style="padding:6px">${_scurveFilterBar(st,allWbs,maxDepth,c)}<div class="w-ph" style="padding:30px"><div class="wpt">No activities in selected WBS</div></div></div>`;_wireScurve(body,cell,allWbs,maxDepth,getDescIds,st);return;}
+      function addMonths(d,n){const r=new Date(d);r.setMonth(r.getMonth()+n);return r;}
+      function fmtMon(d){return`${MONS[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`;}
+      // Build month buckets
+      const allDates=filtTasks.flatMap(x=>[x.start,x.finish]).filter(Boolean);
+      if(hasBL)for(const x of filtTasks){const bl=S.baseline.blByCode[x.code];if(bl){if(bl.start)allDates.push(bl.start);if(bl.finish)allDates.push(bl.finish);}}
+      if(!allDates.length){body.classList.add('no-pad');body.innerHTML=`<div style="padding:6px">${_scurveFilterBar(st,allWbs,maxDepth,c)}<div class="w-ph" style="padding:30px"><div class="wpt">No date data</div></div></div>`;_wireScurve(body,cell,allWbs,maxDepth,getDescIds,st);return;}
+      const minD=new Date(Math.min(...allDates));minD.setDate(1);
+      const maxD=new Date(Math.max(...allDates));
+      const labels=[];let cur=new Date(minD.getFullYear(),minD.getMonth(),1);
+      const endD=new Date(maxD.getFullYear(),maxD.getMonth()+1,1);
+      while(cur<endD){labels.push(new Date(cur));cur=addMonths(cur,1);}
+      const mode=st.mode||'active';
+      // Build count series for current tasks
+      function buildSeries(taskList,blMode){
+        return labels.map(b=>{
+          const mE=new Date(b.getFullYear(),b.getMonth()+1,0);
+          if(blMode){
+            // use baseline dates
+            return taskList.filter(x=>{const bl=S.baseline.blByCode[x.code];if(!bl||!bl.start||!bl.finish)return false;
+              if(mode==='active')return bl.start<=mE&&bl.finish>=b;
+              if(mode==='starting')return bl.start>=b&&bl.start<=mE;
+              if(mode==='finishing')return bl.finish>=b&&bl.finish<=mE;
+              return false;
+            }).length;
+          } else {
+            return taskList.filter(x=>{
+              if(!x.start&&!x.finish)return false;
+              if(mode==='active')return x.start&&x.finish&&x.start<=mE&&x.finish>=b;
+              if(mode==='starting')return x.start&&x.start>=b&&x.start<=mE;
+              if(mode==='finishing')return x.finish&&x.finish>=b&&x.finish<=mE;
+              return false;
+            }).length;
+          }
+        });
+      }
+      const currentCounts=buildSeries(filtTasks,false);
+      const blCounts=hasBL?buildSeries(filtTasks,true):null;
+      // Paginated data table
+      const totalRows=labels.length,pageSize=st.pageSize;
+      const totalPages=Math.max(1,Math.ceil(totalRows/pageSize));
+      if(st.page>totalPages)st.page=totalPages;
+      const si=(st.page-1)*pageSize,ei=Math.min(totalRows,si+pageSize);
+      const ddIdx=S.dataDate?(()=>{const dm=new Date(S.dataDate.getFullYear(),S.dataDate.getMonth(),1);return labels.findIndex(l=>new Date(l.getFullYear(),l.getMonth(),1).getTime()===dm.getTime());})():-1;
+      const modeLabel=mode==='active'?'Active':mode==='starting'?'Starting':'Finishing';
+      const tableRows=labels.slice(si,ei).map((l,idx)=>{
+        const i=si+idx,isDD=(i===ddIdx),isClicked=(i===st.clickedIdx);
+        const cc=currentCounts[i],bc=blCounts?blCounts[i]:null;
+        const varN=bc!=null?(cc-bc):null;
+        const varCol=varN==null?'var(--text-dim)':varN<0?'var(--red)':varN>0?'var(--green-light)':'var(--text-mid)';
+        const ddBadge=isDD?`<span style="display:inline-block;margin-left:4px;padding:1px 4px;border-radius:6px;background:rgba(201,168,76,.18);border:1px solid var(--gold-dim);color:var(--gold);font-size:8px;font-weight:700;font-family:'DM Mono',monospace">DD</span>`:'';
+        return`<tr style="${isClicked?'background:rgba(74,138,181,.18);outline:1px solid rgba(74,138,181,.4)':isDD?'background:rgba(201,168,76,.06)':''}" id="${cid}_row_${i}">
+          <td style="font-family:'DM Mono',monospace;font-size:10px;white-space:nowrap">${fmtMon(l)}${ddBadge}</td>
+          <td class="nr" style="font-family:'DM Mono',monospace;font-size:10px;color:${c.steel}">${cc}</td>
+          ${blCounts?`<td class="nr" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gold)">${bc}</td>`:''}
+          ${blCounts?`<td class="nr" style="font-family:'DM Mono',monospace;font-size:10px;color:${varCol};font-weight:600">${varN==null?'—':(varN>0?'+':'')+varN}</td>`:''}
+        </tr>`;
+      }).join('');
+      // Chart datasets
+      const datasets=[];
+      if(blCounts)datasets.push({label:'Baseline',data:blCounts,backgroundColor:'rgba(201,168,76,.25)',borderColor:'#C9A84C',borderWidth:1.5,borderRadius:2,type:'bar'});
+      datasets.push({label:modeLabel+' Activities',data:currentCounts,backgroundColor:'rgba(74,138,181,.75)',borderColor:'rgba(74,138,181,.9)',borderWidth:0,borderRadius:2,type:'bar'});
+      const selCnt=st.selWbs.size,allSel=selCnt===allWbs.length;
+      const wbsLbl=allSel?'All WBS':selCnt===0?'None':(()=>{const ns=[...st.selWbs].map(id=>S.wbsNodes[id]?.shortName||S.wbsNodes[id]?.name||id).filter(Boolean);return ns.length<=2?ns.join(', '):`${ns[0]} +${ns.length-1} more`;})();
+      const modeBtn=(m,lbl)=>`<button id="${cid}_m_${m}" style="background:${mode===m?'var(--surface2)':'transparent'};border:1px solid ${mode===m?'var(--gold-dim)':'var(--border2)'};color:${mode===m?'var(--gold)':'var(--text-mid)'};font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;border-radius:4px;cursor:pointer">${lbl}</button>`;
+      body.classList.add('no-pad');
+      body.innerHTML=`<div style="display:flex;flex-direction:column;height:100%;overflow:hidden">
+        <!-- Filter bar (reuses sc2 system) -->
+        ${_scurveFilterBar(st,allWbs,maxDepth,c)}
+        <!-- Mode pills -->
+        <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--bg-deep);border-bottom:1px solid var(--border);flex-shrink:0">
+          <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em">View</span>
+          ${modeBtn('active','Active')}
+          ${modeBtn('starting','Starting')}
+          ${modeBtn('finishing','Finishing')}
+          <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim)">${eT(wbsLbl)}</span>
+        </div>
+        <!-- Chart -->
+        <div style="flex:0 0 auto;padding:6px 8px 0">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:3px">
+            <span style="font-size:10px;color:var(--text-dim);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.06em">${modeLabel} Activities per Month</span>
+            <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+              ${blCounts?`<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-mid)"><div style="width:10px;height:10px;background:rgba(201,168,76,.5);border-radius:1px"></div>Baseline</div>`:''}
+              <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-mid)"><div style="width:10px;height:10px;background:rgba(74,138,181,.75);border-radius:1px"></div>${modeLabel}</div>
+            </div>
+          </div>
+          <div style="position:relative;height:150px"><canvas id="${cid}"></canvas></div>
+        </div>
+        <!-- Data table -->
+        <div style="flex:1 1 auto;overflow:auto;padding:6px 8px 0">
+          <div style="font-size:9px;font-family:'DM Mono',monospace;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">
+            📋 Activity Load Table · ${modeLabel}${blCounts?' · Current vs Baseline':''}
+          </div>
+          <table class="w-tbl" style="font-size:10px">
+            <thead><tr>
+              <th>Period</th>
+              <th class="nr">Current</th>
+              ${blCounts?'<th class="nr">Baseline</th><th class="nr">Variance</th>':''}
+            </tr></thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+          <!-- Pagination -->
+          <div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-top:1px solid var(--border);margin-top:2px;flex-wrap:wrap">
+            <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim)">${si+1}–${ei} of ${totalRows}</span>
+            <span style="margin-left:auto;display:flex;gap:4px;align-items:center">
+              <span style="font-size:9px;color:var(--text-dim)">Rows</span>
+              <select id="${cid}_ps" style="background:var(--surface);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 4px;border-radius:3px;font-family:'DM Mono',monospace">
+                ${[8,12,16,24,totalRows].filter((v,i,a)=>a.indexOf(v)===i).map(v=>`<option value="${v}"${pageSize===v?' selected':''}>${v===totalRows?'All':v}</option>`).join('')}
+              </select>
+              <button id="${cid}_f" style="background:var(--surface);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer" ${st.page===1?'disabled':''}>«</button>
+              <button id="${cid}_p" style="background:var(--surface);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer" ${st.page===1?'disabled':''}>‹</button>
+              <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-mid)">p${st.page}/${totalPages}</span>
+              <button id="${cid}_n" style="background:var(--surface);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer" ${st.page===totalPages?'disabled':''}>›</button>
+              <button id="${cid}_l" style="background:var(--surface);border:1px solid var(--border2);color:var(--text);font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer" ${st.page===totalPages?'disabled':''}>»</button>
+            </span>
+          </div>
+        </div>
+      </div>`;
+      // Wire mode buttons
+      const rerender=()=>rerenderWidget(cell);
+      ['active','starting','finishing'].forEach(m=>{const b=document.getElementById(cid+'_m_'+m);if(b)b.onclick=()=>{st.mode=m;st.page=1;rerender();};});
+      // Wire pagination
+      const pg=id=>document.getElementById(id);
+      if(pg(cid+'_f'))pg(cid+'_f').onclick=()=>{st.page=1;rerender();};
+      if(pg(cid+'_p'))pg(cid+'_p').onclick=()=>{st.page=Math.max(1,st.page-1);rerender();};
+      if(pg(cid+'_n'))pg(cid+'_n').onclick=()=>{st.page=Math.min(totalPages,st.page+1);rerender();};
+      if(pg(cid+'_l'))pg(cid+'_l').onclick=()=>{st.page=totalPages;rerender();};
+      if(pg(cid+'_ps'))pg(cid+'_ps').onchange=e=>{st.pageSize=parseInt(e.target.value)||12;st.page=1;rerender();};
+      // Wire WBS filter (reuses sc2 system)
+      _wireScurve(body,cell,allWbs,maxDepth,getDescIds,st);
+      // Draw chart
+      const ctx=document.getElementById(cid);if(!ctx)return;
+      const ch=new Chart(ctx,{type:'bar',data:{labels:labels.map(l=>fmtMon(l)),datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},onClick(e,els){if(!els||!els.length)return;const idx=els[0].index;const ps=st.pageSize;st.page=Math.floor(idx/ps)+1;st.clickedIdx=idx;rerender();},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(8,10,15,.95)',borderColor:c.bd,borderWidth:1,titleColor:c.tm,bodyColor:c.steel}},scales:{x:{grid:{display:false},ticks:{color:c.tm,font:{size:9},maxTicksLimit:16}},y:{grid:{color:c.bd+'44'},ticks:{color:c.tm,font:{size:9}},beginAtZero:true}}}});
       S.charts.set(body,ch);
+      // Data date vertical line + click highlight
+      {const lblStr=labels.map(l=>fmtMon(l));const ddPlugin={id:'ddLine2',afterDraw(chart){const{ctx:cx,chartArea:{top,bottom},scales:{x:xs}}=chart;
+        if(S.dataDate){const idx=lblStr.findIndex(l=>{const[mn,yr]=l.split('-');const m=MONS.indexOf(mn);const y=parseInt('20'+yr);if(m<0)return false;return S.dataDate.getMonth()===m&&S.dataDate.getFullYear()===y;});if(idx>=0){const xPos=xs.getPixelForValue(idx);cx.save();cx.beginPath();cx.moveTo(xPos,top);cx.lineTo(xPos,bottom);cx.strokeStyle=c.gold;cx.lineWidth=1.5;cx.setLineDash([4,3]);cx.stroke();cx.setLineDash([]);cx.fillStyle=c.gold;cx.font="bold 9px 'DM Mono',monospace";cx.textAlign='center';cx.fillText('DD',xPos,top-2);cx.restore();}}
+        if(st.clickedIdx!=null&&st.clickedIdx>=0&&st.clickedIdx<lblStr.length){const xPos=xs.getPixelForValue(st.clickedIdx);cx.save();cx.strokeStyle='rgba(255,255,255,0.35)';cx.lineWidth=1;cx.setLineDash([3,2]);cx.beginPath();cx.moveTo(xPos,top);cx.lineTo(xPos,bottom);cx.stroke();cx.setLineDash([]);cx.restore();}
+      }};ch.plugins=[ddPlugin];ch.update();}
+      // Scroll highlighted row into view
+      if(st.clickedIdx!=null){const tbl=body.querySelector('tbody');if(tbl){const rowIdx=st.clickedIdx-si;const row=tbl.querySelectorAll('tr')[rowIdx];if(row)setTimeout(()=>row.scrollIntoView({block:'nearest'}),60);}}
     }
   },
 
@@ -918,7 +1397,22 @@ const W={
       ms.sort((a,b)=>(a.finish||0)-(b.finish||0));
       body.classList.add('no-pad');
       if(!ms.length){body.innerHTML='<div class="w-ph" style="padding:20px"><div class="wpt">No milestones match filter</div></div>';return;}
-      body.innerHTML=`<table class="w-tbl"><thead><tr><th>ID</th><th>Milestone</th><th>Date</th><th>Status</th></tr></thead><tbody>${ms.slice(0,300).map(m=>`<tr><td>${eT(m.code)}</td><td>${eT(m.name)}</td><td>${fmtD(m.finish)}</td><td><span class="pill ${m.status==='done'?'pd':m.status==='ip'?'pi':'pn'}">${m.status==='done'?'Done':m.status==='ip'?'In Prog':'Pending'}</span></td></tr>`).join('')}</tbody></table>`;
+      const hasBL=S.baseline.fileName&&Object.keys(S.baseline.blByCode).length>0;
+      const blCols=hasBL?'<th>BL Finish</th><th>Var(d)</th>':'';
+      const rows=ms.slice(0,300).map(m=>{
+        let blCells='';
+        if(hasBL){
+          const bl=S.baseline.blByCode[m.code];
+          const blF=bl?bl.finish:null;
+          let varD=null;
+          if(blF&&m.finish){varD=Math.round((blF-m.finish)/86400000);}
+          const varCol=varD===null?'var(--text-dim)':varD<0?'var(--red)':varD>0?'var(--green-light)':'var(--text-mid)';
+          const varTxt=varD===null?'—':(varD>0?'+'+varD:String(varD))+'d';
+          blCells=`<td>${fmtD(blF)}</td><td class="nr" style="color:${varCol};font-weight:600">${varTxt}</td>`;
+        }
+        return`<tr><td>${eT(m.code)}</td><td>${eT(m.name)}</td><td>${fmtD(m.finish)}</td>${blCells}<td><span class="pill ${m.status==='done'?'pd':m.status==='ip'?'pi':'pn'}">${m.status==='done'?'Done':m.status==='ip'?'In Prog':'Pending'}</span></td></tr>`;
+      }).join('');
+      body.innerHTML=`<table class="w-tbl"><thead><tr><th>ID</th><th>Milestone</th><th>Forecast</th>${blCols}<th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;
     }
   },
 
@@ -946,7 +1440,22 @@ const W={
       t.sort((a,b)=>(a.start||a.finish||0)-(b.start||b.finish||0));
       body.classList.add('no-pad');
       if(!t.length){body.innerHTML='<div class="w-ph" style="padding:20px"><div class="wpt">No upcoming activities in window</div></div>';return;}
-      body.innerHTML=`<div style="padding:5px 8px;font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);background:var(--surface2)">${fmtD(start)} → ${fmtD(end)} · ${t.length} activities</div><table class="w-tbl"><thead><tr><th>ID</th><th>Activity</th><th>Start</th><th>Finish</th><th>%</th><th>Status</th></tr></thead><tbody>${t.slice(0,200).map(x=>`<tr><td>${eT(x.code)}</td><td>${eT(x.name)}</td><td>${fmtD(x.start)}</td><td>${fmtD(x.finish)}</td><td class="nr">${(x.completePct||0).toFixed(0)}</td><td><span class="pill ${x.critical?'pc':x.status==='ip'?'pi':'pn'}">${x.critical?'Crit':x.status==='ip'?'In Prog':'Upcoming'}</span></td></tr>`).join('')}</tbody></table>`;
+      const hasBL=S.baseline.fileName&&Object.keys(S.baseline.blByCode).length>0;
+      const blHead=hasBL?'<th>BL Finish</th><th>Var(d)</th>':'';
+      const rows=t.slice(0,200).map(x=>{
+        let blCells='';
+        if(hasBL){
+          const bl=S.baseline.blByCode[x.code];
+          const blF=bl?bl.finish:null;
+          let varD=null;
+          if(blF&&x.finish){varD=Math.round((blF-x.finish)/86400000);}
+          const varCol=varD===null?'var(--text-dim)':varD<0?'var(--red)':varD>0?'var(--green-light)':'var(--text-mid)';
+          const varTxt=varD===null?'—':(varD>0?'+'+varD:String(varD))+'d';
+          blCells=`<td>${fmtD(blF)}</td><td class="nr" style="color:${varCol};font-weight:600">${varTxt}</td>`;
+        }
+        return`<tr><td>${eT(x.code)}</td><td>${eT(x.name)}</td><td>${fmtD(x.start)}</td><td>${fmtD(x.finish)}</td>${blCells}<td class="nr">${(x.completePct||0).toFixed(0)}</td><td><span class="pill ${x.critical?'pc':x.status==='ip'?'pi':'pn'}">${x.critical?'Crit':x.status==='ip'?'In Prog':'Upcoming'}</span></td></tr>`;
+      }).join('');
+      body.innerHTML=`<div style="padding:5px 8px;font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);background:var(--surface2)">${fmtD(start)} → ${fmtD(end)} · ${t.length} activities</div><table class="w-tbl"><thead><tr><th>ID</th><th>Activity</th><th>Start</th><th>Finish</th>${blHead}<th>%</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;
     }
   },
 
@@ -961,7 +1470,22 @@ const W={
       t=filterByWBS(t,cs.wbs);if(!t.length)return ph(body,'🔗','No critical activities found');
       t.sort((a,b)=>a.totalFloat-b.totalFloat);
       body.classList.add('no-pad');
-      body.innerHTML=`<table class="w-tbl"><thead><tr><th>ID</th><th>Activity</th><th>Start</th><th>Finish</th><th>TF</th><th>%</th></tr></thead><tbody>${t.slice(0,200).map(x=>`<tr><td>${eT(x.code)}</td><td>${eT(x.name)}</td><td>${fmtD(x.start)}</td><td>${fmtD(x.finish)}</td><td class="nr">${(x.totalFloat/8).toFixed(1)}d</td><td class="nr">${(x.completePct||0).toFixed(0)}%</td></tr>`).join('')}</tbody></table>`;
+      const hasBL=S.baseline.fileName&&Object.keys(S.baseline.blByCode).length>0;
+      const blHead=hasBL?'<th>BL Finish</th><th>Var(d)</th>':'';
+      const rows=t.slice(0,200).map(x=>{
+        let blCells='';
+        if(hasBL){
+          const bl=S.baseline.blByCode[x.code];
+          const blF=bl?bl.finish:null;
+          let varD=null;
+          if(blF&&x.finish){varD=Math.round((blF-x.finish)/86400000);}
+          const varCol=varD===null?'var(--text-dim)':varD<0?'var(--red)':varD>0?'var(--green-light)':'var(--text-mid)';
+          const varTxt=varD===null?'—':(varD>0?'+'+varD:String(varD))+'d';
+          blCells=`<td>${fmtD(blF)}</td><td class="nr" style="color:${varCol};font-weight:600">${varTxt}</td>`;
+        }
+        return`<tr><td>${eT(x.code)}</td><td>${eT(x.name)}</td><td>${fmtD(x.start)}</td><td>${fmtD(x.finish)}</td>${blCells}<td class="nr">${(x.totalFloat/8).toFixed(1)}d</td><td class="nr">${(x.completePct||0).toFixed(0)}%</td></tr>`;
+      }).join('');
+      body.innerHTML=`<table class="w-tbl"><thead><tr><th>ID</th><th>Activity</th><th>Start</th><th>Finish</th>${blHead}<th>TF</th><th>%</th></tr></thead><tbody>${rows}</tbody></table>`;
     }
   },
 
@@ -1010,6 +1534,15 @@ function ganttSVG(tasks){
     svg+=`<line x1="0" y1="${y+RH}" x2="${SW}" y2="${y+RH}" stroke="${c.bd}" stroke-width="0.4" opacity="0.5"/>`;
     const lbl=`${t.code} ${t.name}`.slice(0,30);
     svg+=`<text x="${LW-5}" y="${y+RH/2+4}" text-anchor="end" font-size="10" fill="${t.critical?c.red:c.tm}">${eX(lbl)}</text>`;
+    // Baseline bar (thin underlay) — matched by task_code
+    const hasBaseline=S.baseline.fileName&&Object.keys(S.baseline.blByCode).length>0;
+    if(hasBaseline){
+      const bl=S.baseline.blByCode[t.code];
+      if(bl&&bl.start&&bl.finish){
+        const bx1=Math.max(LW,dx(bl.start)),bx2=Math.min(LW+BW,dx(bl.finish));const bbw=Math.max(2,bx2-bx1);
+        svg+=`<rect x="${bx1}" y="${y+BP+BH-3}" width="${bbw}" height="3" fill="#A855F7" rx="1" opacity="0.55"/>`;
+      }
+    }
     if(t.start&&t.finish){
       const x1=Math.max(LW,dx(t.start)),x2=Math.min(LW+BW,dx(t.finish));const bw=Math.max(2,x2-x1);
       const bc=t.status==='done'?c.green:t.critical?c.red:t.status==='ip'?c.steel:c.td;
@@ -1028,6 +1561,7 @@ function ganttSVG(tasks){
   // Legend row
   svg+=`<g>`;
   const lgnd=[['Done',c.green],['In Progress',c.steel],['Not Started',c.td],['Critical',c.red]];
+  if(S.baseline.fileName&&Object.keys(S.baseline.blByCode).length>0)lgnd.push(['Baseline','#A855F7']);
   let lx=LW+8;
   lgnd.forEach(([label,col])=>{svg+=`<rect x="${lx}" y="${SH-14}" width="8" height="8" fill="${col}" rx="1" opacity="0.8"/>`;svg+=`<text x="${lx+11}" y="${SH-7}" font-size="9" fill="${c.tm}" font-family="DM Mono,monospace">${label}</text>`;lx+=60;});
   svg+=`</g>`;
@@ -1164,12 +1698,11 @@ const DEFAULT_TEMPLATE={
     {widgetType:'kpi-activities',     x:0,  y:0,  w:4, h:3, ctrlState:'{}'},
     {widgetType:'kpi-progress',       x:4,  y:0,  w:4, h:3, ctrlState:'{}'},
     {widgetType:'kpi-critical',       x:8,  y:0,  w:4, h:3, ctrlState:'{}'},
-    {widgetType:'scurve',             x:0,  y:3,  w:12,h:4, ctrlState:'{"wbs":"all"}'},
-    {widgetType:'lookahead',          x:0,  y:7,  w:12,h:6, ctrlState:'{"wbs":"all","crit":"true"}'},
-    {widgetType:'resource-histogram', x:0,  y:13, w:4, h:5, ctrlState:'{"wbs":"all"}'},
-    {widgetType:'wbs-pie',            x:4,  y:13, w:3, h:5, ctrlState:'{"wbs":"all"}'},
-    {widgetType:'wbs-pie',            x:7,  y:13, w:3, h:5, ctrlState:'{"wbs":"all"}'},
-    {widgetType:'note',               x:10, y:13, w:2, h:5, ctrlState:'{}',
+    {widgetType:'scurve',             x:0,  y:3,  w:12,h:5, ctrlState:'{"wbs":"all"}'},
+    {widgetType:'lookahead',          x:0,  y:8,  w:12,h:6, ctrlState:'{"wbs":"all","crit":"true"}'},
+    {widgetType:'resource-histogram', x:0,  y:14, w:5, h:5, ctrlState:'{"wbs":"all"}'},
+    {widgetType:'wbs-progress-pct',   x:5,  y:14, w:4, h:5, ctrlState:'{"wbs":"all"}'},
+    {widgetType:'note',               x:9,  y:14, w:3, h:5, ctrlState:'{}',
       noteText:'Click to edit. Add context, labels, or instructions for your team.'}
   ]
 };
