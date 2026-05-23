@@ -434,12 +434,7 @@ html.light .pms-tn-item, .light .pms-tn-item{color:#1A1C22;}
   </div>
 </header>
 
-<!-- Free-tier upgrade banner: always shown for non-Pro users -->
-<div id="freeBanner" style="display:flex;background:linear-gradient(90deg,rgba(200,146,42,.12),rgba(200,146,42,.04));border-bottom:1px solid rgba(200,146,42,.25);padding:8px 24px;font-size:12px;color:#e6d8b0;align-items:center;gap:12px;flex-wrap:wrap;">
-  <span style="font-family:'Space Mono',monospace;font-size:10px;padding:2px 6px;border-radius:3px;background:rgba(200,146,42,.2);color:#c8922a;border:1px solid rgba(200,146,42,.4);letter-spacing:.06em;text-transform:uppercase;">Free</span>
-  <span id="freeBannerMsg">Free plan: limited to 100 activities per project. Subscribe to Pro to view unlimited activities.</span>
-  <a href="/?page=pricing" style="margin-left:auto;color:#c8922a;font-weight:600;text-decoration:underline;">Upgrade to Pro →</a>
-</div>
+
 
 <div class="toolbar">
   <span class="tl">Project</span>
@@ -448,10 +443,13 @@ html.light .pms-tn-item, .light .pms-tn-item{color:#1A1C22;}
   <button class="btn bg" id="expandBtn"   disabled onclick="expandAll()">➕ Expand All</button>
   <select id="wbsLevelSel" disabled onchange="onWbsLevel()" title="Show WBS up to selected level" style="min-width:130px;"><option value="all">WBS Level: All</option></select>
   <button class="btn bg" id="ganttBtn"    disabled onclick="toggleGantt()">📊 Gantt</button>
-  <label id="critLabel" style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid var(--border2);border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tm);opacity:.5;pointer-events:none;transition:all .18s;" title="Show only critical activities (driving_path_flag = Y)">
-    <input type="checkbox" id="criticalChk" onchange="onCriticalToggle()" style="accent-color:#f87171;cursor:pointer;margin:0;">
-    <span style="color:#f87171;">🔺</span>Critical Only
-  </label>
+  <label id="critLabel" style="display:none;"></label>
+  <span class="tl" style="margin-left:4px;">Filter:</span>
+  <select id="pathFilterSel" disabled onchange="onPathFilterChange()" style="min-width:180px;" title="Filter activities by path type">
+    <option value="all">All Activities</option>
+    <option value="driving">🔴 Driving Path</option>
+    <option value="critical">🔺 Critical Path</option>
+  </select>
   <label id="remainLabel" style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid var(--border2);border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tm);opacity:.5;pointer-events:none;transition:all .18s;" title="Show only remaining activities (Not Started or In Progress)">
     <input type="checkbox" id="remainingChk" onchange="onRemainingToggle()" style="accent-color:#00d4ff;cursor:pointer;margin:0;">
     <span style="color:#00d4ff;">◷</span>Remaining Only
@@ -530,6 +528,7 @@ const S={
   projects:{},wbsNodes:{},taskData:{},taskBudget:{},
   currentProjId:null,treeHierarchy:{},rootNodes:[],
   expandedSet:new Set(),searchQuery:'',criticalOnly:false,remainingOnly:false,
+  pathFilter:'all', // 'all' | 'driving' | 'critical'
   wbsLevelCap:null,
   sortCol:null,sortDir:1,
   columns:[],colWidths:{},dragSrcIdx:null,
@@ -582,7 +581,7 @@ function minDS(a){const v=a.map(toD).filter(Boolean);return v.length?fmtD(new Da
 function maxDS(a){const v=a.map(toD).filter(Boolean);return v.length?fmtD(new Date(Math.max(...v))):'N/A';}
 
 function procR(sec,r){
-  if(sec==='PROJECT'){const id=r.proj_id||'';S.projects[id]={id,name:r.proj_short_name||id,dataDate:r.last_recalc_date||''};}
+  if(sec==='PROJECT'){const id=r.proj_id||'';S.projects[id]={id,name:r.proj_short_name||id,dataDate:r.last_recalc_date||'',critDrtn:parseFloat(r.critical_drtn_hr_cnt||'0')||0};}
   else if(sec==='PROJWBS'){const id=r.wbs_id||'';S.wbsNodes[id]={id,name:r.wbs_name||'',shortName:r.wbs_short_name||'',parentId:r.parent_wbs_id||'',projId:r.proj_id||''};}
   else if(sec==='TASKRSRC'||sec==='PROJCOST'){const tid=r.task_id||'',c=parseFloat(r.target_cost)||0;if(tid)S.taskBudget[tid]=(S.taskBudget[tid]||0)+c;}
   else if(sec==='TASK'){
@@ -607,9 +606,14 @@ function procR(sec,r){
       const finD=toD(dF);
       if(dataD&&finD){rmDays=Math.max(0,Math.round((finD-dataD)/86400000));}
     }
-    const critical=(r.driving_path_flag||'').trim().toUpperCase()==='Y';
+    const drivingPath=(r.driving_path_flag||'').trim().toUpperCase()==='Y';
+    const totalFloat=parseFloat(r.total_float_hr_cnt||'9999')||9999;
+    const taskType=(r.task_type||'').trim();
+    // critical is true for either mode — resolved at render time via S.pathFilter
+    const critical=drivingPath;
     S.taskData[id]={id,code:r.task_code||'',name:r.task_name||'',wbsId:r.wbs_id||'',projId:r.proj_id||'',
-      displayStart:dS,displayFinish:dF,actualStart:aS,actualEnd:aE,completePct:pct,status:st,remainDrtn:rmDays,critical};
+      displayStart:dS,displayFinish:dF,actualStart:aS,actualEnd:aE,completePct:pct,status:st,remainDrtn:rmDays,
+      critical,drivingPath,totalFloat,taskType};
   }
 }
 function parseXER(content){
@@ -1008,7 +1012,7 @@ function buildRows(wid,depth,tr,flt){
   }
   if(co){
     // Hide WBS branches with no critical descendants
-    const anyCrit=allActsFor(wid,tr).some(a=>a.critical);
+    const anyCrit=allActsFor(wid,tr).some(a=>isActivityCritical(a));
     if(!anyCrit)return rows;
   }
   if(ro){
@@ -1021,7 +1025,7 @@ function buildRows(wid,depth,tr,flt){
   if(S.expandedSet.has(wid)){
     let acts=actsFor(wid);if(S.sortCol)acts=sortActs(acts);
     for(const a of acts){
-      if(co&&!a.critical)continue;
+      if(co&&!isActivityCritical(a))continue;
       if(ro&&a.status==='done')continue;
       let actHit=false;
       if(flt){
@@ -1114,7 +1118,7 @@ function renderTable(){
 
   const html=rows.map(row=>{
     const isW=row.type==='wbs';
-    const cls=(isW?'wr':row.act.status==='ip'?'ir':row.act.status==='done'?'dr':'nr')+(!isW&&row.act.critical?' crit':'')+(row.hit?' shrow':'');
+    const cls=(isW?'wr':row.act.status==='ip'?'ir':row.act.status==='done'?'dr':'nr')+(!isW&&isActivityCritical(row.act)?' crit':'')+(row.hit?' shrow':'');
     const cells=cols.map(c=>{const cc=c.align==='center'?' class="center"':'';const cw=S.colWidths[c.key]||c.width;return`<td${cc} data-col="${c.key}" style="width:${cw}px;max-width:${cw}px">${cellH(c,row)}</td>`;}).join('');
     return`<tr class="${cls}">${cells}</tr>`;
   }).join('');
@@ -1173,10 +1177,31 @@ function onWbsLevel(){
   renderTable();
 }
 function onSearch(){S.searchQuery=document.getElementById('searchInput').value;if(S.searchQuery)expandAll();renderTable();}
-function onCriticalToggle(){
-  S.criticalOnly=document.getElementById('criticalChk').checked;
+// Resolve whether an activity is "critical" under the current pathFilter
+function isActivityCritical(a){
+  if(S.pathFilter==='driving') return a.drivingPath;
+  if(S.pathFilter==='critical'){
+    const proj=S.projects[a.projId];
+    const thresh=proj?proj.critDrtn:0;
+    return a.taskType!=='TT_LOE'&&a.totalFloat<=thresh;
+  }
+  return false; // 'all' — no highlight
+}
+// Keep .critical in sync so Gantt bar colouring + row CSS work unchanged
+function refreshCriticalFlags(){
+  for(const t of Object.values(S.taskData)){
+    t.critical = isActivityCritical(t);
+  }
+}
+function onPathFilterChange(){
+  S.pathFilter=document.getElementById('pathFilterSel').value;
+  S.criticalOnly=(S.pathFilter!=='all');
+  refreshCriticalFlags();
   if(S.criticalOnly)expandAll();
   renderTable();
+}
+function onCriticalToggle(){
+  // Legacy stub — no-op (checkbox removed; kept so any external callers don't throw)
 }
 function onRemainingToggle(){
   S.remainingOnly=document.getElementById('remainingChk').checked;
@@ -1343,7 +1368,7 @@ function renderGantt(){
       }
     }
     else{
-      sD=toD(row.act.displayStart);fD=toD(row.act.displayFinish);pct=row.act.completePct;bc=(row.act.status==='ip'?'ip':row.act.status==='done'?'done':'ns')+(row.act.critical?' crit-bar':'');
+      sD=toD(row.act.displayStart);fD=toD(row.act.displayFinish);pct=row.act.completePct;bc=(row.act.status==='ip'?'ip':row.act.status==='done'?'done':'ns')+(isActivityCritical(row.act)?' crit-bar':'');
       if(S.baselineLoaded){
         const bl=S.baselineByCode[row.act.code];
         if(bl){blSD=toD(bl.start);blFD=toD(bl.finish);}
@@ -1388,7 +1413,8 @@ function loadFileText(text,name){
     sel.disabled=false;
     ['collapseBtn','expandBtn','ganttBtn'].forEach(id=>document.getElementById(id).disabled=false);
     document.getElementById('searchInput').disabled=false;
-    const cl=document.getElementById('critLabel');cl.style.opacity='1';cl.style.pointerEvents='auto';
+    document.getElementById('pathFilterSel').disabled=false;
+    const cl=document.getElementById('critLabel');if(cl){cl.style.opacity='1';cl.style.pointerEvents='auto';}
     const rl=document.getElementById('remainLabel');if(rl){rl.style.opacity='1';rl.style.pointerEvents='auto';}
     document.getElementById('dropZone').style.display='none';
     document.getElementById('closeBtn').style.display='inline-flex';
@@ -1413,7 +1439,8 @@ function closeFile(){
   S.projects={};S.wbsNodes={};S.taskData={};S.taskBudget={};
   S.currentProjId=null;S.treeHierarchy={};S.rootNodes=[];
   S.expandedSet=new Set();S.searchQuery='';S.sortCol=null;S.sortDir=1;
-  S.criticalOnly=false;S.remainingOnly=false;S.wbsLevelCap=null;
+  S.criticalOnly=false;S.remainingOnly=false;S.wbsLevelCap=null;S.pathFilter='all';
+  const pfs=document.getElementById('pathFilterSel');if(pfs){pfs.value='all';pfs.disabled=true;}
   const ccb=document.getElementById('criticalChk');if(ccb)ccb.checked=false;
   const ccl=document.getElementById('critLabel');if(ccl){ccl.style.opacity='.5';ccl.style.pointerEvents='none';}
   const rcb=document.getElementById('remainingChk');if(rcb)rcb.checked=false;
@@ -1696,9 +1723,8 @@ window.PMAuth = {
 </script>
 
 <script>
-// ══════════ Free-tier cap + login status (website edition) ══════════
-const FREE_ACTIVITY_CAP = 100;
-let _isPro = true; // OFFLINE STUB
+// ══════════ Login status (website edition) ══════════
+let _isPro = true;
 let _currentUser = null;
 
 function goSignIn(){ window.location.href = '/?signin=1'; }
@@ -1753,81 +1779,21 @@ function renderAppUserPill(user, licenseActive){
   }
 }
 
-// Apply the free-tier cap to S.taskData for the current project.
-let _removedByProj = {};
-let _projCounts    = {};
-
-function _snapshotProjCounts(){
-  _projCounts = {};
-  for(const t of Object.values(S.taskData)){
-    _projCounts[t.projId] = (_projCounts[t.projId] || 0) + 1;
-  }
-}
-
-function enforceFreeCap(){
-  if(_isPro) return;
-  const seenPerProj = {};
-  const toRemove = [];
-  for(const [tid, t] of Object.entries(S.taskData)){
-    const pid = t.projId;
-    seenPerProj[pid] = (seenPerProj[pid] || 0) + 1;
-    if(seenPerProj[pid] > FREE_ACTIVITY_CAP){
-      toRemove.push(tid);
-    }
-  }
-  for(const tid of toRemove){
-    const t = S.taskData[tid];
-    if(!t) continue;
-    (_removedByProj[t.projId] = _removedByProj[t.projId] || []).push(t);
-    delete S.taskData[tid];
-  }
-}
-
-function restoreAllActivities(){
-  for(const pid of Object.keys(_removedByProj)){
-    for(const t of _removedByProj[pid]){
-      S.taskData[t.id] = t;
-    }
-  }
-  _removedByProj = {};
-}
-
-function updateFreeBanner(){
-  const banner = document.getElementById('freeBanner');
-  const msg    = document.getElementById('freeBannerMsg');
-  if(!banner || !msg) return;
-  if(_isPro){ banner.style.display = 'none'; return; }
-  const pid = S.currentProjId;
-  const total = pid ? (_projCounts[pid] || 0) : 0;
-  if(total > FREE_ACTIVITY_CAP){
-    msg.textContent = `Showing the first ${FREE_ACTIVITY_CAP} of ${total} activities in this project. Subscribe to Pro to view all.`;
-  } else {
-    msg.textContent = 'Free plan: limited to 100 activities per project. Subscribe to Pro to view unlimited activities.';
-  }
-  banner.style.display = 'flex';
-}
-
 // ── Hook into parseXER and onProjSel without editing them directly ─────
 const _origParseXER = window.parseXER;
 window.parseXER = function(content){
   _origParseXER(content);
-  _snapshotProjCounts();
-  enforceFreeCap();
   buildWbsIndex();
 };
 
 const _origOnProjSel = window.onProjSel;
 window.onProjSel = function(){
   _origOnProjSel();
-  updateFreeBanner();
 };
 
 const _origCloseFile = window.closeFile;
 window.closeFile = function(){
   _origCloseFile();
-  _projCounts = {};
-  _removedByProj = {};
-  updateFreeBanner();
 };
 
 
@@ -1840,10 +1806,8 @@ window.closeFile = function(){
       _isPro = !!(user && licenseActive);
       renderAppUserPill(_currentUser, _isPro);
 
-      // If user just upgraded mid-session (was free, now Pro) and a file is loaded,
-      // restore hidden activities and re-render.
+      // If user just upgraded mid-session and a file is loaded, re-render.
       if(_isPro && !wasPro && S.currentProjId){
-        restoreAllActivities();
         buildWbsIndex();
         const {tr, roots} = getTree(S.currentProjId);
         S.treeHierarchy = tr; S.rootNodes = roots;
@@ -1851,7 +1815,6 @@ window.closeFile = function(){
         buildRlpCache(tr);
         renderHead(); renderTable(); updateStats();
       }
-      updateFreeBanner();
       // Notify parent (and frame2) of pro status change
       try{ parent.broadcastProStatus(_isPro); }catch(e){}
     });
