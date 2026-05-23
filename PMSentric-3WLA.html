@@ -1,6 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- ══ PMS XER STORE — IndexedDB-backed large-file persistence (auto-injected) ══ -->
+<script>
+(function(){
+  // Backward-compatible store for the current XER file.
+  // Large XER text lives in IndexedDB (handles 100s of MB).
+  // A small flag + filename stay in localStorage so synchronous
+  // "hide dropzone" guards still work with no flash.
+  var DB='pmsentric_xer', STORE='kv', KEY='current';
+  var FLAG='pms_xer_has', NAME='pms_xer_current_name';
+
+  function openDB(){
+    return new Promise(function(res,rej){
+      try{
+        var rq=indexedDB.open(DB,1);
+        rq.onupgradeneeded=function(){ rq.result.createObjectStore(STORE); };
+        rq.onsuccess=function(){ res(rq.result); };
+        rq.onerror=function(){ rej(rq.error); };
+      }catch(e){ rej(e); }
+    });
+  }
+  function idbSet(text){
+    return openDB().then(function(db){
+      return new Promise(function(res,rej){
+        var tx=db.transaction(STORE,'readwrite');
+        tx.objectStore(STORE).put(text,KEY);
+        tx.oncomplete=function(){ res(true); };
+        tx.onerror=function(){ rej(tx.error); };
+      });
+    });
+  }
+  function idbGet(){
+    return openDB().then(function(db){
+      return new Promise(function(res,rej){
+        var tx=db.transaction(STORE,'readonly');
+        var g=tx.objectStore(STORE).get(KEY);
+        g.onsuccess=function(){ res(g.result||null); };
+        g.onerror=function(){ rej(g.error); };
+      });
+    });
+  }
+  function idbDel(){
+    return openDB().then(function(db){
+      return new Promise(function(res,rej){
+        var tx=db.transaction(STORE,'readwrite');
+        tx.objectStore(STORE).delete(KEY);
+        tx.oncomplete=function(){ res(true); };
+        tx.onerror=function(){ rej(tx.error); };
+      });
+    });
+  }
+
+  window.PMXerStore={
+    // hasFlag(): synchronous — for the early dropzone-hide guards
+    hasFlag:function(){
+      try{ return !!localStorage.getItem(FLAG); }catch(e){ return false; }
+    },
+    getName:function(){
+      try{ return localStorage.getItem(NAME)||'file.xer'; }catch(e){ return 'file.xer'; }
+    },
+    // save(text,name): async. Stores text in IndexedDB, flag+name in localStorage.
+    save:function(text,name){
+      try{ localStorage.setItem(FLAG,'1'); localStorage.setItem(NAME,name||'file.xer'); }catch(e){}
+      return idbSet(text).then(function(){
+        console.log('[PMS-XER] Saved to IndexedDB:',name||'file.xer','('+text.length+' chars)');
+        return true;
+      }).catch(function(err){
+        console.warn('[PMS-XER] IndexedDB save failed:',err);
+        try{ localStorage.removeItem(FLAG); }catch(e){}
+        return false;
+      });
+    },
+    // load(): async → resolves to text or null
+    load:function(){
+      if(!this.hasFlag()) return Promise.resolve(null);
+      return idbGet().catch(function(err){
+        console.warn('[PMS-XER] IndexedDB load failed:',err); return null;
+      });
+    },
+    // clear(): async
+    clear:function(){
+      try{ localStorage.removeItem(FLAG); localStorage.removeItem(NAME); }catch(e){}
+      return idbDel().then(function(){
+        console.log('[PMS-XER] Cleared from IndexedDB');
+        return true;
+      }).catch(function(){ return false; });
+    }
+  };
+})();
+</script>
+<!-- ══ /PMS XER STORE ══ -->
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Schedule PrimeReader — PMsentric</title>
@@ -280,7 +371,7 @@ tr.crit td:first-child{box-shadow:inset 3px 0 0 #f87171;}
 </style>
 </head>
 <body>
-<script>try{if(localStorage.getItem('pms_xer_current')){document.write('<style>#dropZone{display:none!important}</style>');}}catch(e){}</script>
+<script>try{if(PMXerStore.hasFlag()){document.write('<style>#dropZone{display:none!important}</style>');}}catch(e){}</script>
 
 <div class="app">
 
@@ -1484,7 +1575,7 @@ function __xerBroadcast(msg){try{parent.postMessage(msg,'*');}catch(e){}}
 function loadFileText(text,name){
   try{
     // Inline persist + broadcast (cross-tool sync)
-    try{localStorage.setItem('pms_xer_current',text);localStorage.setItem('pms_xer_current_name',name||'file.xer');console.log('[PMS-XER] Saved to localStorage:',name||'file.xer','('+(text).length+' chars)');}catch(e){}
+    PMXerStore.save(text,name||'file.xer');
     if(!__xerSyncInbound)__xerBroadcast({type:'xer:current:load',text:text,name:name||'file.xer'});
     parseXER(text);
     const projs=Object.values(S.projects);
@@ -1546,7 +1637,7 @@ function closeFile(){
   document.getElementById('divider').style.display='none';
   const tp=document.getElementById('tablePart');tp.style.width='';tp.style.flex='1';
   setSt('Ready — load an XER file to begin','');
-  try{localStorage.removeItem('pms_xer_current');localStorage.removeItem('pms_xer_current_name');console.log('[PMS-XER] Cleared from localStorage');}catch(e){}
+  PMXerStore.clear();
   if(!__xerSyncInbound)__xerBroadcast({type:'xer:current:close'});
 }
 
@@ -1821,16 +1912,20 @@ async function appSignOut(){
 let _exitTarget = '/';
 function askExit(url){ _exitTarget = url||'/'; document.getElementById('exitModal').classList.add('open'); }
 function closeExitModal(){ document.getElementById('exitModal').classList.remove('open'); }
-function confirmExit(){ try{localStorage.removeItem('pms_xer_current');localStorage.removeItem('pms_xer_current_name');console.log('[PMS-XER] Cleared from localStorage');}catch(e){} window.location.href = _exitTarget; }
+function confirmExit(){ PMXerStore.clear(); window.location.href = _exitTarget; }
 function switchTool(url){ window.location.href = url; }
 
 // Auto-load from session if available
 (function(){
   try{
-    const stored = localStorage.getItem('pms_xer_current');
-    const name   = localStorage.getItem('pms_xer_current_name') || 'file.xer';
-    console.log('[PMS-XER] Auto-load check: stored='+(stored?stored.length+' chars':'none')+', name='+name);
-    if(stored){ setTimeout(()=>{ loadFileText(stored, name); }, 300); }
+    const hasFile = PMXerStore.hasFlag();
+    const name    = PMXerStore.getName();
+    console.log('[PMS-XER] Auto-load check: hasFile='+hasFile+', name='+name);
+    if(hasFile){
+      PMXerStore.load().then(function(stored){
+        if(stored){ try{ loadFileText(stored, name); }catch(e){} }
+      });
+    }
   }catch(e){}
 })();
 
