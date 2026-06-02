@@ -2075,11 +2075,12 @@ function pgEmitChart(pptx,slide,ch,r,C){
   const ds=data.datasets||[];if(!ds.length)return;
   const pal=['2E5F8A','C9A84C','D86A5A','3CA776','A855F7'];
   const dsColor=(d,i)=>{let c=d.borderColor||d.backgroundColor;if(Array.isArray(c))c=c[0];return pgHex(c)||pal[i%pal.length];};
-  const num=v=>(v&&typeof v==='object')?(Number(v.y)||0):(Number(v)||0);
+  const num=v=>{if(v==null||v==='')return null;const x=(typeof v==='object')?v.y:v;const nx=Number(x);return isNaN(nx)?null:nx;};
   if(t==='line'||t==='bar'){
     const series=ds.map((d,i)=>({name:d.label||('Series '+(i+1)),labels:labels.length?labels:(d.data||[]).map((_,k)=>String(k+1)),values:(d.data||[]).map(num)}));
     const colors=ds.map(dsColor);
-    slide.addChart(t==='line'?pptx.ChartType.line:pptx.ChartType.bar,series,{x:r.x,y:r.y,w:r.w,h:r.h,chartColors:colors,showLegend:ds.length>1,legendPos:'b',legendFontSize:7,catAxisLabelFontSize:7,valAxisLabelFontSize:7,lineDataSymbol:'none',lineSize:2,showValue:false});
+    const smooth=t==='line'&&ds.some(d=>(d.tension||d.lineTension||0)>0);
+    slide.addChart(t==='line'?pptx.ChartType.line:pptx.ChartType.bar,series,{x:r.x,y:r.y,w:r.w,h:r.h,chartColors:colors,showLegend:ds.length>1,legendPos:'b',legendFontSize:7,catAxisLabelFontSize:7,valAxisLabelFontSize:7,lineDataSymbol:'none',lineSize:2,lineSmooth:smooth,showValue:false});
   }else if(t==='doughnut'||t==='pie'){
     const series=ds.map((d,i)=>({name:(d._ringLabels&&d._ringLabels[0])||d.label||('Ring '+(i+1)),labels:(d._ringLabels||(d.data||[]).map((_,k)=>'Seg '+(k+1))),values:(d.data||[]).map(num)}));
     let cc=[];ds.forEach(d=>{const bg=Array.isArray(d.backgroundColor)?d.backgroundColor:[d.backgroundColor];bg.forEach(x=>{const h=pgHex(x);if(h)cc.push(h);});});
