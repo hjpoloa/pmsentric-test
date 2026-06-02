@@ -2160,7 +2160,7 @@ const grid=GridStack.init({
   disableOneColumnMode:true,
 },'#grid');
 
-GridStack.setupDragIn('.widget-item',{appendTo:'body',helper:'clone'});
+GridStack.setupDragIn('.widget-item',{appendTo:'body',helper:'clone',cursorAt:{top:25,left:30}});
 
 // FIX: inject content in-place — no removeWidget in dropped handler
 grid.on('dropped',(ev,prev,newItem)=>{
