@@ -1999,7 +1999,6 @@ async function pgExportPPT(){
     if(!cvs){btn.disabled=false;btn.innerHTML='📊 Export PPT';return;}
     const PptxGenJS=window.PptxGenJS;
     const pptx=new PptxGenJS();
-    pptx.layout='LAYOUT_CUSTOM';
     pptx.defineLayout({name:'CUSTOM',width:sz.w,height:sz.h});
     pptx.layout='CUSTOM';
     const slide=pptx.addSlide();
