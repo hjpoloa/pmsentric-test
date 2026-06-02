@@ -2007,7 +2007,8 @@ function pgThemeColors(){
     surface:pgHex(c.sf)||'12151C', border:pgHex(c.bd)||'252D3A',
     gold:pgHex(c.gold)||'C9A84C', steel:pgHex(c.steel)||'2E5F8A',
     green:pgHex(c.green)||'3CA776', red:pgHex(c.red)||'D86A5A',
-    textMid:pgHex(c.tm)||'9AA4B2', textDim:pgHex(c.td)||'5A6472'
+    textMid:pgHex(c.tm)||'9AA4B2', textDim:pgHex(c.td)||'5A6472',
+    bg:pgHex(c.bg)||'080A0F'
   };
 }
 
@@ -2020,6 +2021,7 @@ function pgBuildNativeSlide(pptx,slide,sz,nodes){
   const colW=usableW/COLS, rowH=usableH/maxRow;
   const GAP=Math.min(0.1,colW*0.14);
   const C=pgThemeColors();
+  try{slide.background={color:C.bg};}catch(_){}
   nodes.forEach(n=>{
     const cell=n.el&&n.el.querySelector('.widget-cell');if(!cell)return;
     const r={
@@ -2034,7 +2036,6 @@ function pgBuildNativeSlide(pptx,slide,sz,nodes){
 function pgEmitWidget(pptx,slide,cell,r,C){
   const type=cell.dataset.widgetType, def=W[type]||{};
   const body=cell.querySelector('.widget-body');
-  slide.addShape(pptx.ShapeType.roundRect,{x:r.x,y:r.y,w:r.w,h:r.h,rectRadius:0.04,fill:{color:C.surface},line:{color:C.border,width:0.75}});
   const HH=Math.min(0.34,r.h*0.18);
   slide.addText(((def.icon?def.icon+'  ':'')+(def.title||type)),{x:r.x+0.07,y:r.y+0.03,w:r.w-0.14,h:HH,fontSize:Math.max(7,Math.min(12,r.w*2.6)),bold:true,color:C.gold,align:'left',valign:'middle',fontFace:'Arial',margin:0});
   const cr={x:r.x+0.09,y:r.y+HH+0.04,w:r.w-0.18,h:r.h-HH-0.12};
@@ -2042,8 +2043,15 @@ function pgEmitWidget(pptx,slide,cell,r,C){
   if(type==='note')return pgEmitNote(slide,cell,cr,C);
   if(type==='gantt')return pgEmitGantt(pptx,slide,cell,cr,C);
   const ch=body&&S.charts.get(body);
-  if(ch)return pgEmitChart(pptx,slide,ch,cr,C);
   const tbl=body&&body.querySelector('table');
+  if(ch&&tbl){
+    const gap=0.08;
+    const chartH=Math.max(0.6,cr.h*0.56-gap/2);
+    pgEmitChart(pptx,slide,ch,{x:cr.x,y:cr.y,w:cr.w,h:chartH},C);
+    pgEmitTable(slide,tbl,{x:cr.x,y:cr.y+chartH+gap,w:cr.w,h:cr.h-chartH-gap},C);
+    return;
+  }
+  if(ch)return pgEmitChart(pptx,slide,ch,cr,C);
   if(tbl)return pgEmitTable(slide,tbl,cr,C);
   const txt=((body&&body.innerText)||'').trim();
   if(txt)slide.addText(txt.slice(0,500),{x:cr.x,y:cr.y,w:cr.w,h:cr.h,fontSize:8,color:C.textMid,valign:'top',fontFace:'Arial'});
@@ -2076,16 +2084,38 @@ function pgEmitChart(pptx,slide,ch,r,C){
   const pal=['2E5F8A','C9A84C','D86A5A','3CA776','A855F7'];
   const dsColor=(d,i)=>{let c=d.borderColor||d.backgroundColor;if(Array.isArray(c))c=c[0];return pgHex(c)||pal[i%pal.length];};
   const num=v=>{if(v==null||v==='')return null;const x=(typeof v==='object')?v.y:v;const nx=Number(x);return isNaN(nx)?null:nx;};
+  // Shared dark-theme axis/legend styling
+  const axis={
+    catAxisLabelColor:C.textMid, valAxisLabelColor:C.textMid,
+    catAxisLabelFontSize:7, valAxisLabelFontSize:7,
+    valGridLine:{style:'solid',color:C.border,size:0.5},
+    catGridLine:{style:'none'},
+    valAxisLineShow:false, catAxisLineShow:true, catAxisLineColor:C.border,
+    legendColor:C.textMid, legendFontSize:7,
+    chartArea:{fill:{color:null}}, plotArea:{fill:{color:null}}
+  };
   if(t==='line'||t==='bar'){
     const series=ds.map((d,i)=>({name:d.label||('Series '+(i+1)),labels:labels.length?labels:(d.data||[]).map((_,k)=>String(k+1)),values:(d.data||[]).map(num)}));
     const colors=ds.map(dsColor);
-    const smooth=t==='line'&&ds.some(d=>(d.tension||d.lineTension||0)>0);
-    slide.addChart(t==='line'?pptx.ChartType.line:pptx.ChartType.bar,series,{x:r.x,y:r.y,w:r.w,h:r.h,chartColors:colors,showLegend:ds.length>1,legendPos:'b',legendFontSize:7,catAxisLabelFontSize:7,valAxisLabelFontSize:7,lineDataSymbol:'none',lineSize:2,lineSmooth:smooth,showValue:false});
+    const isLine=t==='line';
+    const smooth=isLine&&ds.some(d=>(d.tension||d.lineTension||0)>0);
+    const filled=isLine&&ds.some(d=>d.fill);
+    // value-axis number format by magnitude
+    let maxAbs=0;series.forEach(s=>s.values.forEach(v=>{if(v!=null)maxAbs=Math.max(maxAbs,Math.abs(v));}));
+    const fmt=maxAbs>=1e6?'#,##0.0,,"M"':maxAbs>=1e4?'#,##0,"K"':'#,##0';
+    const ctype=filled?pptx.ChartType.area:(isLine?pptx.ChartType.line:pptx.ChartType.bar);
+    slide.addChart(ctype,series,Object.assign({
+      x:r.x,y:r.y,w:r.w,h:r.h,chartColors:colors,
+      chartColorsOpacity:filled?28:100,
+      showLegend:ds.length>1,legendPos:'b',
+      lineDataSymbol:'none',lineSize:2.25,lineSmooth:smooth,
+      valAxisLabelFormatCode:fmt,showValue:false
+    },axis));
   }else if(t==='doughnut'||t==='pie'){
     const series=ds.map((d,i)=>({name:(d._ringLabels&&d._ringLabels[0])||d.label||('Ring '+(i+1)),labels:(d._ringLabels||(d.data||[]).map((_,k)=>'Seg '+(k+1))),values:(d.data||[]).map(num)}));
     let cc=[];ds.forEach(d=>{const bg=Array.isArray(d.backgroundColor)?d.backgroundColor:[d.backgroundColor];bg.forEach(x=>{const h=pgHex(x);if(h)cc.push(h);});});
     if(!cc.length)cc=['2E5F8A','252D3A','C9A84C','252D3A'];
-    slide.addChart(pptx.ChartType.doughnut,series,{x:r.x,y:r.y,w:r.w,h:r.h,chartColors:cc,holeSize:55,showLegend:true,legendPos:'b',legendFontSize:7,dataLabelFontSize:7,showValue:false});
+    slide.addChart(pptx.ChartType.doughnut,series,{x:r.x,y:r.y,w:r.w,h:r.h,chartColors:cc,holeSize:55,showLegend:true,legendPos:'b',legendColor:C.textMid,legendFontSize:7,dataLabelColor:C.textMid,dataLabelFontSize:7,showValue:false,chartArea:{fill:{color:null}},plotArea:{fill:{color:null}}});
   }
 }
 function pgEmitGantt(pptx,slide,cell,r,C){
@@ -2112,25 +2142,66 @@ function pgEmitGantt(pptx,slide,cell,r,C){
   });
 }
 
-async function pgExportPPT(){
+function pgExportPPT(){
   const sz=pgGetCurrentSize();if(!sz){toast('Select a page size first',true);return;}
   const type=document.getElementById('pgType').value;
   if(type!=='ppt'&&type!=='word'&&type!=='arch'){toast('Select a page size first',true);return;}
   const nodes=(typeof grid!=='undefined'&&grid.engine&&grid.engine.nodes)?grid.engine.nodes:[];
   if(!nodes.length){toast('Add widgets to the canvas first',true);return;}
+  // Mode chooser
+  let modal=document.getElementById('pptModeModal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='pptModeModal';modal.className='pdf-modal-backdrop';
+    modal.innerHTML=`
+      <div class="pdf-modal" style="max-width:440px">
+        <div class="pdf-modal-head">
+          <div class="pdf-modal-title">Export PowerPoint</div>
+          <button class="btn" onclick="document.getElementById('pptModeModal').style.display='none'">✕ Close</button>
+        </div>
+        <div class="pdf-modal-body" style="padding:18px;display:flex;flex-direction:column;gap:12px">
+          <div style="font-size:12px;color:var(--text-mid)">Choose how the canvas is placed on the slide:</div>
+          <button class="btn btn-gold" id="pptModeEditable" style="text-align:left;padding:12px 14px;line-height:1.4">
+            <div style="font-weight:700">✏️ Editable elements</div>
+            <div style="font-size:11px;opacity:.8">Native text, charts &amp; tables — edit numbers, text, colors in PowerPoint. Styling approximates the on-screen look.</div>
+          </button>
+          <button class="btn" id="pptModeImage" style="text-align:left;padding:12px 14px;line-height:1.4;border:1px solid var(--border2)">
+            <div style="font-weight:700">🖼️ Image</div>
+            <div style="font-size:11px;opacity:.8">Pixel-perfect snapshot of the page region as a single picture. Not editable.</div>
+          </button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+  modal.style.display='flex';
+  modal.querySelector('#pptModeEditable').onclick=()=>{modal.style.display='none';pgRunPPTExport('editable',sz,nodes);};
+  modal.querySelector('#pptModeImage').onclick=()=>{modal.style.display='none';pgRunPPTExport('image',sz,nodes);};
+}
+
+async function pgRunPPTExport(mode,sz,nodes){
   const btn=document.getElementById('btnExportPpt');
   btn.disabled=true;btn.textContent='⏳ Generating…';
   try{
-    await loadPptxGenJS();
-    const PptxGenJS=window.PptxGenJS;
-    const pptx=new PptxGenJS();
-    pptx.defineLayout({name:'CUSTOM',width:sz.w,height:sz.h});
-    pptx.layout='CUSTOM';
-    const slide=pptx.addSlide();
-    pgBuildNativeSlide(pptx,slide,sz,nodes);
-    const name=(document.getElementById('tplName').value||'canvas').replace(/[^a-z0-9_\- ]/gi,'_');
-    await pptx.writeFile({fileName:name+'.pptx'});
-    toast('PPT exported (editable)');
+    if(mode==='image'){
+      const [cvs]=await Promise.all([pgCaptureFrame(),loadPptxGenJS()]);
+      if(!cvs){btn.disabled=false;btn.innerHTML='📊 Export PPT';return;}
+      const pptx=new window.PptxGenJS();
+      pptx.defineLayout({name:'CUSTOM',width:sz.w,height:sz.h});pptx.layout='CUSTOM';
+      const slide=pptx.addSlide();
+      slide.addImage({data:cvs.toDataURL('image/jpeg',0.92),x:0,y:0,w:sz.w,h:sz.h});
+      const name=(document.getElementById('tplName').value||'canvas').replace(/[^a-z0-9_\- ]/gi,'_');
+      await pptx.writeFile({fileName:name+'.pptx'});
+      toast('PPT exported (image)');
+    }else{
+      await loadPptxGenJS();
+      const pptx=new window.PptxGenJS();
+      pptx.defineLayout({name:'CUSTOM',width:sz.w,height:sz.h});pptx.layout='CUSTOM';
+      const slide=pptx.addSlide();
+      pgBuildNativeSlide(pptx,slide,sz,nodes);
+      const name=(document.getElementById('tplName').value||'canvas').replace(/[^a-z0-9_\- ]/gi,'_');
+      await pptx.writeFile({fileName:name+'.pptx'});
+      toast('PPT exported (editable)');
+    }
   }catch(e){toast('PPT export failed: '+e.message,true);console.error(e);}
   btn.disabled=false;btn.innerHTML='📊 Export PPT';
 }
