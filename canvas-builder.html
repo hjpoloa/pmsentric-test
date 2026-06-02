@@ -204,7 +204,9 @@ main{flex:1;display:flex;min-height:0}
 .grid-stack-item-content{position:absolute !important;inset:0 !important;overflow:hidden !important;display:flex !important;flex-direction:column !important}
 .grid-stack-item-content>.widget-cell{flex:1 1 auto !important;width:100% !important;height:100% !important;min-height:0 !important;display:flex !important;flex-direction:column !important}
 .grid-stack>.grid-stack-item.gs-placeholder>.placeholder-content{background:rgba(201,168,76,.12);border:2px dashed var(--gold);border-radius:var(--radius);transition:all .15s;}
-.ui-draggable-dragging{opacity:.9!important;z-index:9999!important;}
+.ui-draggable-dragging{opacity:.85!important;z-index:9999!important;box-shadow:0 12px 32px rgba(0,0,0,.5)!important;pointer-events:none!important;}
+.ui-draggable-dragging .wi-icon{background:var(--gold);color:#1A1410;}
+.ui-draggable-dragging{transform:scale(1.04);}
 .ui-resizable-handle.ui-resizable-se{background:var(--gold-dim);width:8px;height:8px;border-radius:2px;bottom:4px;right:4px;transform:rotate(45deg)}
 .widget-cell:hover .ui-resizable-handle.ui-resizable-se{background:var(--gold)}
 .sidebar::-webkit-scrollbar,.canvas-wrap::-webkit-scrollbar,.widget-body::-webkit-scrollbar{width:5px;height:5px}
@@ -2157,18 +2159,9 @@ const grid=GridStack.init({
   acceptWidgets:'.widget-item',
   removable:false,
   disableOneColumnMode:true,
-  draggable:{scroll:true,appendTo:'body'},
 },'#grid');
 
-GridStack.setupDragIn('.widget-item',{
-  appendTo:'body',
-  helper(el){
-    const clone=el.cloneNode(true);
-    clone.style.cssText='width:200px;height:60px;opacity:0.85;pointer-events:none;background:var(--surface);border:2px dashed var(--gold);border-radius:8px;display:flex;align-items:center;padding:0 12px;font-size:12px;color:var(--gold);font-family:DM Sans,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;';
-    return clone;
-  },
-  cursorAt:{top:30,left:100},
-});
+GridStack.setupDragIn('.widget-item',{appendTo:'body',helper:'clone'});
 
 // FIX: inject content in-place — no removeWidget in dropped handler
 grid.on('dropped',(ev,prev,newItem)=>{
