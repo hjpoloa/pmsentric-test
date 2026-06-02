@@ -268,6 +268,23 @@ main{flex:1;display:flex;min-height:0}
 /* ── Baseline XER Panel ─────────────────────────────────── */
 .xer-panel-bl{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px;margin-bottom:12px;transition:all .25s}
 .xer-panel-bl.loaded{border-color:var(--steel);background:rgba(46,95,138,.08)}
+
+/* ── Page Grid Overlay ──────────────────────────────────── */
+.pg-overlay{position:absolute;pointer-events:none;z-index:50;top:14px;left:14px;}
+.pg-frame{position:relative;border:2px dashed var(--gold);border-radius:2px;box-shadow:0 0 0 9999px rgba(0,0,0,.18);background:transparent;}
+.pg-label{position:absolute;top:-20px;left:0;font-family:'DM Mono',monospace;font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;background:var(--bg);padding:1px 5px;border-radius:2px;}
+.pg-inner-lines{position:absolute;inset:0;overflow:hidden;}
+.pg-vline,.pg-hline{position:absolute;background:rgba(201,168,76,.12);}
+.pg-vline{top:0;bottom:0;width:1px;}
+.pg-hline{left:0;right:0;height:1px;}
+
+/* Page Grid Toolbar controls */
+.pg-ctrl-wrap{display:inline-flex;align-items:center;gap:0;border:1px solid var(--border2);border-radius:var(--radius-sm);overflow:hidden;}
+.pg-ctrl-wrap select{background:var(--surface);border:none;border-right:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:6px 10px;outline:none;cursor:pointer;transition:background .25s,color .25s;}
+.pg-ctrl-wrap select:last-child{border-right:none;}
+.pg-ctrl-wrap select:focus{background:var(--surface2);}
+.pg-clear-btn{background:var(--surface);border:none;border-left:1px solid var(--border2);color:var(--text-dim);font-size:13px;padding:0 9px;cursor:pointer;transition:all .15s;height:100%;}
+.pg-clear-btn:hover{color:var(--red);background:rgba(216,106,90,.08);}
 .xer-bl-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--steel-light);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
 .xer-bl-status{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
 .xer-bl-project{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;word-break:break-all}
@@ -288,6 +305,19 @@ main{flex:1;display:flex;min-height:0}
     <button class="btn" onclick="document.getElementById('tplInput').click()">⬆ Load Template</button>
     <button class="btn btn-gold" onclick="saveTemplate()">💾 Save Template</button>
     <button class="btn btn-danger" onclick="clearCanvas()">✕ Clear</button>
+
+    <!-- ══════════ PAGE GRID SELECTOR ══════════ -->
+    <div class="pg-ctrl-wrap" id="pgCtrlWrap">
+      <select id="pgType" onchange="pgOnTypeChange()" title="Page format type">
+        <option value="">⬚ Page Grid</option>
+        <option value="word">Word</option>
+        <option value="ppt">PPT</option>
+        <option value="arch">Architectural</option>
+      </select>
+      <select id="pgSize" onchange="pgApply()" style="display:none" title="Page size"></select>
+      <button class="pg-clear-btn" id="pgClearBtn" onclick="pgClear()" style="display:none" title="Remove grid overlay">✕</button>
+    </div>
+    <!-- ══════════ /PAGE GRID SELECTOR ══════════ -->
 
     <!-- ══════════ PMSENTRIC TOOLS NAV (auto-injected) ══════════ -->
 <style id="pms-toolsnav-style">
@@ -1712,7 +1742,113 @@ function rerenderAll(){
 }
 function updateEmptyState(){document.getElementById('canvasWrap').classList.toggle('has-items',grid.engine.nodes.length>0);}
 
-/* ══ GRID SETUP ═════════════════════════════════════════════ */
+/* ══ PAGE GRID ══════════════════════════════════════════════ */
+const PG_SIZES = {
+  word: [
+    { id:'letter',  label:'Letter  8.5×11"',   w:8.5,  h:11   },
+    { id:'legal',   label:'Legal  8.5×14"',    w:8.5,  h:14   },
+    { id:'a4',      label:'A4  8.27×11.69"',   w:8.27, h:11.69},
+    { id:'a3',      label:'A3  11.69×16.54"',  w:11.69,h:16.54},
+  ],
+  ppt: [
+    { id:'wide169', label:'Widescreen 16:9  13.33×7.5"', w:13.33,h:7.5  },
+    { id:'std43',   label:'Standard 4:3  10×7.5"',       w:10,   h:7.5  },
+    { id:'wide1610',label:'Widescreen 16:10  10×6.25"',  w:10,   h:6.25 },
+    { id:'b4',      label:'B4 (ISO)  13.07×9.84"',       w:13.07,h:9.84 },
+  ],
+  arch: [
+    { id:'archa',   label:'Arch A  9×12"',     w:9,  h:12 },
+    { id:'archb',   label:'Arch B  12×18"',    w:12, h:18 },
+    { id:'archc',   label:'Arch C  18×24"',    w:18, h:24 },
+    { id:'archd',   label:'Arch D  24×36"',    w:24, h:36 },
+    { id:'arche',   label:'Arch E  36×48"',    w:36, h:48 },
+  ]
+};
+
+const PG_MAX_W = 720; // max overlay width in px
+const PG_MAX_H = 600; // max overlay height in px
+const PG_GRID_COLS = 6;
+const PG_GRID_ROWS = 4;
+
+function pgOnTypeChange(){
+  const type = document.getElementById('pgType').value;
+  const sizeEl = document.getElementById('pgSize');
+  const clearBtn = document.getElementById('pgClearBtn');
+  if(!type){ sizeEl.style.display='none'; clearBtn.style.display='none'; pgClear(); return; }
+  const sizes = PG_SIZES[type]||[];
+  sizeEl.innerHTML = sizes.map(s=>`<option value="${s.id}">${s.label}</option>`).join('');
+  sizeEl.style.display='';
+  clearBtn.style.display='';
+  pgApply();
+}
+
+function pgApply(){
+  pgClearOverlay();
+  const type = document.getElementById('pgType').value;
+  const sizeId = document.getElementById('pgSize').value;
+  if(!type||!sizeId) return;
+  const sizes = PG_SIZES[type]||[];
+  const sz = sizes.find(s=>s.id===sizeId);
+  if(!sz) return;
+
+  const ratio = sz.w/sz.h;
+  let pw, ph;
+  if(ratio >= 1){ // landscape
+    pw = Math.min(PG_MAX_W, PG_MAX_H * ratio);
+    ph = pw / ratio;
+  } else { // portrait
+    ph = Math.min(PG_MAX_H, PG_MAX_W / ratio);
+    pw = ph * ratio;
+  }
+  pw = Math.round(pw); ph = Math.round(ph);
+
+  const wrap = document.getElementById('canvasWrap');
+  const ov = document.createElement('div');
+  ov.className='pg-overlay'; ov.id='pgOverlay';
+
+  const frame = document.createElement('div');
+  frame.className='pg-frame';
+  frame.style.width=pw+'px'; frame.style.height=ph+'px';
+
+  const lbl = document.createElement('div');
+  lbl.className='pg-label';
+  lbl.textContent=sz.label;
+  frame.appendChild(lbl);
+
+  // inner grid lines
+  const inner = document.createElement('div');
+  inner.className='pg-inner-lines';
+  for(let c=1;c<PG_GRID_COLS;c++){
+    const line=document.createElement('div');
+    line.className='pg-vline';
+    line.style.left=Math.round((pw/PG_GRID_COLS)*c)+'px';
+    inner.appendChild(line);
+  }
+  for(let r=1;r<PG_GRID_ROWS;r++){
+    const line=document.createElement('div');
+    line.className='pg-hline';
+    line.style.top=Math.round((ph/PG_GRID_ROWS)*r)+'px';
+    inner.appendChild(line);
+  }
+  frame.appendChild(inner);
+  ov.appendChild(frame);
+  wrap.appendChild(ov);
+}
+
+function pgClearOverlay(){
+  const el=document.getElementById('pgOverlay');
+  if(el) el.remove();
+}
+
+function pgClear(){
+  pgClearOverlay();
+  document.getElementById('pgType').value='';
+  document.getElementById('pgSize').style.display='none';
+  document.getElementById('pgClearBtn').style.display='none';
+}
+/* ══ /PAGE GRID ══════════════════════════════════════════════ */
+
+
 const grid=GridStack.init({column:12,cellHeight:70,margin:8,float:true,handle:'.widget-head',resizable:{handles:'se'},acceptWidgets:'.widget-item',removable:false},'#grid');
 GridStack.setupDragIn('.widget-item',{appendTo:'body',helper:'clone'});
 
