@@ -141,9 +141,9 @@ main{flex:1;display:flex;min-height:0}
 .sb-title{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.12em;color:var(--gold);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
 .sb-group{margin-bottom:18px}
 .sb-group-lbl{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;padding-left:2px}
-.widget-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:5px;cursor:grab;display:flex;align-items:center;gap:9px;transition:all .18s;user-select:none}
-.widget-item:hover{border-color:var(--gold-dim);background:var(--surface2);transform:translateX(2px)}
-.widget-item:active{cursor:grabbing}
+.widget-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:5px;cursor:grab;display:flex;align-items:center;gap:9px;transition:all .18s;user-select:none;touch-action:none;}
+.widget-item:hover{border-color:var(--gold-dim);background:var(--surface2);transform:translateX(3px);box-shadow:2px 0 8px rgba(201,168,76,.15);}
+.widget-item:active{cursor:grabbing;transform:translateX(1px) scale(0.98);opacity:.8;}
 .wi-icon{width:26px;height:26px;background:var(--muted-bg);border:1px solid var(--border2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
 .wi-text{flex:1;min-width:0}
 .wi-name{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -203,7 +203,8 @@ main{flex:1;display:flex;min-height:0}
 .toast.show{opacity:1} .toast.err{border-color:var(--red)}
 .grid-stack-item-content{position:absolute !important;inset:0 !important;overflow:hidden !important;display:flex !important;flex-direction:column !important}
 .grid-stack-item-content>.widget-cell{flex:1 1 auto !important;width:100% !important;height:100% !important;min-height:0 !important;display:flex !important;flex-direction:column !important}
-.grid-stack>.grid-stack-item.gs-placeholder>.placeholder-content{background:var(--gold-glow);border:1px dashed var(--gold);border-radius:var(--radius)}
+.grid-stack>.grid-stack-item.gs-placeholder>.placeholder-content{background:rgba(201,168,76,.12);border:2px dashed var(--gold);border-radius:var(--radius);transition:all .15s;}
+.ui-draggable-dragging{opacity:.9!important;z-index:9999!important;}
 .ui-resizable-handle.ui-resizable-se{background:var(--gold-dim);width:8px;height:8px;border-radius:2px;bottom:4px;right:4px;transform:rotate(45deg)}
 .widget-cell:hover .ui-resizable-handle.ui-resizable-se{background:var(--gold)}
 .sidebar::-webkit-scrollbar,.canvas-wrap::-webkit-scrollbar,.widget-body::-webkit-scrollbar{width:5px;height:5px}
@@ -285,6 +286,20 @@ main{flex:1;display:flex;min-height:0}
 .pg-ctrl-wrap select:focus{background:var(--surface2);}
 .pg-clear-btn{background:var(--surface);border:none;border-left:1px solid var(--border2);color:var(--text-dim);font-size:13px;padding:0 9px;cursor:pointer;transition:all .15s;height:100%;}
 .pg-clear-btn:hover{color:var(--red);background:rgba(216,106,90,.08);}
+/* Export buttons */
+.pg-export-group{display:none;align-items:center;gap:4px;}
+.pg-export-group.visible{display:inline-flex;}
+.btn-export{background:var(--surface);border:1px solid var(--border2);color:var(--text-mid);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;padding:6px 10px;border-radius:var(--radius-sm);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .18s;white-space:nowrap;}
+.btn-export:hover{background:var(--surface2);border-color:var(--gold-dim);color:var(--gold-light);}
+.btn-export:disabled{opacity:.45;cursor:wait;}
+/* PDF preview modal */
+.pdf-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.pdf-modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:0;width:90vw;max-width:900px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.6);}
+.pdf-modal-head{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);gap:10px;flex-shrink:0;}
+.pdf-modal-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.06em;color:var(--gold);flex:1;}
+.pdf-modal-body{flex:1;overflow:auto;padding:20px;display:flex;align-items:flex-start;justify-content:center;background:var(--bg-deep);}
+.pdf-modal-body canvas{box-shadow:0 8px 32px rgba(0,0,0,.5);max-width:100%;height:auto;}
+.pdf-modal-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;}
 .xer-bl-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--steel-light);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
 .xer-bl-status{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
 .xer-bl-project{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;word-break:break-all}
@@ -318,6 +333,14 @@ main{flex:1;display:flex;min-height:0}
       <button class="pg-clear-btn" id="pgClearBtn" onclick="pgClear()" style="display:none" title="Remove grid overlay">✕</button>
     </div>
     <!-- ══════════ /PAGE GRID SELECTOR ══════════ -->
+
+    <!-- ══════════ EXPORT BUTTONS ══════════ -->
+    <div class="pg-export-group" id="pgExportGroup">
+      <button class="btn-export" id="btnPdfPreview" onclick="pgExportPDF()" title="PDF preview of page">🔍 PDF Preview</button>
+      <button class="btn-export" id="btnExportPpt" onclick="pgExportPPT()" title="Export as PowerPoint">📊 Export PPT</button>
+      <button class="btn-export" id="btnExportWord" onclick="pgExportWord()" title="Export as Word document">📄 Export Word</button>
+    </div>
+    <!-- ══════════ /EXPORT BUTTONS ══════════ -->
 
     <!-- ══════════ PMSENTRIC TOOLS NAV (auto-injected) ══════════ -->
 <style id="pms-toolsnav-style">
@@ -1774,7 +1797,8 @@ function pgOnTypeChange(){
   const type = document.getElementById('pgType').value;
   const sizeEl = document.getElementById('pgSize');
   const clearBtn = document.getElementById('pgClearBtn');
-  if(!type){ sizeEl.style.display='none'; clearBtn.style.display='none'; pgClear(); return; }
+  const exportGroup = document.getElementById('pgExportGroup');
+  if(!type){ sizeEl.style.display='none'; clearBtn.style.display='none'; exportGroup.classList.remove('visible'); pgClear(); return; }
   const sizes = PG_SIZES[type]||[];
   sizeEl.innerHTML = sizes.map(s=>`<option value="${s.id}">${s.label}</option>`).join('');
   sizeEl.style.display='';
@@ -1790,6 +1814,7 @@ function pgApply(){
   const sizes = PG_SIZES[type]||[];
   const sz = sizes.find(s=>s.id===sizeId);
   if(!sz) return;
+  document.getElementById('pgExportGroup').classList.add('visible');
 
   const ratio = sz.w/sz.h;
   let pw, ph;
@@ -1845,12 +1870,305 @@ function pgClear(){
   document.getElementById('pgType').value='';
   document.getElementById('pgSize').style.display='none';
   document.getElementById('pgClearBtn').style.display='none';
+  document.getElementById('pgExportGroup').classList.remove('visible');
 }
 /* ══ /PAGE GRID ══════════════════════════════════════════════ */
 
+/* ══ PAGE EXPORT ══════════════════════════════════════════════ */
+// Lazy-load html2canvas
+function loadHtml2Canvas(){
+  return new Promise((res,rej)=>{
+    if(window.html2canvas){res(window.html2canvas);return;}
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload=()=>res(window.html2canvas);
+    s.onerror=rej;
+    document.head.appendChild(s);
+  });
+}
+// Lazy-load PptxGenJS
+function loadPptxGenJS(){
+  return new Promise((res,rej)=>{
+    if(window.PptxGenJS){res(window.PptxGenJS);return;}
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';
+    s.onload=()=>res(window.PptxGenJS);
+    s.onerror=rej;
+    document.head.appendChild(s);
+  });
+}
 
-const grid=GridStack.init({column:12,cellHeight:70,margin:8,float:true,handle:'.widget-head',resizable:{handles:'se'},acceptWidgets:'.widget-item',removable:false},'#grid');
-GridStack.setupDragIn('.widget-item',{appendTo:'body',helper:'clone'});
+function pgGetCurrentSize(){
+  const type=document.getElementById('pgType').value;
+  const sizeId=document.getElementById('pgSize').value;
+  if(!type||!sizeId)return null;
+  return (PG_SIZES[type]||[]).find(s=>s.id===sizeId)||null;
+}
+
+async function pgCaptureFrame(){
+  const ov=document.getElementById('pgOverlay');
+  if(!ov){toast('No page grid active',true);return null;}
+  const frame=ov.querySelector('.pg-frame');
+  if(!frame)return null;
+  const h2c=await loadHtml2Canvas();
+  // Temporarily hide the overlay dashes so the capture is clean
+  frame.style.border='none';
+  const lbl=frame.querySelector('.pg-label');
+  if(lbl)lbl.style.display='none';
+  const innerLines=frame.querySelector('.pg-inner-lines');
+  if(innerLines)innerLines.style.display='none';
+  const cvs=await h2c(frame,{
+    backgroundColor: document.documentElement.classList.contains('light')?'#FFFFFF':'#080A0F',
+    scale:2,
+    useCORS:true,
+    allowTaint:true,
+    logging:false
+  });
+  frame.style.border='';
+  if(lbl)lbl.style.display='';
+  if(innerLines)innerLines.style.display='';
+  return cvs;
+}
+
+async function pgExportPDF(){
+  const sz=pgGetCurrentSize();if(!sz){toast('Select a page size first',true);return;}
+  const btn=document.getElementById('btnPdfPreview');
+  btn.disabled=true;btn.textContent='⏳ Capturing…';
+  try{
+    const cvs=await pgCaptureFrame();
+    if(!cvs){btn.disabled=false;btn.innerHTML='🔍 PDF Preview';return;}
+    // Show modal
+    let modal=document.getElementById('pdfModal');
+    if(!modal){
+      modal=document.createElement('div');
+      modal.id='pdfModal';modal.className='pdf-modal-backdrop';
+      modal.innerHTML=`
+        <div class="pdf-modal">
+          <div class="pdf-modal-head">
+            <div class="pdf-modal-title" id="pdfModalTitle">PDF Preview</div>
+            <button class="btn" onclick="document.getElementById('pdfModal').style.display='none'">✕ Close</button>
+          </div>
+          <div class="pdf-modal-body" id="pdfModalBody"></div>
+          <div class="pdf-modal-foot">
+            <button class="btn" onclick="document.getElementById('pdfModal').style.display='none'">Close</button>
+            <button class="btn btn-gold" id="pdfDownloadBtn">⬇ Download PDF</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+    }
+    modal.style.display='flex';
+    const body=document.getElementById('pdfModalBody');
+    body.innerHTML='';body.appendChild(cvs);
+    cvs.style.maxWidth='100%';cvs.style.height='auto';
+    document.getElementById('pdfModalTitle').textContent=`PDF Preview — ${sz.label}`;
+    document.getElementById('pdfDownloadBtn').onclick=async()=>{
+      // Use jsPDF if available, else fallback to image download
+      const jsPDFLoaded=await new Promise(res=>{
+        if(window.jspdf){res(true);return;}
+        const s=document.createElement('script');
+        s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        s.onload=()=>res(true);s.onerror=()=>res(false);
+        document.head.appendChild(s);
+      });
+      if(jsPDFLoaded&&window.jspdf){
+        const {jsPDF}=window.jspdf;
+        const orient=sz.w>sz.h?'landscape':'portrait';
+        const pdf=new jsPDF({orientation:orient,unit:'in',format:[sz.w,sz.h]});
+        const imgData=cvs.toDataURL('image/jpeg',0.92);
+        pdf.addImage(imgData,'JPEG',0,0,sz.w,sz.h);
+        pdf.save((document.getElementById('tplName').value||'canvas')+'.pdf');
+      } else {
+        const a=document.createElement('a');a.href=cvs.toDataURL('image/png');
+        a.download=(document.getElementById('tplName').value||'canvas')+'-preview.png';a.click();
+      }
+    };
+  }catch(e){toast('PDF capture failed: '+e.message,true);console.error(e);}
+  btn.disabled=false;btn.innerHTML='🔍 PDF Preview';
+}
+
+async function pgExportPPT(){
+  const sz=pgGetCurrentSize();if(!sz){toast('Select a page size first',true);return;}
+  const type=document.getElementById('pgType').value;
+  if(type!=='ppt'&&type!=='word'&&type!=='arch'){toast('Select a page size first',true);return;}
+  const btn=document.getElementById('btnExportPpt');
+  btn.disabled=true;btn.textContent='⏳ Generating…';
+  try{
+    const [cvs]=await Promise.all([pgCaptureFrame(),loadPptxGenJS()]);
+    if(!cvs){btn.disabled=false;btn.innerHTML='📊 Export PPT';return;}
+    const PptxGenJS=window.PptxGenJS;
+    const pptx=new PptxGenJS();
+    pptx.layout='LAYOUT_CUSTOM';
+    pptx.defineLayout({name:'CUSTOM',width:sz.w,height:sz.h});
+    pptx.layout='CUSTOM';
+    const slide=pptx.addSlide();
+    const imgData=cvs.toDataURL('image/jpeg',0.92);
+    slide.addImage({data:imgData,x:0,y:0,w:sz.w,h:sz.h});
+    const name=(document.getElementById('tplName').value||'canvas').replace(/[^a-z0-9_\- ]/gi,'_');
+    await pptx.writeFile({fileName:name+'.pptx'});
+    toast('PPT exported');
+  }catch(e){toast('PPT export failed: '+e.message,true);console.error(e);}
+  btn.disabled=false;btn.innerHTML='📊 Export PPT';
+}
+
+async function pgExportWord(){
+  const sz=pgGetCurrentSize();if(!sz){toast('Select a page size first',true);return;}
+  const btn=document.getElementById('btnExportWord');
+  btn.disabled=true;btn.textContent='⏳ Generating…';
+  try{
+    const cvs=await pgCaptureFrame();
+    if(!cvs){btn.disabled=false;btn.innerHTML='📄 Export Word';return;}
+    // Build a minimal DOCX using raw XML (no external lib needed for image embed)
+    const imgData=cvs.toDataURL('image/png');
+    const base64=imgData.split(',')[1];
+    // Convert inches to EMU (1 inch = 914400 EMU)
+    const emuW=Math.round(sz.w*914400);
+    const emuH=Math.round(sz.h*914400);
+    // Simple DOCX structure
+    const docxBlob=await buildDocxBlob(base64,emuW,emuH,sz);
+    const name=(document.getElementById('tplName').value||'canvas').replace(/[^a-z0-9_\- ]/gi,'_');
+    const url=URL.createObjectURL(docxBlob);
+    const a=document.createElement('a');a.href=url;a.download=name+'.docx';a.click();
+    URL.revokeObjectURL(url);
+    toast('Word document exported');
+  }catch(e){toast('Word export failed: '+e.message,true);console.error(e);}
+  btn.disabled=false;btn.innerHTML='📄 Export Word';
+}
+
+async function buildDocxBlob(base64Png,emuW,emuH,sz){
+  // Load JSZip lazily
+  await new Promise((res,rej)=>{
+    if(window.JSZip){res();return;}
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    s.onload=res;s.onerror=rej;document.head.appendChild(s);
+  });
+  const zip=new window.JSZip();
+  // Convert base64 to binary
+  const bin=atob(base64Png);
+  const arr=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+
+  // [Content_Types].xml
+  zip.file('[Content_Types].xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Default Extension="png" ContentType="image/png"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`);
+
+  // _rels/.rels
+  zip.folder('_rels').file('.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`);
+
+  // word/media/canvas.png
+  zip.folder('word').folder('media').file('canvas.png',arr);
+
+  // word/_rels/document.xml.rels
+  zip.folder('word').folder('_rels').file('document.xml.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/canvas.png"/>
+</Relationships>`);
+
+  // Page size in twips (1 inch = 1440 twips)
+  const twW=Math.round(sz.w*1440);
+  const twH=Math.round(sz.h*1440);
+  const margin=720; // 0.5 inch margins
+  const imgTwW=twW-margin*2;
+  const imgTwH=Math.round(imgTwW*(emuH/emuW));
+  const imgEmuW=Math.round(imgTwW/1440*914400);
+  const imgEmuH=Math.round(imgTwH/1440*914400);
+
+  // word/document.xml
+  zip.folder('word').file('document.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:o="urn:schemas-microsoft-com:office:office"
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"
+  xmlns:v="urn:schemas-microsoft-com:vml"
+  xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing"
+  xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+  xmlns:w10="urn:schemas-microsoft-com:office:word"
+  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+  xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"
+  xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup"
+  xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk"
+  xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml"
+  xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
+  mc:Ignorable="w14 wp14">
+  <w:body>
+    <w:p>
+      <w:r>
+        <w:drawing>
+          <wp:inline distT="0" distB="0" distL="0" distR="0">
+            <wp:extent cx="${imgEmuW}" cy="${imgEmuH}"/>
+            <wp:effectExtent l="0" t="0" r="0" b="0"/>
+            <wp:docPr id="1" name="Canvas"/>
+            <wp:cNvGraphicFramePr>
+              <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+            </wp:cNvGraphicFramePr>
+            <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                  <pic:nvPicPr>
+                    <pic:cNvPr id="1" name="canvas.png"/>
+                    <pic:cNvPicPr/>
+                  </pic:nvPicPr>
+                  <pic:blipFill>
+                    <a:blip r:embed="rId1"/>
+                    <a:stretch><a:fillRect/></a:stretch>
+                  </pic:blipFill>
+                  <pic:spPr>
+                    <a:xfrm><a:off x="0" y="0"/><a:ext cx="${imgEmuW}" cy="${imgEmuH}"/></a:xfrm>
+                    <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+                  </pic:spPr>
+                </pic:pic>
+              </a:graphicData>
+            </a:graphic>
+          </wp:inline>
+        </w:drawing>
+      </w:r>
+    </w:p>
+    <w:sectPr>
+      <w:pgSz w:w="${twW}" w:h="${twH}"/>
+      <w:pgMar w:top="${margin}" w:right="${margin}" w:bottom="${margin}" w:left="${margin}"/>
+    </w:sectPr>
+  </w:body>
+</w:document>`);
+
+  return await zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+}
+/* ══ /PAGE EXPORT ══════════════════════════════════════════════ */
+
+
+
+const grid=GridStack.init({
+  column:12,
+  cellHeight:60,
+  cellHeightUnit:'px',
+  margin:6,
+  float:false,
+  animate:true,
+  handle:'.widget-head',
+  resizable:{handles:'se'},
+  acceptWidgets:'.widget-item',
+  removable:false,
+  disableOneColumnMode:true,
+  draggable:{scroll:true,appendTo:'body'},
+},'#grid');
+
+GridStack.setupDragIn('.widget-item',{
+  appendTo:'body',
+  helper(el){
+    const clone=el.cloneNode(true);
+    clone.style.cssText='width:200px;height:60px;opacity:0.85;pointer-events:none;background:var(--surface);border:2px dashed var(--gold);border-radius:8px;display:flex;align-items:center;padding:0 12px;font-size:12px;color:var(--gold);font-family:DM Sans,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;';
+    return clone;
+  },
+  cursorAt:{top:30,left:100},
+});
 
 // FIX: inject content in-place — no removeWidget in dropped handler
 grid.on('dropped',(ev,prev,newItem)=>{
