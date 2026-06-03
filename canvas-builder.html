@@ -2450,6 +2450,15 @@ const grid=GridStack.init({
   disableOneColumnMode:true,
 },'#grid');
 
+// GridStack's bundled CSS only covers .gs-12; generate width/left rules for 48 cols
+(function(){
+  const COLS=48; let css='';
+  for(let w=1;w<=COLS;w++) css+='#grid>.grid-stack-item[gs-w="'+w+'"]{width:'+(w/COLS*100)+'%}\n';
+  for(let x=0;x<COLS;x++)  css+='#grid>.grid-stack-item[gs-x="'+x+'"]{left:'+(x/COLS*100)+'%}\n';
+  const st=document.createElement('style'); st.id='gs-cols-48'; st.textContent=css;
+  document.head.appendChild(st);
+})();
+
 GridStack.setupDragIn('.widget-item',{appendTo:'body',helper:'clone',cursorAt:{top:25,left:30}});
 
 // FIX: inject content in-place — no removeWidget in dropped handler
