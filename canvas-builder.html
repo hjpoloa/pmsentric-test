@@ -1912,23 +1912,24 @@ async function pgCaptureFrame(){
   if(!ov){toast('No page grid active',true);return null;}
   const frame=ov.querySelector('.pg-frame');
   if(!frame)return null;
+  const gridEl=document.getElementById('grid');
+  if(!gridEl){toast('Nothing to capture',true);return null;}
   const h2c=await loadHtml2Canvas();
-  // Temporarily hide the overlay dashes so the capture is clean
-  frame.style.border='none';
-  const lbl=frame.querySelector('.pg-label');
-  if(lbl)lbl.style.display='none';
-  const innerLines=frame.querySelector('.pg-inner-lines');
-  if(innerLines)innerLines.style.display='none';
-  const cvs=await h2c(frame,{
-    backgroundColor: document.documentElement.classList.contains('light')?'#FFFFFF':'#080A0F',
-    scale:2,
-    useCORS:true,
-    allowTaint:true,
-    logging:false
-  });
-  frame.style.border='';
-  if(lbl)lbl.style.display='';
-  if(innerLines)innerLines.style.display='';
+  // The widgets live in #grid; the frame is just an overlay box. Capture the
+  // grid content cropped to the frame's rectangle (mapped into grid coords).
+  const fr=frame.getBoundingClientRect(), gr=gridEl.getBoundingClientRect();
+  const cropX=Math.max(0,fr.left-gr.left), cropY=Math.max(0,fr.top-gr.top);
+  const light=document.documentElement.classList.contains('light');
+  let cvs=null;
+  try{
+    cvs=await h2c(gridEl,{
+      backgroundColor: light?'#FFFFFF':'#080A0F',
+      scale:2, useCORS:true, allowTaint:true, logging:false,
+      x:cropX, y:cropY, width:fr.width, height:fr.height,
+      windowWidth:document.documentElement.scrollWidth,
+      windowHeight:Math.max(document.documentElement.scrollHeight, gridEl.scrollHeight+200)
+    });
+  }catch(e){toast('Capture failed: '+e.message,true);console.error(e);return null;}
   return cvs;
 }
 
@@ -2142,40 +2143,47 @@ function pgEmitGantt(pptx,slide,cell,r,C){
   });
 }
 
-function pgExportPPT(){
+function pgExportPPT(){pgExportChooser('ppt');}
+function pgExportWord(){pgExportChooser('word');}
+function pgExportChooser(kind){
   const sz=pgGetCurrentSize();if(!sz){toast('Select a page size first',true);return;}
   const type=document.getElementById('pgType').value;
   if(type!=='ppt'&&type!=='word'&&type!=='arch'){toast('Select a page size first',true);return;}
   const nodes=(typeof grid!=='undefined'&&grid.engine&&grid.engine.nodes)?grid.engine.nodes:[];
   if(!nodes.length){toast('Add widgets to the canvas first',true);return;}
-  // Mode chooser
-  let modal=document.getElementById('pptModeModal');
+  const isPpt=kind==='ppt';
+  const app=isPpt?'PowerPoint':'Word', place=isPpt?'slide':'document';
+  const editDesc=isPpt
+    ? 'Native text, charts &amp; tables — edit numbers, text, colors in PowerPoint. Styling approximates the on-screen look.'
+    : 'Native headings, KPI text &amp; tables you can edit in Word. Charts are embedded as images (Word cannot edit chart data).';
+  let modal=document.getElementById('exportModeModal');
   if(!modal){
     modal=document.createElement('div');
-    modal.id='pptModeModal';modal.className='pdf-modal-backdrop';
-    modal.innerHTML=`
-      <div class="pdf-modal" style="max-width:440px">
-        <div class="pdf-modal-head">
-          <div class="pdf-modal-title">Export PowerPoint</div>
-          <button class="btn" onclick="document.getElementById('pptModeModal').style.display='none'">✕ Close</button>
-        </div>
-        <div class="pdf-modal-body" style="padding:18px;display:flex;flex-direction:column;gap:12px">
-          <div style="font-size:12px;color:var(--text-mid)">Choose how the canvas is placed on the slide:</div>
-          <button class="btn btn-gold" id="pptModeEditable" style="text-align:left;padding:12px 14px;line-height:1.4">
-            <div style="font-weight:700">✏️ Editable elements</div>
-            <div style="font-size:11px;opacity:.8">Native text, charts &amp; tables — edit numbers, text, colors in PowerPoint. Styling approximates the on-screen look.</div>
-          </button>
-          <button class="btn" id="pptModeImage" style="text-align:left;padding:12px 14px;line-height:1.4;border:1px solid var(--border2)">
-            <div style="font-weight:700">🖼️ Image</div>
-            <div style="font-size:11px;opacity:.8">Pixel-perfect snapshot of the page region as a single picture. Not editable.</div>
-          </button>
-        </div>
-      </div>`;
+    modal.id='exportModeModal';modal.className='pdf-modal-backdrop';
     document.body.appendChild(modal);
   }
+  modal.innerHTML=`
+    <div class="pdf-modal" style="max-width:440px">
+      <div class="pdf-modal-head">
+        <div class="pdf-modal-title">Export ${app}</div>
+        <button class="btn" onclick="document.getElementById('exportModeModal').style.display='none'">✕ Close</button>
+      </div>
+      <div class="pdf-modal-body" style="padding:18px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-size:12px;color:var(--text-mid)">Choose how the canvas is placed in the ${place}:</div>
+        <button class="btn btn-gold" id="emEditable" style="text-align:left;padding:12px 14px;line-height:1.4">
+          <div style="font-weight:700">✏️ Editable elements</div>
+          <div style="font-size:11px;opacity:.8">${editDesc}</div>
+        </button>
+        <button class="btn" id="emImage" style="text-align:left;padding:12px 14px;line-height:1.4;border:1px solid var(--border2)">
+          <div style="font-weight:700">🖼️ Image</div>
+          <div style="font-size:11px;opacity:.8">Pixel-perfect snapshot of the page region as a single picture. Not editable.</div>
+        </button>
+      </div>
+    </div>`;
   modal.style.display='flex';
-  modal.querySelector('#pptModeEditable').onclick=()=>{modal.style.display='none';pgRunPPTExport('editable',sz,nodes);};
-  modal.querySelector('#pptModeImage').onclick=()=>{modal.style.display='none';pgRunPPTExport('image',sz,nodes);};
+  const run=isPpt?pgRunPPTExport:pgRunWordExport;
+  modal.querySelector('#emEditable').onclick=()=>{modal.style.display='none';run('editable',sz,nodes);};
+  modal.querySelector('#emImage').onclick=()=>{modal.style.display='none';run('image',sz,nodes);};
 }
 
 async function pgRunPPTExport(mode,sz,nodes){
@@ -2206,28 +2214,115 @@ async function pgRunPPTExport(mode,sz,nodes){
   btn.disabled=false;btn.innerHTML='📊 Export PPT';
 }
 
-async function pgExportWord(){
-  const sz=pgGetCurrentSize();if(!sz){toast('Select a page size first',true);return;}
+async function pgRunWordExport(mode,sz,nodes){
   const btn=document.getElementById('btnExportWord');
   btn.disabled=true;btn.textContent='⏳ Generating…';
   try{
-    const cvs=await pgCaptureFrame();
-    if(!cvs){btn.disabled=false;btn.innerHTML='📄 Export Word';return;}
-    // Build a minimal DOCX using raw XML (no external lib needed for image embed)
-    const imgData=cvs.toDataURL('image/png');
-    const base64=imgData.split(',')[1];
-    // Convert inches to EMU (1 inch = 914400 EMU)
-    const emuW=Math.round(sz.w*914400);
-    const emuH=Math.round(sz.h*914400);
-    // Simple DOCX structure
-    const docxBlob=await buildDocxBlob(base64,emuW,emuH,sz);
+    let blob;
+    if(mode==='image'){
+      const cvs=await pgCaptureFrame();
+      if(!cvs){btn.disabled=false;btn.innerHTML='📄 Export Word';return;}
+      const base64=cvs.toDataURL('image/png').split(',')[1];
+      blob=await buildDocxBlob(base64,Math.round(sz.w*914400),Math.round(sz.h*914400),sz);
+    }else{
+      blob=await buildEditableDocxBlob(nodes,sz);
+    }
     const name=(document.getElementById('tplName').value||'canvas').replace(/[^a-z0-9_\- ]/gi,'_');
-    const url=URL.createObjectURL(docxBlob);
+    const url=URL.createObjectURL(blob);
     const a=document.createElement('a');a.href=url;a.download=name+'.docx';a.click();
     URL.revokeObjectURL(url);
-    toast('Word document exported');
+    toast(mode==='image'?'Word exported (image)':'Word exported (editable)');
   }catch(e){toast('Word export failed: '+e.message,true);console.error(e);}
   btn.disabled=false;btn.innerHTML='📄 Export Word';
+}
+
+async function loadJSZip(){
+  if(window.JSZip)return window.JSZip;
+  await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+  return window.JSZip;
+}
+function _xesc(s){return (''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+/* Editable DOCX: native headings, KPI text & tables; charts/gantt embedded as images.
+   Word is flow layout, so widgets are stacked in reading order (top-to-bottom, then left-to-right). */
+async function buildEditableDocxBlob(nodes,sz){
+  const JSZip=await loadJSZip();
+  const C=pgThemeColors();
+  const twW=Math.round(sz.w*1440), twH=Math.round(sz.h*1440), margin=720;
+  const usableEmu=Math.round((sz.w-1.0)*914400); // 0.5in margins each side
+  const ordered=[...nodes].sort((a,b)=>((a.y||0)-(b.y||0))||((a.x||0)-(b.x||0)));
+  const media=[]; // {name, bytes}
+  const rels=[]; // {id, target}
+  let relSeq=1, drawSeq=1;
+  const body=[];
+
+  function b64ToBytes(b64){const bin=atob(b64);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return arr;}
+  function addImageFromDataURL(durl){
+    const base64=durl.split(',')[1];if(!base64)return null;
+    const name='img'+media.length+'.png';
+    media.push({name,bytes:b64ToBytes(base64)});
+    const rid='rIdImg'+(relSeq++);
+    rels.push({id:rid,target:'media/'+name,type:'image'});
+    return rid;
+  }
+  function imgPara(durl,natW,natH){
+    const rid=addImageFromDataURL(durl);if(!rid)return;
+    const w=usableEmu, h=Math.round(usableEmu*(natH/natW));
+    const id=drawSeq++;
+    body.push(`<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${w}" cy="${h}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="${id}" name="img${id}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${id}" name="img${id}.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${w}" cy="${h}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`);
+  }
+  function heading(txt){
+    body.push(`<w:p><w:pPr><w:spacing w:before="160" w:after="60"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="${C.gold}"/><w:sz w:val="26"/></w:rPr><w:t xml:space="preserve">${_xesc(txt)}</w:t></w:r></w:p>`);
+  }
+  function para(txt,opts){opts=opts||{};const rpr=`${opts.bold?'<w:b/>':''}${opts.color?`<w:color w:val="${opts.color}"/>`:''}${opts.sz?`<w:sz w:val="${opts.sz}"/>`:''}`;body.push(`<w:p>${opts.align?`<w:pPr><w:jc w:val="${opts.align}"/></w:pPr>`:''}<w:r><w:rPr>${rpr}</w:rPr><w:t xml:space="preserve">${_xesc(txt)}</w:t></w:r></w:p>`);}
+  function tableXml(tbl){
+    const heads=[...tbl.querySelectorAll('thead th')].map(th=>th.innerText.trim());
+    const rows=[...tbl.querySelectorAll('tbody tr')].slice(0,60).map(tr=>[...tr.children].map(td=>td.innerText.trim()));
+    if(!heads.length)return;
+    const borders=`<w:tblBorders><w:top w:val="single" w:sz="4" w:color="${C.border}"/><w:left w:val="single" w:sz="4" w:color="${C.border}"/><w:bottom w:val="single" w:sz="4" w:color="${C.border}"/><w:right w:val="single" w:sz="4" w:color="${C.border}"/><w:insideH w:val="single" w:sz="4" w:color="${C.border}"/><w:insideV w:val="single" w:sz="4" w:color="${C.border}"/></w:tblBorders>`;
+    const hcells=heads.map(h=>`<w:tc><w:tcPr><w:shd w:val="clear" w:fill="${C.steel}"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/><w:sz w:val="16"/></w:rPr><w:t xml:space="preserve">${_xesc(h)}</w:t></w:r></w:p></w:tc>`).join('');
+    const brows=rows.map(r=>`<w:tr>${r.map(c=>`<w:tc><w:p><w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:t xml:space="preserve">${_xesc(c)}</w:t></w:r></w:p></w:tc>`).join('')}</w:tr>`).join('');
+    body.push(`<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblLayout w:type="autofit"/>${borders}</w:tblPr><w:tr>${hcells}</w:tr>${brows}</w:tbl><w:p/>`);
+  }
+
+  let h2c=null;
+  for(const n of ordered){
+    try{
+      const cell=n.el&&n.el.querySelector('.widget-cell');if(!cell)continue;
+      const type=cell.dataset.widgetType, def=W[type]||{}, bodyEl=cell.querySelector('.widget-body');
+      heading((def.icon?def.icon+'  ':'')+(def.title||type));
+      if(type.indexOf('kpi')===0){
+        const v=cell.querySelector('.kpi-val'),u=cell.querySelector('.kpi-unit'),sub=cell.querySelector('.kpi-sub');
+        if(v)para(v.innerText.trim(),{bold:true,sz:48,color:(pgHex(getComputedStyle(v).color)||C.gold)});
+        if(u)para(u.innerText.trim(),{color:C.textMid,sz:18});
+        if(sub)para(sub.innerText.trim(),{color:C.textMid,sz:16});
+        continue;
+      }
+      if(type==='note'){const ta=cell.querySelector('textarea');para((ta?ta.value:'').trim()||' ',{color:C.textMid,sz:22});continue;}
+      const ch=bodyEl&&S.charts.get(bodyEl);
+      const tbl=bodyEl&&bodyEl.querySelector('table');
+      if(ch&&ch.canvas){imgPara(ch.canvas.toDataURL('image/png'),ch.canvas.width||600,ch.canvas.height||340);}
+      if(tbl){tableXml(tbl);continue;}
+      if(ch)continue;
+      // gantt or other visual: rasterize the cell body
+      if(bodyEl){if(!h2c)h2c=await loadHtml2Canvas();const cap=await h2c(bodyEl,{backgroundColor:'#'+C.bg,scale:2,useCORS:true,allowTaint:true,logging:false});imgPara(cap.toDataURL('image/png'),cap.width,cap.height);}
+    }catch(err){console.error('word widget failed',err);}
+  }
+
+  const zip=new JSZip();
+  const imgDefault=media.length?'<Default Extension="png" ContentType="image/png"/>':'';
+  zip.file('[Content_Types].xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>${imgDefault}<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`);
+  zip.folder('_rels').file('.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+  const wfolder=zip.folder('word');
+  if(media.length){const mf=wfolder.folder('media');media.forEach(m=>mf.file(m.name,m.bytes));}
+  const relXml=rels.map(r=>`<Relationship Id="${r.id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="${r.target}"/>`).join('');
+  wfolder.folder('_rels').file('document.xml.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${relXml}</Relationships>`);
+  wfolder.file('document.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body.join('')}<w:sectPr><w:pgSz w:w="${twW}" w:h="${twH}"/><w:pgMar w:top="${margin}" w:right="${margin}" w:bottom="${margin}" w:left="${margin}"/></w:sectPr></w:body></w:document>`);
+  return await zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
 }
 
 async function buildDocxBlob(base64Png,emuW,emuH,sz){
