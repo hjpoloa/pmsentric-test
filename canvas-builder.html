@@ -180,6 +180,12 @@ body>.widget-item{transition:none!important;}
 .wc-pill{background:var(--surface);border:1px solid var(--border2);color:var(--text-mid);font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;border-radius:9px;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.05em}
 .wc-pill.active{background:var(--gold-glow);border-color:var(--gold-dim);color:var(--gold)}
 .wc-pill:hover{border-color:var(--gold-dim)}
+.wc-fs{display:inline-flex;align-items:center;gap:3px;margin-left:auto;border:1px solid var(--border2);border-radius:4px;padding:1px 3px;background:var(--surface)}
+.wc-fs .wc-label{margin:0 2px}
+.wc-fs-btn{background:transparent;border:none;color:var(--text-mid);cursor:pointer;border-radius:3px;font-size:12px;line-height:1;padding:2px 5px;font-family:'DM Mono',monospace;transition:all .15s}
+.wc-fs-btn:hover{color:var(--gold);background:var(--muted-bg)}
+.wc-fs-val{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);min-width:30px;text-align:center}
+.wh-actions .wa-toggle.active{color:var(--gold)}
 .widget-body{flex:1 1 auto;min-height:0;padding:10px;overflow:auto;position:relative;width:100%}
 .widget-body.no-pad{padding:0} .widget-body.tight{padding:6px}
 .w-ph{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-dim);text-align:center;gap:5px}
@@ -950,6 +956,8 @@ function eX(s){return String(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;'
 function ph(body,icon,txt){body.innerHTML=`<div class="w-ph"><div class="wpi">${icon}</div><div class="wpt">${eT(txt)}</div><div class="wps">Load XER to populate</div></div>`;}
 function getCS(cell){try{return JSON.parse(cell.dataset.ctrlState||'{}');}catch{return{};}}
 function setCS(cell,k,v){const cs=getCS(cell);cs[k]=v;cell.dataset.ctrlState=JSON.stringify(cs);}
+function applyFS(cell){const b=cell.querySelector('.widget-body');if(!b)return;const fs=(getCS(cell).fs||100)/100;b.style.zoom=fs===1?'':fs;}
+function applyCtrlHidden(cell){const cb=cell.querySelector('.widget-controls');const tg=cell.querySelector('.wa-toggle');const hid=!!getCS(cell).chid;if(cb)cb.style.display=hid?'none':'';if(tg)tg.classList.toggle('active',!hid);}
 
 /* ══ SCURVE FILTER HELPERS ══════════════════════════════════ */
 function _scurveFilterBar(st,allWbs,maxDepth,c){
@@ -1726,7 +1734,7 @@ function buildCell(type,id,restored){
   cell.className='widget-cell';cell.dataset.widgetType=type;cell.dataset.widgetId=id;
   if(restored?.ctrlState)cell.dataset.ctrlState=restored.ctrlState;
   if(restored?.noteText)cell.dataset.noteText=restored.noteText;
-  cell.innerHTML=`<div class="widget-head"><div class="wh-icon">${def.icon}</div><div class="wh-title">${eT(def.title)}</div><div class="wh-actions"><button class="wa-refresh" title="Refresh">↻</button><button class="wa-remove" title="Remove">✕</button></div></div>${def.ctrl?'<div class="widget-controls"></div>':''}<div class="widget-body"></div>`;
+  cell.innerHTML=`<div class="widget-head"><div class="wh-icon">${def.icon}</div><div class="wh-title">${eT(def.title)}</div><div class="wh-actions">${def.ctrl?'<button class="wa-toggle" title="Show/hide settings">⚙</button>':''}<button class="wa-refresh" title="Refresh">↻</button><button class="wa-remove" title="Remove">✕</button></div></div>${def.ctrl?'<div class="widget-controls"></div>':''}<div class="widget-body"></div>`;
   return cell;
 }
 
@@ -1737,12 +1745,17 @@ function wireCell(gsItem,cell){
     grid.removeWidget(gsItem);updateEmptyState();autoSave();
   });
   cell.querySelector('.wa-refresh').addEventListener('click',e=>{e.stopPropagation();rerenderWidget(cell);});
+  const tg=cell.querySelector('.wa-toggle');
+  if(tg)tg.addEventListener('click',e=>{e.stopPropagation();setCS(cell,'chid',!getCS(cell).chid);applyCtrlHidden(cell);autoSave();});
   const cb=cell.querySelector('.widget-controls');
   if(cb){
     rebuildCtrl(cell);
     cb.addEventListener('change',e=>{const k=e.target.dataset.ctrl;if(!k)return;setCS(cell,k,e.target.value);rerenderWidget(cell);});
     cb.addEventListener('input',e=>{const k=e.target.dataset.ctrl;if(k&&e.target.tagName==='INPUT'){setCS(cell,k,e.target.value);clearTimeout(cell._st);cell._st=setTimeout(()=>rerenderWidget(cell),300);}});
-    cb.addEventListener('click',e=>{const btn=e.target.closest('[data-ctrl-toggle]');if(!btn)return;const k=btn.dataset.ctrlToggle,v=btn.dataset.ctrlVal;const cur=getCS(cell)[k];setCS(cell,k,cur===v?'all':v);rebuildCtrl(cell);rerenderWidget(cell);});
+    cb.addEventListener('click',e=>{
+      const fsb=e.target.closest('[data-fs]');
+      if(fsb){let v=(+(getCS(cell).fs||100))+(+fsb.dataset.fs)*10;v=Math.max(60,Math.min(200,v));setCS(cell,'fs',v);applyFS(cell);rebuildCtrl(cell);rerenderWidget(cell);autoSave();return;}
+      const btn=e.target.closest('[data-ctrl-toggle]');if(!btn)return;const k=btn.dataset.ctrlToggle,v=btn.dataset.ctrlVal;const cur=getCS(cell)[k];setCS(cell,k,cur===v?'all':v);rebuildCtrl(cell);rerenderWidget(cell);});
   }
 }
 
@@ -1750,6 +1763,8 @@ function rebuildCtrl(cell){
   const cb=cell.querySelector('.widget-controls');if(!cb)return;
   const def=W[cell.dataset.widgetType];if(!def||!def.ctrl)return;
   cb.innerHTML=def.ctrl(cell,cb);
+  const fs=getCS(cell).fs||100;
+  cb.insertAdjacentHTML('beforeend',`<span class="wc-fs"><span class="wc-label">Text</span><button class="wc-fs-btn" data-fs="-1" title="Smaller text">A−</button><span class="wc-fs-val">${fs}%</span><button class="wc-fs-btn" data-fs="1" title="Larger text">A+</button></span>`);
   // Inject WBS dropdown if host exists
   const host=cb.querySelector('.wbs-dd-host');
   if(host)renderWBSDropdown(host,cell,'wbs');
@@ -1761,6 +1776,7 @@ function rerenderWidget(cell){
   const body=cell.querySelector('.widget-body');const ch=S.charts.get(body);if(ch){try{ch.destroy();}catch(_){}S.charts.delete(body);}
   body.className='widget-body';body.innerHTML='';
   try{def.render(body,cell);}catch(e){console.error(e);ph(body,'⚠','Render error: '+e.message);}
+  applyFS(cell);
 }
 function rerenderAll(){
   document.querySelectorAll('.widget-cell').forEach(cell=>{const def=W[cell.dataset.widgetType];if(def?.ctrl)rebuildCtrl(cell);rerenderWidget(cell);});
@@ -1859,7 +1875,7 @@ function pgApply(){
   }
   frame.appendChild(inner);
   ov.appendChild(frame);
-  wrap.appendChild(ov);
+  (document.getElementById('grid')||wrap).appendChild(ov);
 }
 
 function pgClearOverlay(){
@@ -2506,6 +2522,7 @@ function addWidgetProg(type,pos,restored){
   console.log('[PMS-Canvas] Added widget:',type,'id:',id,'gsItem dims:',gsItem.offsetWidth+'x'+gsItem.offsetHeight,'contentDiv dims:',contentDiv.offsetWidth+'x'+contentDiv.offsetHeight,'cell dims:',cell.offsetWidth+'x'+cell.offsetHeight);
   wireCell(gsItem,cell);
   if(def.ctrl)rebuildCtrl(cell);
+  applyCtrlHidden(cell);applyFS(cell);
   setTimeout(()=>{
     const body=cell.querySelector('.widget-body');
     console.log('[PMS-Canvas] Render:',type,'body dims:',body?.offsetWidth+'x'+body?.offsetHeight,'taskData count:',Object.keys(S.taskData).length);
