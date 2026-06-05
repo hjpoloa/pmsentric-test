@@ -321,53 +321,6 @@ tr.fp-banner .fp-banner-badge{font-family:'Space Mono',monospace;font-size:9px;p
 .btn-gold{background:linear-gradient(135deg,#c8922a,#a8721a);color:#fff;border:none;}
 .btn-gold:hover{box-shadow:0 0 16px rgba(200,146,42,.4);}
 </style>
-
-<!-- ══ PMS LOADING BAR ══ -->
-<style>
-#pmsLoadBar{
-  position:fixed;top:0;left:0;right:0;height:3px;z-index:99999;
-  pointer-events:none;overflow:hidden;
-  background:transparent;
-  display:none;
-}
-#pmsLoadBar.active{ display:block; }
-#pmsLoadBarFill{
-  height:100%;width:0%;
-  background:linear-gradient(90deg,#3b82f6,#06b6d4,#6366f1);
-  background-size:200% 100%;
-  animation:pmsBarShimmer 1.2s linear infinite, pmsBarGrow 2.5s ease-out forwards;
-  box-shadow:0 0 8px rgba(59,130,246,.7);
-}
-@keyframes pmsBarShimmer{
-  0%{background-position:200% 0}
-  100%{background-position:-200% 0}
-}
-@keyframes pmsBarGrow{
-  0%{width:0%}
-  40%{width:70%}
-  80%{width:88%}
-  100%{width:92%}
-}
-#pmsLoadOverlay{
-  position:fixed;top:0;left:0;right:0;bottom:0;
-  z-index:99998;pointer-events:none;
-  background:transparent;
-  display:none;
-}
-#pmsLoadLabel{
-  position:fixed;top:10px;left:50%;transform:translateX(-50%);
-  z-index:100000;pointer-events:none;
-  background:rgba(15,23,42,.85);
-  color:#94a3b8;font-size:12px;font-family:inherit;
-  padding:5px 14px;border-radius:20px;
-  border:1px solid rgba(148,163,184,.18);
-  backdrop-filter:blur(8px);
-  display:none;white-space:nowrap;
-  letter-spacing:.03em;
-}
-</style>
-<div id="pmsLoadBar"><div id="pmsLoadBarFill"></div></div>
-<div id="pmsLoadLabel"></div>
 </head>
 <body>
 <script>if(window.self !== window.top){ window.top.location.href = window.self.location.href; }
@@ -1308,12 +1261,10 @@ function loadFileText(text,name){
     const critCount=Object.values(S.taskData).filter(t=>t.projId===S.currentProjId&&isCritical(t)).length;
     setSt(`Loaded: ${name}  ·  ${projs.length} proj  ·  ${Object.keys(S.taskData).length} activities  ·  ${critCount} on driving path`,'ok');
     if(!__xerSyncInbound)__xerBroadcast({type:'xer:current:load',text:text,name:name});
-    pmsLoadingHide();
-  }catch(err){setSt('Error: '+err.message,'err');pmsLoadingHide();}
+  }catch(err){setSt('Error: '+err.message,'err');}
 }
 function loadFile(file){
   if(!file)return;setSt('Parsing '+file.name+'…','');
-  pmsLoadingShow('Parsing '+file.name+'…');
   const r=new FileReader();
   r.onload=e=>loadFileText(e.target.result,file.name);
   r.onerror=()=>setSt('Failed to read file.','err');
@@ -1358,7 +1309,6 @@ window.addEventListener('DOMContentLoaded',()=>{
       // Hide drop zone immediately — no flash
       document.getElementById('dropZone').style.display='none';
       setSt('Restoring file…','');
-      pmsLoadingShow('Restoring XER…');
       PMXerStore.load().then(function(stored){
         if(stored){
           try{ loadFileText(stored,name); }
@@ -1370,7 +1320,6 @@ window.addEventListener('DOMContentLoaded',()=>{
         } else {
           document.getElementById('dropZone').style.display='';
           setSt('Ready — load an XER file to begin','');
-          pmsLoadingHide();
         }
       });
     } else {
@@ -1447,36 +1396,6 @@ function renderAppUserPill(user, licenseActive){
   function start(){ PMAuth.onAuthChange(function(user,licenseActive){ renderAppUserPill(user,licenseActive); }); }
   if(window.PMAuth)start();
   else{ const iv=setInterval(function(){if(window.PMAuth){clearInterval(iv);start();}},50); setTimeout(function(){if(!window.PMAuth){clearInterval(iv);renderAppUserPill(null,false);}},4000); }
-})();
-</script>
-
-<script>
-// ══ PMS LOADING BAR HELPERS ══
-(function(){
-  function _bar(){ return document.getElementById('pmsLoadBar'); }
-  function _fill(){ return document.getElementById('pmsLoadBarFill'); }
-  function _lbl(){ return document.getElementById('pmsLoadLabel'); }
-  window.pmsLoadingShow = function(msg){
-    var b=_bar(),f=_fill(),l=_lbl();
-    if(!b)return;
-    // Reset animation by replacing the fill element
-    var nf=f.cloneNode(true);
-    f.parentNode.replaceChild(nf,f);
-    b.classList.add('active');
-    if(l){ l.textContent=msg||'Parsing XER…'; l.style.display='block'; }
-  };
-  window.pmsLoadingHide = function(){
-    var b=_bar(),f=document.getElementById('pmsLoadBarFill'),l=_lbl();
-    if(!b)return;
-    // Snap to 100% then fade out
-    if(f){ f.style.animation='none'; f.style.width='100%';
-      f.style.transition='width .15s ease'; }
-    if(l){ l.style.display='none'; }
-    setTimeout(function(){
-      b.classList.remove('active');
-      if(f){ f.style.width='0%'; f.style.transition=''; f.style.animation=''; }
-    }, 220);
-  };
 })();
 </script>
 </body>
