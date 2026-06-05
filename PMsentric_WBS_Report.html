@@ -810,6 +810,65 @@ header {
 </style>
 </head>
 <body>
+<!-- ══ PMS LOADING BAR (self-contained, auto-injected) ══ -->
+<script>
+(function(){
+  // Build the bar + label once, append to documentElement so it survives
+  // before <body> children render. Provides window.pmsLoadingShow/Hide.
+  var CSS = ''
+    + '#pmsLoadBar{position:fixed;top:0;left:0;right:0;height:3px;z-index:2147483646;'
+    + 'pointer-events:none;overflow:hidden;background:transparent;display:none}'
+    + '#pmsLoadBar.active{display:block}'
+    + '#pmsLoadBarFill{height:100%;width:0%;'
+    + 'background:linear-gradient(90deg,#3b82f6,#06b6d4,#6366f1);background-size:200% 100%;'
+    + 'animation:pmsBarShimmer 1.2s linear infinite, pmsBarGrow 2.5s ease-out forwards;'
+    + 'box-shadow:0 0 8px rgba(59,130,246,.7)}'
+    + '@keyframes pmsBarShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}'
+    + '@keyframes pmsBarGrow{0%{width:0%}40%{width:70%}80%{width:88%}100%{width:92%}}'
+    + '#pmsLoadLabel{position:fixed;top:10px;left:50%;transform:translateX(-50%);'
+    + 'z-index:2147483647;pointer-events:none;background:rgba(15,23,42,.85);'
+    + 'color:#cbd5e1;font-size:12px;font-family:inherit;padding:5px 14px;border-radius:20px;'
+    + 'border:1px solid rgba(148,163,184,.18);backdrop-filter:blur(8px);'
+    + 'display:none;white-space:nowrap;letter-spacing:.03em}';
+
+  function build(){
+    if(document.getElementById('pmsLoadBar')) return;
+    var st=document.createElement('style'); st.textContent=CSS;
+    document.head ? document.head.appendChild(st) : document.documentElement.appendChild(st);
+    var bar=document.createElement('div'); bar.id='pmsLoadBar';
+    bar.innerHTML='<div id="pmsLoadBarFill"></div>';
+    var lbl=document.createElement('div'); lbl.id='pmsLoadLabel';
+    var root=document.body||document.documentElement;
+    root.appendChild(bar); root.appendChild(lbl);
+  }
+  if(document.body) build();
+  else document.addEventListener('DOMContentLoaded', build);
+
+  window.pmsLoadingShow=function(msg){
+    build();
+    var bar=document.getElementById('pmsLoadBar');
+    var fill=document.getElementById('pmsLoadBarFill');
+    var lbl=document.getElementById('pmsLoadLabel');
+    if(!bar||!fill) return;
+    // restart the grow animation by cloning the fill
+    var nf=fill.cloneNode(false); fill.parentNode.replaceChild(nf,fill);
+    bar.classList.add('active');
+    if(lbl){ lbl.textContent=msg||'Parsing XER\u2026'; lbl.style.display='block'; }
+  };
+  window.pmsLoadingHide=function(){
+    var bar=document.getElementById('pmsLoadBar');
+    var fill=document.getElementById('pmsLoadBarFill');
+    var lbl=document.getElementById('pmsLoadLabel');
+    if(!bar) return;
+    if(fill){ fill.style.animation='none'; fill.style.transition='width .15s ease'; fill.style.width='100%'; }
+    if(lbl){ lbl.style.display='none'; }
+    setTimeout(function(){
+      bar.classList.remove('active');
+      if(fill){ fill.style.width='0%'; fill.style.transition=''; fill.style.animation=''; }
+    },220);
+  };
+})();
+</script>
 <div class="app">
 
 <header>
@@ -1311,6 +1370,7 @@ function setupDrop(dropEl, inputEl, onLoad) {
   });
 }
 function readFile(file, cb) {
+  pmsLoadingShow('Parsing '+file.name+'\u2026');
   const r = new FileReader();
   r.onload = e => cb(e.target.result, file.name);
   r.readAsText(file, 'latin-1');
@@ -1346,8 +1406,10 @@ function onUpdateXerLoaded(text, name) {
     // Persist to sessionStorage for cross-tool sync
     PMXerStore.save(text,name||'file.xer');
     if (!window.__xerSyncInbound) { try { parent.postMessage({type:'xer:current:load', text:text, name:name||'file.xer'}, '*'); } catch(e){} }
+    pmsLoadingHide();
   } catch (err) {
     setSt('Error parsing Update XER: ' + err.message, 'err');
+    pmsLoadingHide();
   }
 }
 
@@ -4411,6 +4473,7 @@ function escH(s) {
     if(hasFile){
       PMXerStore.load().then(function(stored){
         if(!stored) return;
+        pmsLoadingShow('Restoring XER\u2026');
         const run = ()=>{ if(typeof onUpdateXerLoaded==='function'){ window.__xerSyncInbound = true; try{ onUpdateXerLoaded(stored, name); } finally { window.__xerSyncInbound = false; } } };
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>setTimeout(run, 50));
         else setTimeout(run, 50);
