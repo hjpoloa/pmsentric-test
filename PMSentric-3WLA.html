@@ -403,8 +403,8 @@ tr.crit td:first-child{box-shadow:inset 3px 0 0 #f87171;}
     var bar=document.createElement('div'); bar.id='pmsLoadBar';
     bar.innerHTML='<div id="pmsLoadCard"><div id="pmsLoadLabel"></div>'
       + '<div id="pmsLoadTrack"><div id="pmsLoadBarFill"></div></div></div>';
-    var root=document.body||document.documentElement;
-    root.appendChild(bar);
+    // append to <html> so wizard/step re-renders of <body> can't remove it
+    document.documentElement.appendChild(bar);
   }
   if(document.body) build();
   else document.addEventListener('DOMContentLoaded', build);

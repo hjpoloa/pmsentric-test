@@ -824,8 +824,8 @@ header {
     var bar=document.createElement('div'); bar.id='pmsLoadBar';
     bar.innerHTML='<div id="pmsLoadCard"><div id="pmsLoadLabel"></div>'
       + '<div id="pmsLoadTrack"><div id="pmsLoadBarFill"></div></div></div>';
-    var root=document.body||document.documentElement;
-    root.appendChild(bar);
+    // append to <html> so wizard/step re-renders of <body> can't remove it
+    document.documentElement.appendChild(bar);
   }
   if(document.body) build();
   else document.addEventListener('DOMContentLoaded', build);
@@ -4414,12 +4414,14 @@ function escH(s) {
     const name    = PMXerStore.getName();
     console.log('[PMS-XER] Auto-load check: hasFile='+hasFile+', name='+name);
     if(hasFile){
+      pmsLoadingShow('Restoring XER\u2026');
       PMXerStore.load().then(function(stored){
-        if(!stored) return;
-        pmsLoadingShow('Restoring XER\u2026');
+        if(!stored){ pmsLoadingHide(); return; }
         const run = ()=>{ if(typeof __pmsOnUpdateXerLoaded==='function'){ window.__xerSyncInbound = true; try{ __pmsOnUpdateXerLoaded(stored, name); } finally { window.__xerSyncInbound = false; } } };
-        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>setTimeout(run, 50));
-        else setTimeout(run, 50);
+        // double rAF so the loading bar paints before the synchronous parse blocks
+        var go = ()=> requestAnimationFrame(()=> requestAnimationFrame(run));
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
+        else go();
       });
     }
   }catch(e){}
