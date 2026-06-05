@@ -10,6 +10,8 @@
   // "hide dropzone" guards still work with no flash.
   var DB='pmsentric_xer', STORE='kv', KEY='current';
   var FLAG='pms_xer_has', NAME='pms_xer_current_name';
+  var BKEY='baseline';
+  var BFLAG='pms_xer_bl_has', BNAME='pms_xer_bl_name';
 
   function openDB(){
     return new Promise(function(res,rej){
@@ -51,6 +53,36 @@
       });
     });
   }
+  function idbSetK(key,text){
+    return openDB().then(function(db){
+      return new Promise(function(res,rej){
+        var tx=db.transaction(STORE,'readwrite');
+        tx.objectStore(STORE).put(text,key);
+        tx.oncomplete=function(){ res(true); };
+        tx.onerror=function(){ rej(tx.error); };
+      });
+    });
+  }
+  function idbGetK(key){
+    return openDB().then(function(db){
+      return new Promise(function(res,rej){
+        var tx=db.transaction(STORE,'readonly');
+        var g=tx.objectStore(STORE).get(key);
+        g.onsuccess=function(){ res(g.result||null); };
+        g.onerror=function(){ rej(g.error); };
+      });
+    });
+  }
+  function idbDelK(key){
+    return openDB().then(function(db){
+      return new Promise(function(res,rej){
+        var tx=db.transaction(STORE,'readwrite');
+        tx.objectStore(STORE).delete(key);
+        tx.oncomplete=function(){ res(true); };
+        tx.onerror=function(){ rej(tx.error); };
+      });
+    });
+  }
 
   window.PMXerStore={
     // hasFlag(): synchronous — for the early dropzone-hide guards
@@ -84,6 +116,37 @@
       try{ localStorage.removeItem(FLAG); localStorage.removeItem(NAME); }catch(e){}
       return idbDel().then(function(){
         console.log('[PMS-XER] Cleared from IndexedDB');
+        return true;
+      }).catch(function(){ return false; });
+    },
+    // ── Baseline persistence (mirrors current-XER API) ──
+    hasBaselineFlag:function(){
+      try{ return !!localStorage.getItem(BFLAG); }catch(e){ return false; }
+    },
+    getBaselineName:function(){
+      try{ return localStorage.getItem(BNAME)||'baseline.xer'; }catch(e){ return 'baseline.xer'; }
+    },
+    saveBaseline:function(text,name){
+      try{ localStorage.setItem(BFLAG,'1'); localStorage.setItem(BNAME,name||'baseline.xer'); }catch(e){}
+      return idbSetK(BKEY,text).then(function(){
+        console.log('[PMS-XER] Baseline saved to IndexedDB:',name||'baseline.xer','('+text.length+' chars)');
+        return true;
+      }).catch(function(err){
+        console.warn('[PMS-XER] Baseline IndexedDB save failed:',err);
+        try{ localStorage.removeItem(BFLAG); }catch(e){}
+        return false;
+      });
+    },
+    loadBaseline:function(){
+      if(!this.hasBaselineFlag()) return Promise.resolve(null);
+      return idbGetK(BKEY).catch(function(err){
+        console.warn('[PMS-XER] Baseline IndexedDB load failed:',err); return null;
+      });
+    },
+    clearBaseline:function(){
+      try{ localStorage.removeItem(BFLAG); localStorage.removeItem(BNAME); }catch(e){}
+      return idbDelK(BKEY).then(function(){
+        console.log('[PMS-XER] Baseline cleared from IndexedDB');
         return true;
       }).catch(function(){ return false; });
     }

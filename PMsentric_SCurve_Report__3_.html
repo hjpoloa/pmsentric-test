@@ -10,6 +10,8 @@
   // "hide dropzone" guards still work with no flash.
   var DB='pmsentric_xer', STORE='kv', KEY='current';
   var FLAG='pms_xer_has', NAME='pms_xer_current_name';
+  var BKEY='baseline';
+  var BFLAG='pms_xer_bl_has', BNAME='pms_xer_bl_name';
 
   function openDB(){
     return new Promise(function(res,rej){
@@ -51,6 +53,36 @@
       });
     });
   }
+  function idbSetK(key,text){
+    return openDB().then(function(db){
+      return new Promise(function(res,rej){
+        var tx=db.transaction(STORE,'readwrite');
+        tx.objectStore(STORE).put(text,key);
+        tx.oncomplete=function(){ res(true); };
+        tx.onerror=function(){ rej(tx.error); };
+      });
+    });
+  }
+  function idbGetK(key){
+    return openDB().then(function(db){
+      return new Promise(function(res,rej){
+        var tx=db.transaction(STORE,'readonly');
+        var g=tx.objectStore(STORE).get(key);
+        g.onsuccess=function(){ res(g.result||null); };
+        g.onerror=function(){ rej(g.error); };
+      });
+    });
+  }
+  function idbDelK(key){
+    return openDB().then(function(db){
+      return new Promise(function(res,rej){
+        var tx=db.transaction(STORE,'readwrite');
+        tx.objectStore(STORE).delete(key);
+        tx.oncomplete=function(){ res(true); };
+        tx.onerror=function(){ rej(tx.error); };
+      });
+    });
+  }
 
   window.PMXerStore={
     // hasFlag(): synchronous — for the early dropzone-hide guards
@@ -84,6 +116,37 @@
       try{ localStorage.removeItem(FLAG); localStorage.removeItem(NAME); }catch(e){}
       return idbDel().then(function(){
         console.log('[PMS-XER] Cleared from IndexedDB');
+        return true;
+      }).catch(function(){ return false; });
+    },
+    // ── Baseline persistence (mirrors current-XER API) ──
+    hasBaselineFlag:function(){
+      try{ return !!localStorage.getItem(BFLAG); }catch(e){ return false; }
+    },
+    getBaselineName:function(){
+      try{ return localStorage.getItem(BNAME)||'baseline.xer'; }catch(e){ return 'baseline.xer'; }
+    },
+    saveBaseline:function(text,name){
+      try{ localStorage.setItem(BFLAG,'1'); localStorage.setItem(BNAME,name||'baseline.xer'); }catch(e){}
+      return idbSetK(BKEY,text).then(function(){
+        console.log('[PMS-XER] Baseline saved to IndexedDB:',name||'baseline.xer','('+text.length+' chars)');
+        return true;
+      }).catch(function(err){
+        console.warn('[PMS-XER] Baseline IndexedDB save failed:',err);
+        try{ localStorage.removeItem(BFLAG); }catch(e){}
+        return false;
+      });
+    },
+    loadBaseline:function(){
+      if(!this.hasBaselineFlag()) return Promise.resolve(null);
+      return idbGetK(BKEY).catch(function(err){
+        console.warn('[PMS-XER] Baseline IndexedDB load failed:',err); return null;
+      });
+    },
+    clearBaseline:function(){
+      try{ localStorage.removeItem(BFLAG); localStorage.removeItem(BNAME); }catch(e){}
+      return idbDelK(BKEY).then(function(){
+        console.log('[PMS-XER] Baseline cleared from IndexedDB');
         return true;
       }).catch(function(){ return false; });
     }
@@ -1409,10 +1472,7 @@ setupDrop(
   __pmsOnUpdateXerLoaded
 );
 
-setupDrop(
-  document.getElementById('dropBaseline'),
-  document.getElementById('baselineFileInput'),
-  (text, name) => {
+function __pmsOnBaselineXerLoaded(text, name) {
     B.byCode = parseBaselineXER(text);
     B.loaded = true;
     B.fileName = name;
@@ -1433,7 +1493,13 @@ setupDrop(
     } else {
       document.getElementById('statusText').textContent = 'Baseline loaded — load an Update XER to generate the S-Curve';
     }
+    PMXerStore.saveBaseline(text,name||'baseline.xer');
+    if (!window.__xerSyncInbound) { try { parent.postMessage({type:'xer:baseline:load', text:text, name:name||'baseline.xer'}, '*'); } catch(e){} }
   }
+setupDrop(
+  document.getElementById('dropBaseline'),
+  document.getElementById('baselineFileInput'),
+  __pmsOnBaselineXerLoaded
 );
 
 function clearUpdate() {
@@ -1477,6 +1543,8 @@ function clearBaseline() {
   } else {
     document.getElementById('statusText').textContent = 'Ready — Load an Update XER file to begin';
   }
+  PMXerStore.clearBaseline();
+  if (!window.__xerSyncInbound) { try { parent.postMessage({type:'xer:baseline:clear'}, '*'); } catch(e){} }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -4424,12 +4492,25 @@ function escH(s) {
     if(hasFile){
       pmsLoadingShow('Restoring XER\u2026');
       PMXerStore.load().then(function(stored){
-        if(!stored){ pmsLoadingHide(); return; }
-        const run = ()=>{ if(typeof __pmsOnUpdateXerLoaded==='function'){ window.__xerSyncInbound = true; try{ __pmsOnUpdateXerLoaded(stored, name); } finally { window.__xerSyncInbound = false; } } };
+        if(!stored){ pmsLoadingHide(); __pmsRestoreBaseline(); return; }
+        const run = ()=>{ if(typeof __pmsOnUpdateXerLoaded==='function'){ window.__xerSyncInbound = true; try{ __pmsOnUpdateXerLoaded(stored, name); } finally { window.__xerSyncInbound = false; } } __pmsRestoreBaseline(); };
         // double rAF so the loading bar paints before the synchronous parse blocks
         var go = ()=> requestAnimationFrame(()=> requestAnimationFrame(run));
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
         else go();
+      });
+    } else {
+      __pmsRestoreBaseline();
+    }
+    function __pmsRestoreBaseline(){
+      if(!PMXerStore.hasBaselineFlag()) return;
+      PMXerStore.loadBaseline().then(function(bl){
+        if(!bl) return;
+        if(typeof __pmsOnBaselineXerLoaded==='function'){
+          window.__xerSyncInbound = true;
+          try{ __pmsOnBaselineXerLoaded(bl, PMXerStore.getBaselineName()); }
+          finally { window.__xerSyncInbound = false; }
+        }
       });
     }
   }catch(e){}
