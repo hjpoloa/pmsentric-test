@@ -2343,33 +2343,6 @@ window.closeFile = function(){
       + '</div>'
       + clone.outerHTML
       + '
-// ══ PMS LOADING BAR HELPERS ══
-(function(){
-  function _bar(){ return document.getElementById('pmsLoadBar'); }
-  function _fill(){ return document.getElementById('pmsLoadBarFill'); }
-  function _lbl(){ return document.getElementById('pmsLoadLabel'); }
-  window.pmsLoadingShow = function(msg){
-    var b=_bar(),f=_fill(),l=_lbl();
-    if(!b)return;
-    // Reset animation by replacing the fill element
-    var nf=f.cloneNode(true);
-    f.parentNode.replaceChild(nf,f);
-    b.classList.add('active');
-    if(l){ l.textContent=msg||'Parsing XER…'; l.style.display='block'; }
-  };
-  window.pmsLoadingHide = function(){
-    var b=_bar(),f=document.getElementById('pmsLoadBarFill'),l=_lbl();
-    if(!b)return;
-    // Snap to 100% then fade out
-    if(f){ f.style.animation='none'; f.style.width='100%';
-      f.style.transition='width .15s ease'; }
-    if(l){ l.style.display='none'; }
-    setTimeout(function(){
-      b.classList.remove('active');
-      if(f){ f.style.width='0%'; f.style.transition=''; f.style.animation=''; }
-    }, 220);
-  };
-})();
 </body></html>';
     return html;
   }
@@ -2519,6 +2492,34 @@ window.closeFile = function(){
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- ══════════ /PMSENTRIC PDF EXPORT MODULE ══════════ -->
+
+<script>
+// ══ PMS LOADING BAR HELPERS ══
+(function(){
+  function _bar(){ return document.getElementById('pmsLoadBar'); }
+  function _fill(){ return document.getElementById('pmsLoadBarFill'); }
+  function _lbl(){ return document.getElementById('pmsLoadLabel'); }
+  window.pmsLoadingShow = function(msg){
+    var b=_bar(),f=_fill(),l=_lbl();
+    if(!b)return;
+    var nf=f.cloneNode(true);
+    f.parentNode.replaceChild(nf,f);
+    b.classList.add('active');
+    if(l){ l.textContent=msg||'Parsing XER…'; l.style.display='block'; }
+  };
+  window.pmsLoadingHide = function(){
+    var b=_bar(),f=document.getElementById('pmsLoadBarFill'),l=_lbl();
+    if(!b)return;
+    if(f){ f.style.animation='none'; f.style.width='100%';
+      f.style.transition='width .15s ease'; }
+    if(l){ l.style.display='none'; }
+    setTimeout(function(){
+      b.classList.remove('active');
+      if(f){ f.style.width='0%'; f.style.transition=''; f.style.animation=''; }
+    }, 220);
+  };
+})();
+</script>
 
 </body>
 </html>

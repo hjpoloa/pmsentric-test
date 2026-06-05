@@ -3174,6 +3174,7 @@ function printReportView() {
       + '</div>'
       + '<script>window.addEventListener("load",function(){setTimeout(function(){window.print();},300);});<\/script>'
       + '
+<script>
 // ══ PMS LOADING BAR HELPERS ══
 (function(){
   function _bar(){ return document.getElementById('pmsLoadBar'); }
@@ -3201,6 +3202,7 @@ function printReportView() {
     }, 220);
   };
 })();
+</script>
 </body></html>';
 
     const w = window.open('', '_blank', 'width=1200,height=800');
