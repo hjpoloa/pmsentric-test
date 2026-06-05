@@ -596,30 +596,34 @@ table.res-table .bar-cell { padding:0 16px; }
   // Build the bar + label once, append to documentElement so it survives
   // before <body> children render. Provides window.pmsLoadingShow/Hide.
   var CSS = ''
-    + '#pmsLoadBar{position:fixed;top:0;left:0;right:0;height:3px;z-index:2147483646;'
-    + 'pointer-events:none;overflow:hidden;background:transparent;display:none}'
-    + '#pmsLoadBar.active{display:block}'
-    + '#pmsLoadBarFill{height:100%;width:0%;'
+    + '#pmsLoadBar{position:fixed;inset:0;z-index:2147483646;'
+    + 'display:none;align-items:center;justify-content:center;'
+    + 'background:rgba(2,6,23,.45);backdrop-filter:blur(2px);pointer-events:none}'
+    + '#pmsLoadBar.active{display:flex}'
+    + '#pmsLoadCard{display:flex;flex-direction:column;align-items:center;gap:14px;'
+    + 'padding:26px 34px;border-radius:16px;background:rgba(15,23,42,.92);'
+    + 'border:1px solid rgba(148,163,184,.18);'
+    + 'box-shadow:0 18px 50px rgba(0,0,0,.45);min-width:280px}'
+    + '#pmsLoadTrack{position:relative;width:240px;height:5px;border-radius:4px;'
+    + 'overflow:hidden;background:rgba(148,163,184,.18)}'
+    + '#pmsLoadBarFill{position:absolute;top:0;left:0;height:100%;width:0%;border-radius:4px;'
     + 'background:linear-gradient(90deg,#3b82f6,#06b6d4,#6366f1);background-size:200% 100%;'
     + 'animation:pmsBarShimmer 1.2s linear infinite, pmsBarGrow 2.5s ease-out forwards;'
-    + 'box-shadow:0 0 8px rgba(59,130,246,.7)}'
+    + 'box-shadow:0 0 10px rgba(59,130,246,.6)}'
     + '@keyframes pmsBarShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}'
     + '@keyframes pmsBarGrow{0%{width:0%}40%{width:70%}80%{width:88%}100%{width:92%}}'
-    + '#pmsLoadLabel{position:fixed;top:10px;left:50%;transform:translateX(-50%);'
-    + 'z-index:2147483647;pointer-events:none;background:rgba(15,23,42,.85);'
-    + 'color:#cbd5e1;font-size:12px;font-family:inherit;padding:5px 14px;border-radius:20px;'
-    + 'border:1px solid rgba(148,163,184,.18);backdrop-filter:blur(8px);'
-    + 'display:none;white-space:nowrap;letter-spacing:.03em}';
+    + '#pmsLoadLabel{color:#e2e8f0;font-size:13px;font-family:inherit;'
+    + 'white-space:nowrap;letter-spacing:.03em;font-weight:500}';
 
   function build(){
     if(document.getElementById('pmsLoadBar')) return;
     var st=document.createElement('style'); st.textContent=CSS;
     document.head ? document.head.appendChild(st) : document.documentElement.appendChild(st);
     var bar=document.createElement('div'); bar.id='pmsLoadBar';
-    bar.innerHTML='<div id="pmsLoadBarFill"></div>';
-    var lbl=document.createElement('div'); lbl.id='pmsLoadLabel';
+    bar.innerHTML='<div id="pmsLoadCard"><div id="pmsLoadLabel"></div>'
+      + '<div id="pmsLoadTrack"><div id="pmsLoadBarFill"></div></div></div>';
     var root=document.body||document.documentElement;
-    root.appendChild(bar); root.appendChild(lbl);
+    root.appendChild(bar);
   }
   if(document.body) build();
   else document.addEventListener('DOMContentLoaded', build);
@@ -633,7 +637,7 @@ table.res-table .bar-cell { padding:0 16px; }
     // restart the grow animation by cloning the fill
     var nf=fill.cloneNode(false); fill.parentNode.replaceChild(nf,fill);
     bar.classList.add('active');
-    if(lbl){ lbl.textContent=msg||'Parsing XER\u2026'; lbl.style.display='block'; }
+    if(lbl){ lbl.textContent=msg||'Parsing XER\u2026'; }
   };
   window.pmsLoadingHide=function(){
     var bar=document.getElementById('pmsLoadBar');
@@ -641,7 +645,6 @@ table.res-table .bar-cell { padding:0 16px; }
     var lbl=document.getElementById('pmsLoadLabel');
     if(!bar) return;
     if(fill){ fill.style.animation='none'; fill.style.transition='width .15s ease'; fill.style.width='100%'; }
-    if(lbl){ lbl.style.display='none'; }
     setTimeout(function(){
       bar.classList.remove('active');
       if(fill){ fill.style.width='0%'; fill.style.transition=''; fill.style.animation=''; }
