@@ -1375,7 +1375,15 @@ function setupDrop(dropEl, inputEl, onLoad) {
 function readFile(file, cb) {
   pmsLoadingShow('Parsing '+file.name+'\u2026');
   const r = new FileReader();
-  r.onload = e => cb(e.target.result, file.name);
+  r.onload = e => {
+    var data = e.target.result;
+    // double rAF so the loading bar paints before the synchronous parse blocks
+    requestAnimationFrame(()=> requestAnimationFrame(function(){
+      try { cb(data, file.name); }
+      finally { pmsLoadingHide(); }
+    }));
+  };
+  r.onerror = () => pmsLoadingHide();
   r.readAsText(file, 'latin-1');
 }
 
