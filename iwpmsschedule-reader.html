@@ -326,6 +326,7 @@ tr.crit td:first-child{box-shadow:inset 3px 0 0 #f87171;}
 .glabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--tm);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .zbtn{background:var(--surface2);border:1px solid var(--border2);color:var(--text);width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;line-height:1;}
 .zbtn:hover{border-color:var(--accent);color:var(--accent);}
+.zbtn.act{background:var(--accent);border-color:var(--accent);color:#000;}
 .zval{font-family:'Space Mono',monospace;font-size:10px;color:var(--tm);min-width:28px;text-align:center;}
 .cgbtn{background:none;border:none;cursor:pointer;color:var(--tm);font-size:15px;padding:0 3px;transition:color .15s;flex-shrink:0;}
 .cgbtn:hover{color:#f87171;}
@@ -721,6 +722,7 @@ html.light .pms-tn-item, .light .pms-tn-item{color:#1A1C22;}
         <button class="zbtn" onclick="zoomOut()">−</button>
         <span class="zval" id="zoomVal">1×</span>
         <button class="zbtn" onclick="zoomIn()">+</button>
+        <button class="zbtn" id="fitBtn" onclick="toggleFit()" title="Fit entire schedule to visible Gantt pane" style="width:auto;padding:0 7px;font-size:10px;">FIT</button>
         <button class="cgbtn" onclick="closeGantt()">✕</button>
       </div>
       <div id="ganttAxisWrap"><div id="ganttAxisInner"></div></div>
@@ -741,14 +743,14 @@ html.light .pms-tn-item, .light .pms-tn-item{color:#1A1C22;}
 <script>
 // ═══ STATE ════════════════════════════════════════════════════════════════
 const S={
-  projects:{},wbsNodes:{},taskData:{},taskBudget:{},
+  projects:{},wbsNodes:{},taskData:{},taskBudget:{},calHrs:{},calWork:{},
   currentProjId:null,treeHierarchy:{},rootNodes:[],
   expandedSet:new Set(),searchQuery:'',criticalOnly:false,remainingOnly:false,
   pathFilter:'all', // 'all' | 'driving' | 'critical'
   wbsLevelCap:null,
   sortCol:null,sortDir:1,
   columns:[],colWidths:{},dragSrcIdx:null,
-  ganttOpen:false,ganttZoomIdx:2,
+  ganttOpen:false,ganttZoomIdx:2,fitMode:false,
   renderedRows:[],
   wbsActsIndex:{},
   rlpCache:{},
@@ -771,7 +773,8 @@ function defCols(){return[
   {key:'start',      label:'Start',          sortable:true, width:110,align:'center'},
   {key:'finish',     label:'Finish',         sortable:true, width:110,align:'center'},
   {key:'variance',   label:'Var (days)',     sortable:true, width:100,align:'center',baseline:true},
-  {key:'remainDrtn', label:'Rem. Dur. (CD)',  sortable:true, width:110,align:'center'},
+  {key:'remainDrtn', label:'Rem. Dur. (days)', sortable:true, width:110,align:'center'},
+  {key:'budgetCost', label:'Budgeted Total Cost', sortable:true, width:150,align:'right'},
   {key:'schedPct',   label:'Sched % Compl.', sortable:true, width:130,align:'center',baseline:true},
   {key:'pct',        label:'% Complete',     sortable:true, width:120,align:'center'},
   {key:'count',      label:'Activities',     sortable:true, width:85, align:'center'},
@@ -799,6 +802,7 @@ function maxDS(a){const v=a.map(toD).filter(Boolean);return v.length?fmtD(new Da
 function procR(sec,r){
   if(sec==='PROJECT'){const id=r.proj_id||'';S.projects[id]={id,name:r.proj_short_name||id,dataDate:r.last_recalc_date||'',critDrtn:parseFloat(r.critical_drtn_hr_cnt||'0')||0};}
   else if(sec==='PROJWBS'){const id=r.wbs_id||'';S.wbsNodes[id]={id,name:r.wbs_name||'',shortName:r.wbs_short_name||'',parentId:r.parent_wbs_id||'',projId:r.proj_id||''};}
+  else if(sec==='CALENDAR'){const cid=r.clndr_id||'';const h=parseFloat(r.day_hr_cnt)||0;if(cid&&h>0)S.calHrs[cid]=h;}
   else if(sec==='TASKRSRC'||sec==='PROJCOST'){const tid=r.task_id||'',c=parseFloat(r.target_cost)||0;if(tid)S.taskBudget[tid]=(S.taskBudget[tid]||0)+c;}
   else if(sec==='TASK'){
     const id=r.task_id||'';
@@ -813,15 +817,10 @@ function procR(sec,r){
     let pct;
     if(r.complete_pct_type==='CP_Drtn'){const t=parseFloat(r.target_drtn_hr_cnt)||0,rm=parseFloat(r.remain_drtn_hr_cnt)||0;pct=t>0?Math.round((t-rm)/t*1000)/10:0;}
     else pct=Math.round((parseFloat(r.phys_complete_pct||r.perf_complete_pct||r.complete_pct||'0')||0)*10)/10;
-    // Remaining duration: calendar days from data date to forecast finish
-    let rmDays=0;
-    if(st!=='done'){
-      const proj=S.projects[r.proj_id||''];
-      const dataDateRaw=proj?proj.dataDate:'';
-      const dataD=dataDateRaw?new Date(dataDateRaw.trim().slice(0,10)):null;
-      const finD=toD(dF);
-      if(dataD&&finD){rmDays=Math.max(0,Math.round((finD-dataD)/86400000));}
-    }
+    // Remaining duration: XER remain_drtn_hr_cnt converted to days via the activity calendar's hours/day
+    const remHr=parseFloat(r.remain_drtn_hr_cnt)||0;
+    const hpd=S.calHrs[r.clndr_id||'']||8;
+    const rmDays=Math.round(remHr/hpd*10)/10;
     const drivingPath=(r.driving_path_flag||'').trim().toUpperCase()==='Y';
     const totalFloat=parseFloat(r.total_float_hr_cnt||'9999')||9999;
     const taskType=(r.task_type||'').trim();
@@ -829,11 +828,12 @@ function procR(sec,r){
     const critical=drivingPath;
     S.taskData[id]={id,code:r.task_code||'',name:r.task_name||'',wbsId:r.wbs_id||'',projId:r.proj_id||'',
       displayStart:dS,displayFinish:dF,actualStart:aS,actualEnd:aE,completePct:pct,status:st,remainDrtn:rmDays,
-      critical,drivingPath,totalFloat,taskType};
+      clndrId:r.clndr_id||'',critical,drivingPath,totalFloat,taskType};
   }
 }
 function parseXER(content){
-  S.projects={};S.wbsNodes={};S.taskData={};S.taskBudget={};S.wbsActsIndex={};S.rlpCache={};S.wbsHasChildren={};
+  S.projects={};S.wbsNodes={};S.taskData={};S.taskBudget={};S.calHrs={};S.calWork={};S.wbsActsIndex={};S.rlpCache={};S.wbsHasChildren={};
+  parseCalendars(content);
   let tbl=null,flds=[];
   for(const raw of content.split('\n')){
     const l=raw.replace(/\r$/,'');
@@ -844,6 +844,122 @@ function parseXER(content){
   for(const[tid,b]of Object.entries(S.taskBudget))if(S.taskData[tid])S.taskData[tid].budgetCost=b;
   for(const t of Object.values(S.taskData))if(t.budgetCost===undefined)t.budgetCost=0;
   buildWbsIndex();
+}
+
+// ═══ CALENDAR (work-week + holidays) ══════════════════════════════════════
+// clndr_data can span multiple physical lines, so the CALENDAR table is
+// reassembled here record-by-record before the line-oriented main parser runs.
+function parseCalendars(content){
+  const lines=content.split('\n');
+  let inCal=false,flds=[],rec=null;
+  function flush(){
+    if(!rec)return;
+    const r={};flds.forEach((f,i)=>{r[f]=i<rec.length?rec[i]:'';});
+    const cid=r.clndr_id||'';
+    if(cid){
+      const hpd=parseFloat(r.day_hr_cnt)||0;
+      if(hpd>0)S.calHrs[cid]=hpd;
+      S.calWork[cid]=parseClndrData(r.clndr_data||'',hpd||8);
+      S.calWork[cid].hpd=hpd||8;
+      S.calWork[cid].isDefault=(r.proj_default_flag==='Y'||r.default_flag==='Y');
+    }
+    rec=null;
+  }
+  for(const raw of lines){
+    const l=raw.replace(/\r$/,'');
+    if(l.startsWith('%T\t')){flush();inCal=(l.slice(3).trim()==='CALENDAR');flds=[];continue;}
+    if(!inCal)continue;
+    if(l.startsWith('%F\t')){flush();flds=l.slice(3).split('\t');continue;}
+    if(l.startsWith('%R\t')){flush();rec=l.slice(3).split('\t');continue;}
+    if(l.startsWith('%E')){flush();inCal=false;continue;}
+    // continuation of a multiline clndr_data field — append to last cell
+    if(rec){rec[rec.length-1]+='\n'+l;}
+  }
+  flush();
+}
+
+// Parse a P6 clndr_data blob → {workDays:[7 bools, JS Sun..Sat], holidays:Set, workExc:Set}
+function parseClndrData(data,hpd){
+  const MF=[false,true,true,true,true,true,false]; // Mon–Fri fallback
+  const workDays=[false,false,false,false,false,false,false]; // JS getDay() 0=Sun..6=Sat
+  const holidays=new Set(), workExc=new Set();
+  if(!data) return {workDays:MF.slice(),holidays,workExc};
+
+  // Isolate the DaysOfWeek region (up to Exceptions).
+  let dowS=data.indexOf('DaysOfWeek');
+  let exS=data.indexOf('Exceptions');
+  let dow=(dowS>=0)?data.slice(dowS,exS>dowS?exS:undefined):data;
+
+  // P6 day index: 1=Sunday … 7=Saturday → JS index = d-1.
+  // Bound each day's content by the NEXT day marker so nested parens don't matter.
+  for(let d=1;d<=7;d++){
+    const marker='(0||'+d+'()';
+    const i=dow.indexOf(marker);
+    if(i<0)continue; // day not listed → treat as non-working
+    let j=dow.length;
+    for(let nd=d+1;nd<=7;nd++){const k=dow.indexOf('(0||'+nd+'()');if(k>i){j=k;break;}}
+    const body=dow.slice(i+marker.length,j);
+    if(/s\|/.test(body))workDays[d-1]=true; // has a shift start → working
+  }
+
+  // Exceptions: each entry carries a date serial after "d|"; non-working unless it has a shift.
+  if(exS>=0){
+    const ex=data.slice(exS);
+    const ms=[...ex.matchAll(/d\|(\d+)/g)];
+    for(let a=0;a<ms.length;a++){
+      const serial=parseInt(ms[a][1],10);
+      const from=ms[a].index;
+      const to=(a+1<ms.length)?ms[a+1].index:ex.length;
+      const body=ex.slice(from,to);
+      const key=serialToKey(serial);
+      if(!key)continue;
+      if(/s\|/.test(body))workExc.add(key); else holidays.add(key);
+    }
+  }
+
+  // A valid P6 calendar always has at least one non-working weekday; if the parse
+  // produced "all 7 working" (or none), it failed → use Mon–Fri fallback.
+  const nWork=workDays.filter(Boolean).length;
+  if(nWork===0||nWork===7) return {workDays:MF.slice(),holidays,workExc};
+  return {workDays,holidays,workExc};
+}
+// P6/Excel serial (days since 1899-12-30) → 'YYYY-MM-DD' (UTC)
+function serialToKey(serial){
+  if(!serial||isNaN(serial))return null;
+  const ms=Date.UTC(1899,11,30)+serial*86400000;
+  const d=new Date(ms);
+  if(isNaN(d))return null;
+  return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+}
+function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+
+// Working days in (start, end] per a calendar's work-week + holiday exceptions.
+function countWorkDays(start,end,cal){
+  if(!start||!end||end<=start)return 0;
+  const wd=cal&&cal.workDays?cal.workDays:[false,true,true,true,true,true,false];
+  const hol=cal?cal.holidays:null, wex=cal?cal.workExc:null;
+  let n=0, guard=0;
+  const cur=new Date(start.getFullYear(),start.getMonth(),start.getDate());
+  const fin=new Date(end.getFullYear(),end.getMonth(),end.getDate());
+  cur.setDate(cur.getDate()+1); // exclude the data date itself
+  while(cur<=fin && guard++<20000){
+    const k=dateKey(cur);
+    const working=(wd[cur.getDay()] && !(hol&&hol.has(k))) || (wex&&wex.has(k));
+    if(working)n++;
+    cur.setDate(cur.getDate()+1);
+  }
+  return n;
+}
+// Pick the calendar most used by a set of activities; fall back to project default, then any.
+function dominantCal(acts){
+  const cnt={};
+  for(const a of acts){const c=a.clndrId||'';if(c)cnt[c]=(cnt[c]||0)+1;}
+  let best=null,bestN=-1;
+  for(const c in cnt)if(cnt[c]>bestN){bestN=cnt[c];best=c;}
+  if(best&&S.calWork[best])return S.calWork[best];
+  for(const c in S.calWork)if(S.calWork[c].isDefault)return S.calWork[c];
+  for(const c in S.calWork)return S.calWork[c];
+  return null;
 }
 
 // ═══ BASELINE ═════════════════════════════════════════════════════════════
@@ -1095,6 +1211,26 @@ function minRemainDrtn(wid){
   return max;
 }
 
+// WBS-level Remaining Duration, P6-style: working days from the Data Date to the
+// WBS's latest remaining (incomplete) finish, on the dominant activity calendar.
+function wbsRemDays(wid){
+  const dd=currentDataDate();
+  if(!dd)return null;
+  const acts=allActsFor(wid,S.treeHierarchy).filter(a=>a.status!=='done');
+  if(!acts.length)return 0;
+  let maxF=null;
+  for(const a of acts){const f=toD(a.displayFinish);if(f&&(!maxF||f>maxF))maxF=f;}
+  if(!maxF)return 0;
+  return countWorkDays(dd,maxF,dominantCal(acts));
+}
+
+function wbsBudget(wid){
+  return allActsFor(wid,S.treeHierarchy).reduce((s,a)=>s+(a.budgetCost||0),0);
+}function fmtMoney(v){
+  if(!(v>0))return'<span style="color:var(--td)">—</span>';
+  return`<span style="font-family:'Space Mono',monospace;font-size:11px">${v.toLocaleString(undefined,{maximumFractionDigits:0})}</span>`;
+}
+
 // ═══ SORT ═════════════════════════════════════════════════════════════════
 function srtV(act,col){
   switch(col){
@@ -1105,6 +1241,7 @@ function srtV(act,col){
     case'actEnd':return toD(act.actualEnd)||new Date(0);
     case'pct':return act.completePct||0;
     case'remainDrtn':return act.remainDrtn||0;
+    case'budgetCost':return act.budgetCost||0;
     case'blStart':{const b=S.baselineByCode[act.code];return b?(toD(b.start)||new Date(0)):new Date(0);}
     case'blFinish':{const b=S.baselineByCode[act.code];return b?(toD(b.finish)||new Date(0)):new Date(0);}
     case'variance':{const b=S.baselineByCode[act.code];if(!b)return -99999;const v=varianceDays(act.displayFinish,b.finish);return v===null?-99999:v;}
@@ -1285,7 +1422,8 @@ function cellH(col,row){
         const sign=v>0?'+':'';
         return`<span style="color:${color};font-family:'Space Mono',monospace;font-size:11px;font-weight:600">${sign}${v}d</span>`;
       }
-      case'remainDrtn':return r.count>0?`<span style="font-family:'Space Mono',monospace;font-size:11px">${minRemainDrtn(wid)}d</span>`:'—';
+      case'remainDrtn':{if(r.count<=0)return'—';const v=wbsRemDays(wid);return v===null?'<span style="color:var(--td)">—</span>':`<span style="font-family:'Space Mono',monospace;font-size:11px">${v}d</span>`;}
+      case'budgetCost':return r.count>0?fmtMoney(wbsBudget(wid)):'<span style="color:var(--td)">—</span>';
       case'schedPct':{
         const p=schedPctWbs(wid,currentDataDate());
         if(p===null)return'<span style="color:var(--td)">—</span>';
@@ -1311,6 +1449,7 @@ function cellH(col,row){
         return`<span style="color:${color};font-family:'Space Mono',monospace;font-size:11px;font-weight:600">${sign}${v}d</span>`;
       }
       case'remainDrtn':return act.status==='done'?'<span style="color:var(--done)">0d</span>':`<span style="font-family:'Space Mono',monospace;font-size:11px">${act.remainDrtn}d</span>`;
+      case'budgetCost':return fmtMoney(act.budgetCost||0);
       case'schedPct':{
         if(!bl)return'<span style="color:var(--td)">—</span>';
         const p=schedPctAt(bl.start,bl.finish,currentDataDate(),act.budgetCost);
@@ -1475,8 +1614,11 @@ function initSplitter(){
 }
 
 // ═══ GANTT ════════════════════════════════════════════════════════════════
-function zoomIn(){S.ganttZoomIdx=Math.min(ZOOM.length-1,S.ganttZoomIdx+1);document.getElementById('zoomVal').textContent=ZOOM[S.ganttZoomIdx]+'×';if(S.ganttOpen)renderGantt();}
-function zoomOut(){S.ganttZoomIdx=Math.max(0,S.ganttZoomIdx-1);document.getElementById('zoomVal').textContent=ZOOM[S.ganttZoomIdx]+'×';if(S.ganttOpen)renderGantt();}
+function zoomIn(){S.fitMode=false;updateFitBtn();S.ganttZoomIdx=Math.min(ZOOM.length-1,S.ganttZoomIdx+1);document.getElementById('zoomVal').textContent=ZOOM[S.ganttZoomIdx]+'×';if(S.ganttOpen)renderGantt();}
+function zoomOut(){S.fitMode=false;updateFitBtn();S.ganttZoomIdx=Math.max(0,S.ganttZoomIdx-1);document.getElementById('zoomVal').textContent=ZOOM[S.ganttZoomIdx]+'×';if(S.ganttOpen)renderGantt();}
+function toggleFit(){S.fitMode=!S.fitMode;updateFitBtn();if(S.ganttOpen)renderGantt();}
+function updateFitBtn(){const b=document.getElementById('fitBtn');if(b)b.classList.toggle('act',S.fitMode);}
+window.addEventListener('resize',()=>{if(S.fitMode&&S.ganttOpen)renderGantt();});
 
 function toggleGantt(){S.ganttOpen?closeGantt():openGantt();}
 function openGantt(){
@@ -1545,8 +1687,15 @@ function renderGantt(){
   const ai=document.getElementById('ganttAxisInner');
   if(!range){gi.innerHTML='';ai.innerHTML='';return;}
 
-  const MW=55*ZOOM[S.ganttZoomIdx];
   const months=buildMonths(range.mn,range.mx);
+  let MW;
+  if(S.fitMode&&months.length){
+    const gbw=document.getElementById('ganttBodyWrap');
+    const avail=Math.max(200,(gbw?gbw.clientWidth:600)-2);
+    MW=Math.max(8,Math.floor(avail/months.length));
+  } else {
+    MW=55*ZOOM[S.ganttZoomIdx];
+  }
   const TW=months.length*MW;
   const totalH=rows.length*ROW_H;
   const spanMs=range.mx-range.mn;
@@ -1655,7 +1804,7 @@ function loadFile(file){
   r.readAsText(file,'latin-1');
 }
 function closeFile(){
-  S.projects={};S.wbsNodes={};S.taskData={};S.taskBudget={};
+  S.projects={};S.wbsNodes={};S.taskData={};S.taskBudget={};S.calHrs={};S.calWork={};
   S.currentProjId=null;S.treeHierarchy={};S.rootNodes=[];
   S.expandedSet=new Set();S.searchQuery='';S.sortCol=null;S.sortDir=1;
   S.criticalOnly=false;S.remainingOnly=false;S.wbsLevelCap=null;S.pathFilter='all';
@@ -1665,6 +1814,7 @@ function closeFile(){
   const rcb=document.getElementById('remainingChk');if(rcb)rcb.checked=false;
   const rcl=document.getElementById('remainLabel');if(rcl){rcl.style.opacity='.5';rcl.style.pointerEvents='none';}
   S.ganttOpen=false;S.renderedRows=[];
+  S.fitMode=false;updateFitBtn();
   const sel=document.getElementById('projectSelect');
   sel.innerHTML='<option>— load a file first —</option>';sel.disabled=true;
   const wls=document.getElementById('wbsLevelSel');if(wls){wls.innerHTML='<option value="all">WBS Level: All</option>';wls.value='all';wls.disabled=true;}
